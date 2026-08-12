@@ -70,6 +70,24 @@ function isValidYear(value: unknown): value is number {
   );
 }
 
+export function parseCalendarYearRange(parsed: unknown): CalendarYearRange {
+  const fallback = getDefaultCalendarYearRange();
+
+  if (!parsed || typeof parsed !== "object") {
+    return fallback;
+  }
+
+  const row = parsed as { minYear?: unknown; maxYear?: unknown };
+  if (!isValidYear(row.minYear) || !isValidYear(row.maxYear)) {
+    return fallback;
+  }
+
+  return {
+    minYear: Math.min(row.minYear, row.maxYear),
+    maxYear: Math.max(row.minYear, row.maxYear),
+  };
+}
+
 export function loadCalendarYearRange(): CalendarYearRange {
   const fallback = getDefaultCalendarYearRange();
 
@@ -83,19 +101,7 @@ export function loadCalendarYearRange(): CalendarYearRange {
       return fallback;
     }
 
-    const parsed = JSON.parse(raw) as {
-      minYear?: unknown;
-      maxYear?: unknown;
-    };
-
-    if (!isValidYear(parsed.minYear) || !isValidYear(parsed.maxYear)) {
-      return fallback;
-    }
-
-    return {
-      minYear: Math.min(parsed.minYear, parsed.maxYear),
-      maxYear: Math.max(parsed.minYear, parsed.maxYear),
-    };
+    return parseCalendarYearRange(JSON.parse(raw) as unknown);
   } catch {
     return fallback;
   }

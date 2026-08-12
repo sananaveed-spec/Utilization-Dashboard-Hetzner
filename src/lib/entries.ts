@@ -272,6 +272,31 @@ export function createUtilizationEntry(
   };
 }
 
+export function parseUtilizationEntries(parsed: unknown): UtilizationEntry[] {
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed
+    .filter(
+      (item): item is Record<string, unknown> =>
+        Boolean(item) && typeof item === "object",
+    )
+    .map((item) => ({
+      id: typeof item.id === "string" ? item.id : createId(),
+      engineerName: String(item.engineerName ?? ""),
+      projectCode: String(item.projectCode ?? ""),
+      projectName: String(item.projectName ?? ""),
+      weekValuesByMonth:
+        item.weekValuesByMonth && typeof item.weekValuesByMonth === "object"
+          ? (item.weekValuesByMonth as UtilizationResultRow["weekValuesByMonth"])
+          : {},
+    }))
+    .filter(
+      (item) => item.engineerName && item.projectCode && item.projectName,
+    );
+}
+
 export function loadUtilizationEntries(): UtilizationEntry[] {
   if (typeof window === "undefined") {
     return [];
@@ -283,29 +308,7 @@ export function loadUtilizationEntries(): UtilizationEntry[] {
       return [];
     }
 
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed
-      .filter(
-        (item): item is Record<string, unknown> =>
-          Boolean(item) && typeof item === "object",
-      )
-      .map((item) => ({
-        id: typeof item.id === "string" ? item.id : createId(),
-        engineerName: String(item.engineerName ?? ""),
-        projectCode: String(item.projectCode ?? ""),
-        projectName: String(item.projectName ?? ""),
-        weekValuesByMonth:
-          item.weekValuesByMonth && typeof item.weekValuesByMonth === "object"
-            ? (item.weekValuesByMonth as UtilizationResultRow["weekValuesByMonth"])
-            : {},
-      }))
-      .filter(
-        (item) => item.engineerName && item.projectCode && item.projectName,
-      );
+    return parseUtilizationEntries(JSON.parse(raw) as unknown);
   } catch {
     return [];
   }

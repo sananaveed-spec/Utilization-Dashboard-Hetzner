@@ -34,6 +34,18 @@ function isValidHoliday(value: unknown): value is Holiday {
   );
 }
 
+export function parseHolidays(parsed: unknown): Holiday[] {
+  if (!Array.isArray(parsed)) {
+    return [];
+  }
+
+  return parsed.filter(isValidHoliday).map((row) => ({
+    id: row.id,
+    name: row.name.trim(),
+    date: row.date.trim(),
+  }));
+}
+
 export function loadHolidays(): Holiday[] {
   if (typeof window === "undefined") {
     return [];
@@ -45,16 +57,7 @@ export function loadHolidays(): Holiday[] {
       return [];
     }
 
-    const parsed = JSON.parse(raw) as unknown;
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
-
-    return parsed.filter(isValidHoliday).map((row) => ({
-      id: row.id,
-      name: row.name.trim(),
-      date: row.date.trim(),
-    }));
+    return parseHolidays(JSON.parse(raw) as unknown);
   } catch {
     return [];
   }

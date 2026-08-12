@@ -1,0 +1,67 @@
+[
+  {
+    "id": "e8993a69-5568-4378-8a9a-f8a7bcf596c3",
+    "name": "Kashmir Day",
+    "date": "2026-02-05"
+  },
+  {
+    "id": "2c8c3153-2877-47dc-aa44-74fcc9bd3627",
+    "name": "Pakistan Day",
+    "date": "2026-03-23"
+  },
+  {
+    "id": "e391a063-1c5e-48a5-90ad-1845ad23ae0b",
+    "name": "Eid-ul-Fitr - Day 1",
+    "date": "2026-03-20"
+  },
+  {
+    "id": "f8fbf7f8-2250-4764-8a19-3498189ad070",
+    "name": "Eid-ul-Fitr - Day 2",
+    "date": "2026-03-21"
+  },
+  {
+    "id": "6a5e8780-8980-47bb-9f4e-920b2ebb9a04",
+    "name": "Eid-ul-Fitr - Day 3",
+    "date": "2026-03-22"
+  },
+  {
+    "id": "1cb3ff0b-1625-4a17-96b4-95fbca688160",
+    "name": "Labour Day",
+    "date": "2026-05-01"
+  },
+  {
+    "id": "e8605370-3e46-425e-ae09-740c77f0201e",
+    "name": "Day of Arafa",
+    "date": "2026-05-26"
+  },
+  {
+    "id": "858fcefd-2887-4e5a-815e-8cbd44781618",
+    "name": "Eid ul-Adha - Day 1",
+    "date": "2026-05-27"
+  },
+  {
+    "id": "570a6185-28e4-4e7c-98d2-1a4fc6a896bc",
+    "name": "Eid ul-Adha - Day 2",
+    "date": "2026-05-28"
+  },
+  {
+    "id": "7b67d1c7-d155-4845-a551-6ff7ea36d8c1",
+    "name": "Ashura - 9th Moharram",
+    "date": "2026-06-25"
+  },
+  {
+    "id": "1c613b5e-cf61-47c4-ba48-04acb0bdbcc8",
+    "name": "Ashura - 10th Moharram",
+    "date": "2026-06-26"
+  },
+  {
+    "id": "96c2de61-692d-409c-9498-c319e1b4a6a1",
+    "name": "Independence Day",
+    "date": "2026-08-14"
+  },
+  {
+    "id": "d48d6f95-ecc7-48cf-9aaf-e3e2e65b993d",
+    "name": "Quaid-e-Azam Day",
+    "date": "2026-12-25"
+  }
+]

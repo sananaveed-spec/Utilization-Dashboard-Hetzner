@@ -13,8 +13,23 @@ export function DashboardShell() {
   const store = useUtilizationStore();
   const [tab, setTab] = useState<DashboardTab>("overview");
 
+  if (store.loading) {
+    return (
+      <div className="dashboard-shell">
+        <div className="dashboard-main">
+          <p className="login-subtitle">Loading dashboard data…</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-shell">
+      {store.saveError ? (
+        <p className="users-error dashboard-save-error" role="alert">
+          {store.saveError}
+        </p>
+      ) : null}
       <aside className="dashboard-sidebar" aria-label="Dashboard navigation">
         <p className="dashboard-sidebar-brand">Utilization</p>
         <nav className="dashboard-nav">
