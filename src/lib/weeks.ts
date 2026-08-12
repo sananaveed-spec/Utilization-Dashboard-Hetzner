@@ -24,6 +24,19 @@ function toDateString(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function toHolidaySet(
+  holidayDates: ReadonlySet<string> | readonly string[],
+): ReadonlySet<string> {
+  if (Array.isArray(holidayDates)) {
+    return new Set(
+      holidayDates
+        .map((value) => value.trim())
+        .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)),
+    );
+  }
+  return holidayDates as ReadonlySet<string>;
+}
+
 export type MonthCursor = {
   year: number;
   month: number; // 1-12
@@ -235,14 +248,7 @@ export function getWorkWeeksForMonth(
   cursor: MonthCursor,
   holidayDates: ReadonlySet<string> | readonly string[] = [],
 ): WorkWeek[] {
-  const holidays =
-    holidayDates instanceof Set
-      ? holidayDates
-      : new Set(
-          holidayDates
-            .map((value) => value.trim())
-            .filter((value) => /^\d{4}-\d{2}-\d{2}$/.test(value)),
-        );
+  const holidays = toHolidaySet(holidayDates);
 
   const first = new Date(cursor.year, cursor.month - 1, 1);
   const last = new Date(cursor.year, cursor.month, 0);
