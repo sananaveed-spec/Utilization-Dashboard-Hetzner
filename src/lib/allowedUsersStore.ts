@@ -1,48 +1,32 @@
-import { promises as fs } from "fs";
-import path from "path";
 import {
   DEFAULT_ALLOWED_EMAILS,
   normalizeEmail,
   uniqueNormalizedEmails,
 } from "@/lib/allowedUsers";
+import { readJsonFile, writeJsonFile } from "@/lib/jsonDataStore";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const DATA_FILE = path.join(DATA_DIR, "allowed-users.json");
+const ALLOWED_USERS_FILE = "allowed-users.json";
 
-async function ensureStore(): Promise<string[]> {
-  try {
-    const raw = await fs.readFile(DATA_FILE, "utf8");
-    const parsed = JSON.parse(raw) as unknown;
-
-    if (!Array.isArray(parsed)) {
-      return uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
-    }
-
-    const emails = uniqueNormalizedEmails(
-      parsed.filter((value): value is string => typeof value === "string"),
-    );
-
-    return emails.length > 0
-      ? emails
-      : uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
-  } catch (error) {
-    const code =
-      error && typeof error === "object" && "code" in error
-        ? String((error as { code?: unknown }).code)
-        : "";
-
-    if (code !== "ENOENT") {
-      // Corrupt or unreadable file — fall back to defaults.
-    }
-
-    const defaults = uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
-    await writeAllowedEmails(defaults);
-    return defaults;
+function parseAllowedEmails(parsed: unknown): string[] {
+  if (!Array.isArray(parsed)) {
+    return uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
   }
+
+  const emails = uniqueNormalizedEmails(
+    parsed.filter((value): value is string => typeof value === "string"),
+  );
+
+  return emails.length > 0
+    ? emails
+    : uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
 }
 
 export async function readAllowedEmails(): Promise<string[]> {
-  return ensureStore();
+  const parsed = await readJsonFile<unknown>(
+    ALLOWED_USERS_FILE,
+    [...DEFAULT_ALLOWED_EMAILS],
+  );
+  return parseAllowedEmails(parsed);
 }
 
 export async function writeAllowedEmails(emails: string[]): Promise<string[]> {
@@ -50,9 +34,7 @@ export async function writeAllowedEmails(emails: string[]): Promise<string[]> {
   const toWrite =
     next.length > 0 ? next : uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
 
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(DATA_FILE, `${JSON.stringify(toWrite, null, 2)}\n`, "utf8");
-  return toWrite;
+  return writeJsonFile(ALLOWED_USERS_FILE, toWrite);
 }
 
 export async function addAllowedEmail(email: string): Promise<{
