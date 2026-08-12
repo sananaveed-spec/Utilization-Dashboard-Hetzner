@@ -3,7 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ALLOWED_USERS_CHANGED_EVENT,
+  DEFAULT_ALLOWED_EMAILS,
   isEmailAllowed,
+  uniqueNormalizedEmails,
 } from "@/lib/allowedUsers";
 
 type UseAllowedUsersResult = {
@@ -13,6 +15,10 @@ type UseAllowedUsersResult = {
   refresh: () => Promise<void>;
 };
 
+function getFallbackEmails(): string[] {
+  return uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
+}
+
 export function useAllowedUsers(): UseAllowedUsersResult {
   const [emails, setEmails] = useState<string[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -21,10 +27,19 @@ export function useAllowedUsers(): UseAllowedUsersResult {
     setLoading(true);
     try {
       const response = await fetch("/api/allowed-users", { cache: "no-store" });
-      const data = (await response.json()) as { emails?: string[] };
-      setEmails(Array.isArray(data.emails) ? data.emails : []);
+      const data = (await response.json()) as {
+        emails?: string[];
+        error?: string;
+      };
+
+      if (!response.ok || !Array.isArray(data.emails) || data.emails.length === 0) {
+        setEmails(getFallbackEmails());
+        return;
+      }
+
+      setEmails(data.emails);
     } catch {
-      setEmails([]);
+      setEmails(getFallbackEmails());
     } finally {
       setLoading(false);
     }

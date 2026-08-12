@@ -25,7 +25,9 @@ function isBlobNotFoundError(error: unknown): boolean {
   );
 }
 
-async function readFilesystemJson<T>(filename: string): Promise<T | null> {
+export async function readFilesystemJson<T>(
+  filename: string,
+): Promise<T | null> {
   try {
     const raw = await fs.readFile(path.join(DATA_DIR, filename), "utf8");
     return JSON.parse(raw) as T;
@@ -83,18 +85,30 @@ export async function readJsonFile<T>(
   fallback: T,
 ): Promise<T> {
   if (useBlobStorage()) {
-    const fromBlob = await readBlobJson<T>(filename);
-    if (fromBlob !== null) {
-      return fromBlob;
+    try {
+      const fromBlob = await readBlobJson<T>(filename);
+      if (fromBlob !== null) {
+        return fromBlob;
+      }
+    } catch {
+      // Blob read failed — fall back to the deployed data file.
     }
 
     const fromDisk = await readFilesystemJson<T>(filename);
     if (fromDisk !== null) {
-      await writeBlobJson(filename, fromDisk);
+      try {
+        await writeBlobJson(filename, fromDisk);
+      } catch {
+        // Still return disk data even if blob write fails.
+      }
       return fromDisk;
     }
 
-    await writeBlobJson(filename, fallback);
+    try {
+      await writeBlobJson(filename, fallback);
+    } catch {
+      // ignore
+    }
     return fallback;
   }
 
@@ -112,7 +126,12 @@ export async function writeJsonFile<T>(
   data: T,
 ): Promise<T> {
   if (useBlobStorage()) {
-    return writeBlobJson(filename, data);
+    try {
+      return await writeBlobJson(filename, data);
+    } catch {
+      // Last resort for local/dev-like environments without blob access.
+      return writeFilesystemJson(filename, data);
+    }
   }
   return writeFilesystemJson(filename, data);
 }

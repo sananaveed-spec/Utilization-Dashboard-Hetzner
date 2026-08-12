@@ -3,7 +3,11 @@ import {
   normalizeEmail,
   uniqueNormalizedEmails,
 } from "@/lib/allowedUsers";
-import { readJsonFile, writeJsonFile } from "@/lib/jsonDataStore";
+import {
+  readFilesystemJson,
+  readJsonFile,
+  writeJsonFile,
+} from "@/lib/jsonDataStore";
 
 const ALLOWED_USERS_FILE = "allowed-users.json";
 
@@ -26,7 +30,19 @@ export async function readAllowedEmails(): Promise<string[]> {
     ALLOWED_USERS_FILE,
     [...DEFAULT_ALLOWED_EMAILS],
   );
-  return parseAllowedEmails(parsed);
+  const stored = parseAllowedEmails(parsed);
+
+  const baselineParsed = await readFilesystemJson<unknown>(ALLOWED_USERS_FILE);
+  const baseline = baselineParsed
+    ? parseAllowedEmails(baselineParsed)
+    : uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
+
+  const merged = uniqueNormalizedEmails([...stored, ...baseline]);
+  if (merged.length !== stored.length) {
+    await writeJsonFile(ALLOWED_USERS_FILE, merged);
+  }
+
+  return merged;
 }
 
 export async function writeAllowedEmails(emails: string[]): Promise<string[]> {
