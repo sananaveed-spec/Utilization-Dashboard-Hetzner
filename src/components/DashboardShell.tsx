@@ -3,11 +3,17 @@
 import { useState } from "react";
 import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
+import { Overview2Filters } from "@/components/Overview2Filters";
 import { UsersPanel } from "@/components/UsersPanel";
 import { UtilizationFilters } from "@/components/UtilizationFilters";
 import { useUtilizationStore } from "@/hooks/useUtilizationStore";
 
-type DashboardTab = "overview" | "analysis" | "holidays" | "users";
+type DashboardTab =
+  | "overview"
+  | "overview2"
+  | "analysis"
+  | "holidays"
+  | "users";
 
 export function DashboardShell() {
   const store = useUtilizationStore();
@@ -43,6 +49,14 @@ export function DashboardShell() {
           </button>
           <button
             type="button"
+            className={`dashboard-nav-item dashboard-nav-item--sub${tab === "overview2" ? " dashboard-nav-item--active" : ""}`}
+            onClick={() => setTab("overview2")}
+            aria-current={tab === "overview2" ? "page" : undefined}
+          >
+            Overview2
+          </button>
+          <button
+            type="button"
             className={`dashboard-nav-item${tab === "analysis" ? " dashboard-nav-item--active" : ""}`}
             onClick={() => setTab("analysis")}
             aria-current={tab === "analysis" ? "page" : undefined}
@@ -71,6 +85,8 @@ export function DashboardShell() {
       <div className="dashboard-main">
         {tab === "overview" ? (
           <UtilizationFilters store={store} />
+        ) : tab === "overview2" ? (
+          <Overview2Filters store={store} />
         ) : tab === "analysis" ? (
           <AnalysisPanel store={store} />
         ) : tab === "holidays" ? (
