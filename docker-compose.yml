@@ -1,21 +1,22 @@
-# Optional reference for Coolify "Docker Compose" deployments.
-# Prefer the root Dockerfile + Coolify UI volume/env settings (see DEPLOY.md).
+# Deploy with a .env file in this folder (see coolify.env.template).
+# NEXT_PUBLIC_* are passed at build time; Timesheets secrets at runtime.
 services:
   utilization-dashboard:
-    build: .
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_AZURE_CLIENT_ID: ${NEXT_PUBLIC_AZURE_CLIENT_ID}
+        NEXT_PUBLIC_AZURE_TENANT_ID: ${NEXT_PUBLIC_AZURE_TENANT_ID}
+        NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS: ${NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS:-allumiax.com}
+        NEXT_PUBLIC_AZURE_AUTHORITY: ${NEXT_PUBLIC_AZURE_AUTHORITY:-https://login.microsoftonline.com/organizations}
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       DATA_DIR: /app/data
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
-      # Set these in Coolify (do not commit secrets):
-      # NEXT_PUBLIC_AZURE_CLIENT_ID
-      # NEXT_PUBLIC_AZURE_TENANT_ID
-      # NEXT_PUBLIC_ALLOWED_EMAIL_DOMAINS
-      # TIMESHEETS_API_TOKEN
-      # TIMESHEETS_ORGANIZATION_ID
-      # TIMESHEETS_TIMEZONE
     volumes:
       - utilization-data:/app/data
     restart: unless-stopped
