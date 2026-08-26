@@ -47,7 +47,7 @@ export function AddEngineerDialog({
   return (
     <div className="dialog-backdrop" onClick={onClose}>
       <div
-        className="dialog-panel"
+        className="dialog-panel dialog-panel--add-engineer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="add-engineer-title"
@@ -61,7 +61,7 @@ export function AddEngineerDialog({
           <SearchableSelect
             id="add-engineer-name"
             label="Employee"
-            placeholder="Search Clockify employee…"
+            placeholder="Search engineer name"
             options={options}
             value={selectedId}
             onChange={(value) => {
@@ -69,10 +69,11 @@ export function AddEngineerDialog({
               setError(null);
             }}
             emptyMessage="No employees available to add"
+            defaultOpen
           />
 
           {candidates.length === 0 ? (
-            <p className="hint">All active Clockify employees are already on the list.</p>
+            <p className="hint">All active employees are already on the list.</p>
           ) : null}
 
           {error ? (

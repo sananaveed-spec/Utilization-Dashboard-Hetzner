@@ -1,11 +1,18 @@
-const CLOCKIFY_BASE_URL = "https://api.clockify.me/api/v1";
-const CLOCKIFY_REPORTS_BASE_URL = "https://reports.api.clockify.me/v1";
+/**
+ * Timesheets (SolidTime) client with Clockify-shaped exports so existing
+ * /api/clockify* routes and UI keep working unchanged.
+ * API: https://timesheets.allumiax.com/api/v1
+ */
+
+const DEFAULT_BASE_URL = "https://timesheets.allumiax.com/api/v1";
 
 export type ClockifyUser = {
   id: string;
   name: string;
   email: string;
   status: "ACTIVE" | "PENDING_EMAIL_VERIFICATION" | "DECLINED";
+  /** SolidTime user id (distinct from organization member id). */
+  userId?: string;
 };
 
 export type ClockifyProject = {
@@ -30,19 +37,56 @@ export type ClockifyDetailedTimeEntry = {
 type ClientConfig = {
   apiKey: string;
   workspaceId: string;
+  baseUrl?: string;
+};
+
+type RawMember = {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+};
+
+type RawTimeEntry = {
+  id: string;
+  start: string;
+  end: string | null;
+  duration: number | null;
+  billable?: boolean;
+  user_id?: string;
+  project_id?: string | null;
+};
+
+type RawProject = {
+  id: string;
+  name: string;
+  is_archived?: boolean;
+  client?: { name?: string | null } | null;
+  client_name?: string | null;
 };
 
 const MAX_RETRIES = 4;
+const LIFETIME_START = "2015-01-01T00:00:00Z";
 
-function buildHeaders(apiKey: string): HeadersInit {
+function buildHeaders(apiToken: string): HeadersInit {
   return {
-    "X-Api-Key": apiKey,
+    Authorization: `Bearer ${apiToken}`,
+    Accept: "application/json",
     "Content-Type": "application/json",
   };
 }
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/** SolidTime requires `Y-m-d\TH:i:s\Z` (no milliseconds). */
+function toApiDate(isoOrDate: string | Date): string {
+  const date = typeof isoOrDate === "string" ? new Date(isoOrDate) : isoOrDate;
+  if (Number.isNaN(date.getTime())) {
+    return String(isoOrDate).replace(/\.\d{3}Z$/, "Z");
+  }
+  return date.toISOString().replace(/\.\d{3}Z$/, "Z");
 }
 
 function parseIsoDurationToSeconds(duration: string | null): number {
@@ -108,68 +152,19 @@ function getDetailedEntrySeconds(entry: ClockifyDetailedTimeEntry): number {
   return Math.max(Math.floor((endMs - startMs) / 1000), 0);
 }
 
-function extractDetailedEntries(json: unknown): ClockifyDetailedTimeEntry[] {
-  if (!json || typeof json !== "object") {
-    return [];
-  }
-
-  const root = json as Record<string, unknown>;
-  const raw =
-    root.timeentries ??
-    root.timeEntries ??
-    root.entries ??
-    root.timeentriesList;
-
-  if (!Array.isArray(raw)) {
-    return [];
-  }
-
-  return raw
-    .filter((row) => row && typeof row === "object")
-    .map((row) => {
-      const record = row as Record<string, unknown>;
-      const interval = (record.timeInterval ?? {}) as Record<string, unknown>;
-      const project =
-        record.project && typeof record.project === "object"
-          ? (record.project as Record<string, unknown>)
-          : null;
-      const user =
-        record.user && typeof record.user === "object"
-          ? (record.user as Record<string, unknown>)
-          : null;
-
-      const projectName = String(
-        record.projectName ?? project?.name ?? "",
-      ).trim();
-      const userName = String(
-        record.userName ?? user?.name ?? record.userEmail ?? "",
-      ).trim();
-
-      return {
-        id: String(record.id ?? record._id ?? ""),
-        userName,
-        projectName,
-        timeInterval: {
-          start: String(interval.start ?? ""),
-          end:
-            interval.end === null || interval.end === undefined
-              ? null
-              : String(interval.end),
-          duration:
-            (interval.duration as string | number | null | undefined) ?? null,
-        },
-      } satisfies ClockifyDetailedTimeEntry;
-    })
-    .filter((entry) => entry.timeInterval.start && entry.userName);
-}
-
 export class ClockifyClient {
-  private readonly apiKey: string;
-  private readonly workspaceId: string;
+  private readonly apiToken: string;
+  private readonly organizationId: string;
+  private readonly baseUrl: string;
 
   constructor(config: ClientConfig) {
-    this.apiKey = config.apiKey;
-    this.workspaceId = config.workspaceId;
+    this.apiToken = config.apiKey;
+    this.organizationId = config.workspaceId;
+    this.baseUrl = (config.baseUrl ?? DEFAULT_BASE_URL).replace(/\/$/, "");
+  }
+
+  private orgPath(path: string): string {
+    return `${this.baseUrl}/organizations/${this.organizationId}${path}`;
   }
 
   private async fetchWithRetry(
@@ -182,7 +177,7 @@ export class ClockifyClient {
       const response = await fetch(url.toString(), {
         ...init,
         headers: {
-          ...buildHeaders(this.apiKey),
+          ...buildHeaders(this.apiToken),
           ...(init?.headers ?? {}),
         },
         cache: "no-store",
@@ -206,42 +201,24 @@ export class ClockifyClient {
       attempt += 1;
     }
 
-    throw new Error("Clockify retry loop unexpectedly ended.");
+    throw new Error("Timesheets retry loop unexpectedly ended.");
   }
 
   async getAllUsers(): Promise<ClockifyUser[]> {
-    const pageSize = 50;
-    let page = 1;
-    const users: ClockifyUser[] = [];
-
-    while (true) {
-      const url = new URL(
-        `${CLOCKIFY_BASE_URL}/workspaces/${this.workspaceId}/users`,
-      );
-      url.searchParams.set("page-size", String(pageSize));
-      url.searchParams.set("page", String(page));
-
-      const response = await this.fetchWithRetry(url);
-
-      if (!response.ok) {
-        throw new Error(`Clockify users request failed: ${response.status}`);
-      }
-
-      const batch = (await response.json()) as ClockifyUser[];
-      if (!Array.isArray(batch) || batch.length === 0) {
-        break;
-      }
-
-      users.push(...batch);
-
-      if (batch.length < pageSize) {
-        break;
-      }
-
-      page += 1;
+    const response = await this.fetchWithRetry(this.orgPath("/members"));
+    if (!response.ok) {
+      throw new Error(`Timesheets members request failed: ${response.status}`);
     }
 
-    return users;
+    const json = (await response.json()) as { data: RawMember[] };
+    return (json.data ?? []).map((member) => ({
+      id: member.id,
+      userId: member.user_id,
+      name: member.name,
+      email: member.email,
+      // Placeholders still track time; treat all members as active.
+      status: "ACTIVE" as const,
+    }));
   }
 
   async getActiveUsers(): Promise<ClockifyUser[]> {
@@ -251,33 +228,51 @@ export class ClockifyClient {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  async getProjects(): Promise<ClockifyProject[]> {
-    const pageSize = 5000;
-    let page = 1;
+  private async fetchProjects(archived: "false" | "true" | "all"): Promise<
+    ClockifyProject[]
+  > {
     const projects: ClockifyProject[] = [];
+    let page = 1;
 
     while (true) {
-      const url = new URL(
-        `${CLOCKIFY_BASE_URL}/workspaces/${this.workspaceId}/projects`,
-      );
-      url.searchParams.set("page-size", String(pageSize));
+      const url = new URL(this.orgPath("/projects"));
       url.searchParams.set("page", String(page));
-      url.searchParams.set("archived", "false");
-
-      const response = await this.fetchWithRetry(url);
-
-      if (!response.ok) {
-        throw new Error(`Clockify projects request failed: ${response.status}`);
+      if (archived !== "all") {
+        url.searchParams.set("archived", archived);
       }
 
-      const batch = (await response.json()) as ClockifyProject[];
-      if (!Array.isArray(batch) || batch.length === 0) {
+      const response = await this.fetchWithRetry(url);
+      if (!response.ok) {
+        throw new Error(
+          `Timesheets projects request failed: ${response.status}`,
+        );
+      }
+
+      const json = (await response.json()) as {
+        data: RawProject[];
+        meta?: { last_page?: number };
+      };
+      const batch = json.data ?? [];
+      if (batch.length === 0) {
         break;
       }
 
-      projects.push(...batch);
+      for (const raw of batch) {
+        projects.push({
+          id: raw.id,
+          name: raw.name,
+          archived: Boolean(raw.is_archived),
+          template: false,
+          clientName: raw.client?.name ?? raw.client_name ?? null,
+        });
+      }
 
-      if (batch.length < pageSize) {
+      const lastPage = json.meta?.last_page;
+      if (typeof lastPage === "number") {
+        if (page >= lastPage) {
+          break;
+        }
+      } else if (batch.length < 15) {
         break;
       }
 
@@ -287,6 +282,10 @@ export class ClockifyClient {
     return projects;
   }
 
+  async getProjects(): Promise<ClockifyProject[]> {
+    return this.fetchProjects("false");
+  }
+
   async getActiveProjects(): Promise<ClockifyProject[]> {
     const projects = await this.getProjects();
     return projects
@@ -294,54 +293,72 @@ export class ClockifyClient {
       .sort((a, b) => a.name.localeCompare(b.name));
   }
 
-  /**
-   * Unique project IDs the user has logged time against (lifetime),
-   * collected from their time entries.
-   */
-  async getLifetimeWorkedProjectIds(userId: string): Promise<Set<string>> {
-    const pageSize = 5000;
-    let page = 1;
-    const projectIds = new Set<string>();
-    const maxPages = 200;
+  private async fetchTimeEntries(options: {
+    startISO: string;
+    endISO: string;
+    memberId?: string;
+  }): Promise<RawTimeEntry[]> {
+    const entries: RawTimeEntry[] = [];
+    const limit = 100;
+    let offset = 0;
 
-    while (page <= maxPages) {
-      const url = new URL(
-        `${CLOCKIFY_BASE_URL}/workspaces/${this.workspaceId}/user/${userId}/time-entries`,
-      );
-      url.searchParams.set("page-size", String(pageSize));
-      url.searchParams.set("page", String(page));
-      url.searchParams.set("project-required", "true");
+    while (true) {
+      const url = new URL(this.orgPath("/time-entries"));
+      url.searchParams.set("start", toApiDate(options.startISO));
+      url.searchParams.set("end", toApiDate(options.endISO));
+      url.searchParams.set("limit", String(limit));
+      url.searchParams.set("offset", String(offset));
+      if (options.memberId) {
+        url.searchParams.append("member_ids[]", options.memberId);
+      }
 
       const response = await this.fetchWithRetry(url);
-
       if (!response.ok) {
         throw new Error(
-          `Clockify user time entries request failed: ${response.status}`,
+          `Timesheets time entries request failed: ${response.status}`,
         );
       }
 
-      const batch = (await response.json()) as Array<{
-        projectId?: string | null;
-      }>;
+      const json = (await response.json()) as {
+        data: RawTimeEntry[];
+        meta?: { total?: number };
+      };
+      const batch = json.data ?? [];
+      entries.push(...batch);
 
-      if (!Array.isArray(batch) || batch.length === 0) {
+      const total = json.meta?.total;
+      offset += batch.length;
+      if (batch.length === 0) {
         break;
       }
-
-      for (const entry of batch) {
-        const projectId = entry.projectId?.trim();
-        if (projectId) {
-          projectIds.add(projectId);
-        }
-      }
-
-      if (batch.length < pageSize) {
+      if (typeof total === "number" && offset >= total) {
         break;
       }
-
-      page += 1;
+      if (batch.length < limit) {
+        break;
+      }
     }
 
+    return entries;
+  }
+
+  /**
+   * Unique project IDs the member has logged time against (from 2015 → now).
+   */
+  async getLifetimeWorkedProjectIds(userId: string): Promise<Set<string>> {
+    const entries = await this.fetchTimeEntries({
+      startISO: LIFETIME_START,
+      endISO: new Date().toISOString(),
+      memberId: userId,
+    });
+
+    const projectIds = new Set<string>();
+    for (const entry of entries) {
+      const projectId = entry.project_id?.trim();
+      if (projectId) {
+        projectIds.add(projectId);
+      }
+    }
     return projectIds;
   }
 
@@ -362,57 +379,67 @@ export class ClockifyClient {
   }
 
   /**
-   * Detailed report for a date range (workspace timezone).
-   * Used to sum hours per user + project within week date bounds.
+   * Time entries for a date range, shaped like Clockify detailed report rows
+   * (userName + projectName resolved via members/projects).
    */
   async getDetailedReportEntries(
     dateRangeStart: string,
     dateRangeEnd: string,
-    timezone: string,
+    _timezone: string,
   ): Promise<ClockifyDetailedTimeEntry[]> {
-    const url = `${CLOCKIFY_REPORTS_BASE_URL}/workspaces/${this.workspaceId}/reports/detailed`;
-    const pageSize = 1000;
-    const maxPages = 50;
-    let page = 1;
-    const entries: ClockifyDetailedTimeEntry[] = [];
+    const [rawEntries, members, projects] = await Promise.all([
+      this.fetchTimeEntries({
+        startISO: dateRangeStart,
+        endISO: dateRangeEnd,
+      }),
+      this.getAllUsers(),
+      this.fetchProjects("all").catch(async () => {
+        // Fallback if "all" is unsupported: merge active + archived.
+        const [active, archived] = await Promise.all([
+          this.fetchProjects("false"),
+          this.fetchProjects("true").catch(() => [] as ClockifyProject[]),
+        ]);
+        return [...active, ...archived];
+      }),
+    ]);
 
-    while (page <= maxPages) {
-      const response = await this.fetchWithRetry(url, {
-        method: "POST",
-        body: JSON.stringify({
-          dateRangeStart,
-          dateRangeEnd,
-          exportType: "JSON",
-          timeZone: timezone,
-          weekStart: "SUNDAY",
-          rounding: false,
-          detailedFilter: {
-            page,
-            pageSize,
-            sortColumn: "ID",
-          },
-        }),
-      });
-
-      if (!response.ok) {
-        const body = await response.text().catch(() => "");
-        throw new Error(
-          `Clockify detailed report failed (${response.status}): ${body.slice(0, 200)}`,
-        );
+    const nameByUserId = new Map<string, string>();
+    for (const member of members) {
+      if (member.userId) {
+        nameByUserId.set(member.userId, member.name);
       }
-
-      const json: unknown = await response.json();
-      const batch = extractDetailedEntries(json);
-      entries.push(...batch);
-
-      if (batch.length < pageSize) {
-        break;
-      }
-
-      page += 1;
+      nameByUserId.set(member.id, member.name);
     }
 
-    return entries;
+    const nameByProjectId = new Map<string, string>();
+    for (const project of projects) {
+      nameByProjectId.set(project.id, project.name);
+    }
+
+    return rawEntries
+      .map((raw) => {
+        const userName = raw.user_id
+          ? (nameByUserId.get(raw.user_id) ?? "")
+          : "";
+        const projectName = raw.project_id
+          ? (nameByProjectId.get(raw.project_id) ?? "")
+          : "";
+
+        return {
+          id: raw.id,
+          userName,
+          projectName,
+          timeInterval: {
+            start: raw.start,
+            end: raw.end,
+            duration:
+              raw.duration === null || raw.duration === undefined
+                ? null
+                : raw.duration,
+          },
+        } satisfies ClockifyDetailedTimeEntry;
+      })
+      .filter((entry) => entry.timeInterval.start && entry.userName);
   }
 
   getEntrySeconds(entry: ClockifyDetailedTimeEntry): number {
@@ -421,23 +448,34 @@ export class ClockifyClient {
 }
 
 export function getClockifyConfig(): ClientConfig | null {
-  const apiKey = process.env.CLOCKIFY_API_KEY?.trim() ?? "";
-  const workspaceId = process.env.CLOCKIFY_WORKSPACE_ID?.trim() ?? "";
+  const apiKey =
+    process.env.TIMESHEETS_API_TOKEN?.trim() ||
+    process.env.CLOCKIFY_API_KEY?.trim() ||
+    "";
+  const workspaceId =
+    process.env.TIMESHEETS_ORGANIZATION_ID?.trim() ||
+    process.env.CLOCKIFY_WORKSPACE_ID?.trim() ||
+    "";
+  const baseUrl = process.env.TIMESHEETS_API_BASE_URL?.trim() || undefined;
 
   if (
     !apiKey ||
     !workspaceId ||
     apiKey === "your_clockify_api_key_here" ||
-    workspaceId === "your_workspace_id_here"
+    apiKey === "your_api_token_here" ||
+    workspaceId === "your_workspace_id_here" ||
+    workspaceId === "your_organization_id_here"
   ) {
     return null;
   }
 
-  return { apiKey, workspaceId };
+  return { apiKey, workspaceId, baseUrl };
 }
 
 export function getClockifyTimezone(): string {
   return (
-    process.env.CLOCKIFY_WORKSPACE_TIMEZONE?.trim() || "America/Los_Angeles"
+    process.env.TIMESHEETS_TIMEZONE?.trim() ||
+    process.env.CLOCKIFY_WORKSPACE_TIMEZONE?.trim() ||
+    "America/Los_Angeles"
   );
 }

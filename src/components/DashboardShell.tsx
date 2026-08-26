@@ -5,11 +5,9 @@ import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
 import { Overview2Filters } from "@/components/Overview2Filters";
 import { UsersPanel } from "@/components/UsersPanel";
-import { UtilizationFilters } from "@/components/UtilizationFilters";
 import { useUtilizationStore } from "@/hooks/useUtilizationStore";
 
 type DashboardTab =
-  | "overview"
   | "overview2"
   | "analysis"
   | "holidays"
@@ -17,7 +15,7 @@ type DashboardTab =
 
 export function DashboardShell() {
   const store = useUtilizationStore();
-  const [tab, setTab] = useState<DashboardTab>("overview");
+  const [tab, setTab] = useState<DashboardTab>("overview2");
 
   if (store.loading) {
     return (
@@ -41,19 +39,11 @@ export function DashboardShell() {
         <nav className="dashboard-nav">
           <button
             type="button"
-            className={`dashboard-nav-item${tab === "overview" ? " dashboard-nav-item--active" : ""}`}
-            onClick={() => setTab("overview")}
-            aria-current={tab === "overview" ? "page" : undefined}
-          >
-            Overview
-          </button>
-          <button
-            type="button"
-            className={`dashboard-nav-item dashboard-nav-item--sub${tab === "overview2" ? " dashboard-nav-item--active" : ""}`}
+            className={`dashboard-nav-item${tab === "overview2" ? " dashboard-nav-item--active" : ""}`}
             onClick={() => setTab("overview2")}
             aria-current={tab === "overview2" ? "page" : undefined}
           >
-            Overview2
+            Overview
           </button>
           <button
             type="button"
@@ -83,9 +73,7 @@ export function DashboardShell() {
       </aside>
 
       <div className="dashboard-main">
-        {tab === "overview" ? (
-          <UtilizationFilters store={store} />
-        ) : tab === "overview2" ? (
+        {tab === "overview2" ? (
           <Overview2Filters store={store} />
         ) : tab === "analysis" ? (
           <AnalysisPanel store={store} />

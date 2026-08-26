@@ -223,6 +223,34 @@ export function listMonthsInDateRange(range: DateRange): MonthCursor[] {
   return months;
 }
 
+/**
+ * Short month name for column headers.
+ * Same-year range: "Jun". Multi-year range: "Jun26".
+ */
+export function formatFullMonthSpanLabel(
+  cursor: MonthCursor,
+  options?: { includeYear?: boolean },
+): string {
+  const monthShort = new Date(cursor.year, cursor.month - 1, 1).toLocaleString(
+    "en-US",
+    { month: "short" },
+  );
+  if (options?.includeYear) {
+    return `${monthShort}${String(cursor.year).slice(-2)}`;
+  }
+  return monthShort;
+}
+
+/** True when the inclusive day range spans more than one calendar year. */
+export function dateRangeSpansMultipleYears(range: DateRange): boolean {
+  const start = parseDateKey(range.start);
+  const end = parseDateKey(range.end);
+  if (!start || !end) {
+    return false;
+  }
+  return start.getFullYear() !== end.getFullYear();
+}
+
 export type CalendarDayCell = {
   key: string;
   day: number;

@@ -192,13 +192,19 @@ export function Overview2ResultsTable({
       if (!scroll || !headerRow || !engineerRow) {
         return;
       }
+      const headerHeight = headerRow.getBoundingClientRect().height;
+      const allottedHeight = engineerRow.getBoundingClientRect().height;
       scroll.style.setProperty(
         "--overview2-sticky-header-height",
-        `${headerRow.getBoundingClientRect().height}px`,
+        `${headerHeight}px`,
       );
       scroll.style.setProperty(
         "--overview2-sticky-engineer-row-height",
-        `${engineerRow.getBoundingClientRect().height}px`,
+        `${allottedHeight}px`,
+      );
+      scroll.style.setProperty(
+        "--overview2-sticky-slot-2-top",
+        `${headerHeight + allottedHeight - 1}px`,
       );
     }
 
@@ -407,7 +413,7 @@ export function Overview2ResultsTable({
         })
         .join(", ");
       setEditError(
-        `Allotted Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${details}. Entry was not saved.`,
+        `Planned Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${details}. Entry was not saved.`,
       );
       return;
     }
@@ -568,7 +574,7 @@ export function Overview2ResultsTable({
           </thead>
           <tbody>
             <tr
-              className="overview2-engineer-row overview2-engineer-row--allotted"
+              className="overview2-engineer-row overview2-engineer-row--allotted overview2-sticky-slot-1"
               ref={engineerAllottedRowRef}
             >
               <th
@@ -596,7 +602,7 @@ export function Overview2ResultsTable({
                 </span>
               </th>
               <th scope="row" className="overview2-results-metric">
-                Allotted Hours
+                Planned Hours
               </th>
               <td className="overview2-results-value overview2-results-month-value">
                 {assignedDisplay}
@@ -613,7 +619,7 @@ export function Overview2ResultsTable({
                 : null}
               <td className="actions-cell" />
             </tr>
-            <tr className="overview2-engineer-row overview2-engineer-row--actual">
+            <tr className="overview2-engineer-row overview2-engineer-row--actual overview2-sticky-slot-2">
               <th scope="row" className="overview2-results-metric">
                 Actual Hours
               </th>
@@ -671,7 +677,7 @@ export function Overview2ResultsTable({
                             />
                           </th>
                           <th scope="row" className="overview2-results-metric">
-                            Allotted Hours
+                            Planned Hours
                           </th>
                           <td className="overview2-results-value overview2-results-month-value">
                             {formatTotal(monthAssigned)}
@@ -693,7 +699,7 @@ export function Overview2ResultsTable({
                                         className="week-input"
                                         type="text"
                                         inputMode="decimal"
-                                        aria-label={`${entry.projectCode} week ${week.weekNumber} allotted`}
+                                        aria-label={`${entry.projectCode} week ${week.weekNumber} planned`}
                                         value={totals.rawValue}
                                         onChange={(event) =>
                                           updateWeekValue(

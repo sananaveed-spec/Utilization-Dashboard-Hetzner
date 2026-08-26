@@ -106,7 +106,7 @@ export function FirmUtilizationCharts({
           (item) =>
             item.engineerName === engineerName && item.monthLabel === label,
         );
-        point[`${label} Allotted`] = row?.allotted ?? 0;
+        point[`${label} Planned`] = row?.allotted ?? 0;
         point[`${label} Capacity`] = row?.capacity ?? 0;
       }
       return point;
@@ -126,7 +126,7 @@ export function FirmUtilizationCharts({
 
   const pressureData = headcountPressure.map((row) => ({
     name: row.monthLabel,
-    Allotted: row.allotted,
+        Planned: row.allotted,
     Capacity: row.capacity,
     Utilization: row.percent ?? 0,
   }));
@@ -182,7 +182,7 @@ export function FirmUtilizationCharts({
         <div className="analysis-chart-card">
           <h3 className="analysis-chart-title">Headcount pressure</h3>
           <p className="analysis-chart-hint">
-            Firm-wide allotted vs capacity — rising pressure means hire before
+            Firm-wide planned vs capacity — rising pressure means hire before
             taking new projects
           </p>
           <div className="analysis-chart-frame">
@@ -201,7 +201,7 @@ export function FirmUtilizationCharts({
                 <Legend />
                 <Line
                   type="monotone"
-                  dataKey="Allotted"
+                  dataKey="Planned"
                   stroke={CHART_COLORS.allotted}
                   strokeWidth={2}
                   dot={{ r: 4 }}
@@ -223,7 +223,7 @@ export function FirmUtilizationCharts({
 
       <section className="analysis-section">
         <div className="analysis-chart-card">
-          <h3 className="analysis-chart-title">Allotted vs capacity by engineer</h3>
+          <h3 className="analysis-chart-title">Planned vs capacity by engineer</h3>
           <p className="analysis-chart-hint">
             Grouped hours for each month in range
           </p>
@@ -247,8 +247,8 @@ export function FirmUtilizationCharts({
                 <Legend />
                 {monthLabels.map((label, index) => (
                   <Bar
-                    key={`${label}-allotted`}
-                    dataKey={`${label} Allotted`}
+                    key={`${label}-planned`}
+                    dataKey={`${label} Planned`}
                     fill={index === 0 ? CHART_COLORS.allotted : "#60a5fa"}
                     radius={[3, 3, 0, 0]}
                   />
@@ -269,7 +269,7 @@ export function FirmUtilizationCharts({
         <div className="analysis-chart-card">
           <h3 className="analysis-chart-title">Utilization by engineer</h3>
           <p className="analysis-chart-hint">
-            Average allotted ÷ capacity across the selected months
+            Average planned ÷ capacity across the selected months
           </p>
           <div className="analysis-chart-frame analysis-chart-frame--tall">
             <ResponsiveContainer width="100%" height="100%">

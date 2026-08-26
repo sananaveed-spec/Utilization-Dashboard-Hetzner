@@ -209,12 +209,12 @@ export function AnalysisDateRangePicker({
 
   return (
     <div className="analysis-range-picker" ref={rootRef}>
-      <span className="field-label">Analysis calendar</span>
       <button
         type="button"
         className="field-input analysis-range-trigger"
         aria-expanded={open}
         aria-controls={panelId}
+        aria-label="Select date range"
         onClick={() => setOpen((current) => !current)}
       >
         <span>{formatDateRangeLabel(value)}</span>

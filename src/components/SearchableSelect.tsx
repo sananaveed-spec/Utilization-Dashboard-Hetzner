@@ -18,6 +18,8 @@ type SearchableSelectProps = {
   emptyMessage?: string;
   /** When false, typing filters without clearing the current value and the × is hidden. */
   clearable?: boolean;
+  /** Open the options list on mount (useful inside dialogs). */
+  defaultOpen?: boolean;
   className?: string;
 };
 
@@ -31,12 +33,13 @@ export function SearchableSelect({
   disabled = false,
   emptyMessage = "No matches found",
   clearable = true,
+  defaultOpen = false,
   className,
 }: SearchableSelectProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
   const rootRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(defaultOpen && !disabled);
   const [query, setQuery] = useState("");
 
   const selected = options.find((option) => option.id === value) ?? null;

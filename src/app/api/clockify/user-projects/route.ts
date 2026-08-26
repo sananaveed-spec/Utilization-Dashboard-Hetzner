@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "Clockify is not configured. Set CLOCKIFY_API_KEY and CLOCKIFY_WORKSPACE_ID in .env.local.",
+          "Timesheets is not configured. Set TIMESHEETS_API_TOKEN and TIMESHEETS_ORGANIZATION_ID in .env.local.",
       },
       { status: 503 },
     );
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Clockify request failed.";
+      error instanceof Error ? error.message : "Timesheets request failed.";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

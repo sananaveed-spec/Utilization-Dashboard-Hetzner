@@ -311,7 +311,9 @@
     "engineerName": "irsa.sarfaraz",
     "projectCode": "AE25001",
     "projectName": "Judy Water Treatment Plant W1 pump station replacement",
-    "weekValuesByMonth": {}
+    "weekValuesByMonth": {
+      "2026-08": {}
+    }
   },
   {
     "id": "f40838a2-be13-4495-9edd-a4cb77172a85",
@@ -398,111 +400,6 @@
     "weekValuesByMonth": {}
   },
   {
-    "id": "a4f26493-b287-44b4-876e-ed9d7a575f85",
-    "engineerName": "m.suleyman",
-    "projectCode": "PBS25005",
-    "projectName": "City of Hope - Helford Special Procedure Room",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "fdc56ae3-a60b-485a-93f8-92a9b10d3348",
-    "engineerName": "m.suleyman",
-    "projectCode": "CE25001",
-    "projectName": "ECY - EV Infrastructure",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "17ce0a51-fba6-44f8-a490-096e2bdae6b0",
-    "engineerName": "m.suleyman",
-    "projectCode": "AET25001",
-    "projectName": "Issaquah Transportation Bus Charging",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "6012c569-6c64-4898-9269-e433c99e14bf",
-    "engineerName": "m.suleyman",
-    "projectCode": "AG25001",
-    "projectName": "Yermo School's New Gym",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "63634208-5e6d-4132-b24f-0cf3588c7d56",
-    "engineerName": "m.suleyman",
-    "projectCode": "SECO25001",
-    "projectName": "City of Burlington - WWTP Influent & Effluent PS Upgrades",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "874175ad-0978-4ae8-ac5f-e78d50f6ab41",
-    "engineerName": "m.suleyman",
-    "projectCode": "SBE25010",
-    "projectName": "UCD Campus Outdoor Security",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "b410f43d-e69d-4efa-9764-76655add3623",
-    "engineerName": "m.suleyman",
-    "projectCode": "BVE25002",
-    "projectName": "Al Tahoe/Bayview Well Rehab & Emergency Power",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "835b85f4-f293-452b-8b71-b674cd61fc5d",
-    "engineerName": "m.suleyman",
-    "projectCode": "BVE25003",
-    "projectName": "UC Davis Electrical Panel Replacement - Jungerman hall, Mann laboratory, Sprocket building, Voorhies hall, Young hall",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "acb66007-c3e7-453d-b360-4740111478a2",
-    "engineerName": "m.suleyman",
-    "projectCode": "PBS25005.1",
-    "projectName": "City of Hope - Helford Special Procedure Room CO#1",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "e0e9d44b-1056-4b80-8686-2406259ccfaf",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002",
-    "projectName": "PR Distribution Project",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "68866d96-ce86-4681-9ade-829a47356dfb",
-    "engineerName": "m.suleyman",
-    "projectCode": "BDE25004",
-    "projectName": "PSS Longview ISD Multi Purpose Facility",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "837ed6af-c876-4b37-80d2-44932f9bac9e",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002.1",
-    "projectName": "PR DISTRIBUTION ETAP TO SKM",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "0312120e-a423-4eb8-bc67-b3da33c3e8c0",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002.3",
-    "projectName": "PR DISTRIBUTION PROJECT CO#3",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "b44d18bc-0df4-4277-ac0b-a8db22eb3a22",
-    "engineerName": "m.suleyman",
-    "projectCode": "ERE26001",
-    "projectName": "Fire Station 52 - Comal County ESD 3",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "fbd2cbc9-c4e1-4b3a-98ea-b7453670138b",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25001",
-    "projectName": "Texas Medical Center (TMC) Transit Center Opportunity",
-    "weekValuesByMonth": {}
-  },
-  {
     "id": "6d25a8a5-f783-4708-8cfb-4c1f397a11d2",
     "engineerName": "Wareesha Azwar",
     "projectCode": "PCLIS24001",
@@ -513,7 +410,7 @@
     "id": "5a9c4619-f4a0-4d84-93ed-62ca5f5c1f92",
     "engineerName": "Wareesha Azwar",
     "projectCode": "HBH24003",
-    "projectName": "DOW SCO",
+    "projectName": "DOW SCO SECOND PASS",
     "weekValuesByMonth": {}
   },
   {
@@ -534,7 +431,7 @@
     "id": "79f6d6b6-c000-4846-801a-31765dbd3a92",
     "engineerName": "Wareesha Azwar",
     "projectCode": "BIE25001",
-    "projectName": "Oroville WWTP Upgrade",
+    "projectName": "Oroville WWTP",
     "weekValuesByMonth": {}
   },
   {
@@ -1040,14 +937,22 @@
     "engineerName": "Areeb",
     "projectCode": "ATS26013",
     "projectName": "CFA Easton Park - MDP Panel",
-    "weekValuesByMonth": {}
+    "weekValuesByMonth": {
+      "2026-08": {
+        "3": "8"
+      }
+    }
   },
   {
     "id": "eda15717-74a2-4b6a-80de-c72c237cca2a",
     "engineerName": "Areeb",
     "projectCode": "ATS26015",
     "projectName": "TxDPS Law Academy & Training Facility",
-    "weekValuesByMonth": {}
+    "weekValuesByMonth": {
+      "2026-08": {
+        "3": ""
+      }
+    }
   },
   {
     "id": "f288427e-0db6-4be0-8ffe-6a64fca6d388",
@@ -1953,258 +1858,6 @@
     "weekValuesByMonth": {}
   },
   {
-    "id": "cfae373f-7964-49cc-b0ae-33606904ae73",
-    "engineerName": "m.suleyman",
-    "projectCode": "ALX25006",
-    "projectName": "Neher McGrath Study Comprehensive Learning",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "a9db5447-ad35-4b83-82e8-330c570d48eb",
-    "engineerName": "m.suleyman",
-    "projectCode": "APE26001",
-    "projectName": "High Island ISD Construction of New K-12th School & Gym",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "49922098-ca23-4d89-a148-3cb773d43197",
-    "engineerName": "m.suleyman",
-    "projectCode": "ATS25007",
-    "projectName": "Old Settlers Park - 3 Sites",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "84c9f28d-1518-4dd9-bc7a-36768ec3e278",
-    "engineerName": "m.suleyman",
-    "projectCode": "ATS25010",
-    "projectName": "Sprouts Farmers Market - New Braunfels",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "7ea26ba5-7ea8-4d12-a1da-f4171d459f44",
-    "engineerName": "m.suleyman",
-    "projectCode": "ATS26015",
-    "projectName": "TxDPS Law Academy & Training Facility",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "8139dd1a-4ced-4bb3-871c-3eadd972a6ee",
-    "engineerName": "m.suleyman",
-    "projectCode": "BDE25004- PSS Longview ISD Multi Purpose Facility",
-    "projectName": "BDE25004- PSS Longview ISD Multi Purpose Facility",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "1381ac24-3050-4dfe-95be-8ec9225f2bef",
-    "engineerName": "m.suleyman",
-    "projectCode": "BVE25003.1",
-    "projectName": "UC Davis Electrical Panel Replacement - Young hall CO#1",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "24d621de-b8b9-4504-a820-df671d7aea30",
-    "engineerName": "m.suleyman",
-    "projectCode": "CDI26002",
-    "projectName": "Canadian Solar Dallas",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "729a66e4-97fd-462a-bfa9-17b9b03dd592",
-    "engineerName": "m.suleyman",
-    "projectCode": "CESC25002",
-    "projectName": "TCC Woodland Industrial Park",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "926f4a50-15ac-43a1-b148-397d43768602",
-    "engineerName": "m.suleyman",
-    "projectCode": "Customer Focus Training",
-    "projectName": "Customer Focus Training",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "29866cc7-e561-4038-83aa-003708a61844",
-    "engineerName": "m.suleyman",
-    "projectCode": "EPS25003",
-    "projectName": "EPS Horizon Nuts",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "7d0749de-c2d4-4d59-975c-6180e349cba4",
-    "engineerName": "m.suleyman",
-    "projectCode": "EPS25009",
-    "projectName": "City of Clovis PUMP STATION E ARC FLASH STUDY",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "46aad982-7f8c-4aa8-88c9-281415a702ca",
-    "engineerName": "m.suleyman",
-    "projectCode": "ESR24241.1",
-    "projectName": "Auburn Infrastructure Upgrades",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "ee0818ab-c980-44db-b09a-4d0b52cbb8ff",
-    "engineerName": "m.suleyman",
-    "projectCode": "ETAP/SKM Project Assessment",
-    "projectName": "ETAP/SKM Project Assessment",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "f237f7af-6da2-43e3-bce4-9a98c39edd2d",
-    "engineerName": "m.suleyman",
-    "projectCode": "FBE24001",
-    "projectName": "Main Plant Electrical Systems Improvements (Sausalito)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "159fae85-7c9d-43ec-be0f-282f4497b8e8",
-    "engineerName": "m.suleyman",
-    "projectCode": "Halfday",
-    "projectName": "Halfday",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "cf8a2d17-253d-4479-b598-9735cd6e793b",
-    "engineerName": "m.suleyman",
-    "projectCode": "HE26003.2",
-    "projectName": "EED Schick Schadel SCCAF Study CO#2",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "8f4c5b96-1dcf-4b22-b60f-17702d3cc01d",
-    "engineerName": "m.suleyman",
-    "projectCode": "HE26005",
-    "projectName": "Zones Auburn",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "a44b4583-7ada-4377-b324-b82736c77a2d",
-    "engineerName": "m.suleyman",
-    "projectCode": "Internal Engineering Support (M Sulaiman)",
-    "projectName": "Internal Engineering Support (M Sulaiman)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "b0450981-f108-426d-8feb-fbc0cf2a5c65",
-    "engineerName": "m.suleyman",
-    "projectCode": "Internal Training/ Self Development",
-    "projectName": "Internal Training/ Self Development",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "ad13f3ab-ce68-42cc-9a15-0a47e9620517",
-    "engineerName": "m.suleyman",
-    "projectCode": "Kaiser Medical Center (Anaheim & Irvine)",
-    "projectName": "Panel 1CSH Addition",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "2ae79c88-8611-4fe3-9d0c-eb75251d7df1",
-    "engineerName": "m.suleyman",
-    "projectCode": "Meeting / Sessions with Abdur",
-    "projectName": "Meeting / Sessions with Abdur",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "7cd5e924-3e02-4bc6-8515-5ad36fe5f609",
-    "engineerName": "m.suleyman",
-    "projectCode": "Meeting with Zulfiqar",
-    "projectName": "Meeting with Zulfiqar",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "daec638c-a6f6-4d15-b267-3c1b16576f58",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002.1 PR DISTRIBUTION ETAP TO SKM",
-    "projectName": "MESC25002.1 PR DISTRIBUTION ETAP TO SKM",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "ac0b7c2a-4a8e-4231-a64e-3881b5136fde",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002.2 PR DISTRIBUTION PROJECT CO#2",
-    "projectName": "MESC25002.2 PR DISTRIBUTION PROJECT CO#2",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "686511fe-53b3-49ff-a09c-55095e0c7acb",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002.3 PR DISTRIBUTION PROJECT CO#3",
-    "projectName": "MESC25002.3 PR DISTRIBUTION PROJECT CO#3",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "22fc9e12-552d-4f89-97ad-2f64846c5151",
-    "engineerName": "m.suleyman",
-    "projectCode": "Paid Time Off (PTO)",
-    "projectName": "Paid Time Off (PTO)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "c7be794e-4b74-4f70-a307-803e82527239",
-    "engineerName": "m.suleyman",
-    "projectCode": "Planned Overhead",
-    "projectName": "Planned Overhead",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "705547bc-5be8-438f-8cd8-512c8bf7f1f4",
-    "engineerName": "m.suleyman",
-    "projectCode": "Public Holiday",
-    "projectName": "Public Holiday",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "a26855e6-2a4d-4d56-ae77-a32e81ce916b",
-    "engineerName": "m.suleyman",
-    "projectCode": "SBE25010.1",
-    "projectName": "UCD Campus Outdoor Security CO#1",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "fd9bf06d-1da6-488c-ada0-9ce23750f89a",
-    "engineerName": "m.suleyman",
-    "projectCode": "SEC26006",
-    "projectName": "PSS DWS5 Phase 1E - Everett, WA",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "5a85930b-6658-45a0-b0bd-c93ff08d8889",
-    "engineerName": "m.suleyman",
-    "projectCode": "Self Learning (DO NOT USE)",
-    "projectName": "Self Learning (DO NOT USE)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "bc69e3d3-9b15-4db2-8f65-3dff8c58434a",
-    "engineerName": "m.suleyman",
-    "projectCode": "TMC25002",
-    "projectName": "Hutto South WWTP Influent Lift Station",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "2741c140-19f8-4240-b6b0-b2f152f513d4",
-    "engineerName": "m.suleyman",
-    "projectCode": "Unpaid Time Off (UPTO)",
-    "projectName": "Unpaid Time Off (UPTO)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "42233358-5ad2-4f99-a167-8e4d80a62ab0",
-    "engineerName": "m.suleyman",
-    "projectCode": "Unplanned Overhead",
-    "projectName": "Unplanned Overhead",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "3c3f3cfb-60ad-4c99-8213-c03aba762e45",
-    "engineerName": "m.suleyman",
-    "projectCode": "VEG25001",
-    "projectName": "NTS Compactor Replacement",
-    "weekValuesByMonth": {}
-  },
-  {
     "id": "e05cf2ea-9864-4734-a7f8-a4b0df9fb416",
     "engineerName": "mustafa.abdullah",
     "projectCode": "AE25001",
@@ -2996,118 +2649,6 @@
     "weekValuesByMonth": {}
   },
   {
-    "id": "d9e88e50-df23-4558-b8e7-c8204eeeb21f",
-    "engineerName": "m.suleyman",
-    "projectCode": "BDE25004-",
-    "projectName": "PSS Longview ISD Multi Purpose Facility",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "ebeefb72-e690-45ac-a531-ee7bc86cecf5",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Customer Focus Training",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "6b29e523-ab24-4849-ac66-8d711dd58095",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "ETAP/SKM Project Assessment",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "ebb37eee-112c-437a-b28f-f92f4eb47d70",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Halfday",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "95f0058f-597d-4639-b95f-3c8f26070b4c",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Internal Engineering Support (M Sulaiman)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "3db4d685-71a4-4390-b17e-e7089bdebbdc",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Internal Training/ Self Development",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "fe45a75f-f6fa-44c3-b0ee-fd0c852d72e2",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Kaiser Medical Center (Anaheim & Irvine) - Panel 1CSH Addition",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "f1e59119-580a-4c2e-9c73-53253badf889",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Meeting / Sessions with Abdur",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "0029ac85-b85b-4940-b314-5baf2e7fdf4d",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Meeting with Zulfiqar",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "9ab00c53-3d38-4a97-a0de-0778364be809",
-    "engineerName": "m.suleyman",
-    "projectCode": "MESC25002.2",
-    "projectName": "PR DISTRIBUTION PROJECT CO#2",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "08572b0b-f28b-4570-8534-589c78043c34",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Paid Time Off (PTO)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "3637265a-1db2-4a2f-bf02-ae1c8025787f",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Planned Overhead",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "f6d81bcc-24c5-4359-9120-03ac378d32af",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Public Holiday",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "d77952b8-5555-4fb4-82d2-101d25ccd1b7",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Self Learning (DO NOT USE)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "dd24b87f-9ca5-4e4b-8214-dcbbf6e0e3ba",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Unpaid Time Off (UPTO)",
-    "weekValuesByMonth": {}
-  },
-  {
-    "id": "30a12072-4825-40b7-802e-21897055990d",
-    "engineerName": "m.suleyman",
-    "projectCode": "—",
-    "projectName": "Unplanned Overhead",
-    "weekValuesByMonth": {}
-  },
-  {
     "id": "573a31f5-4f7d-4a6c-a2bf-8fec17e7302b",
     "engineerName": "irsa.sarfaraz",
     "projectCode": "—",
@@ -3495,6 +3036,1140 @@
   {
     "id": "b34c386c-13da-47bf-9782-9ba843fbe847",
     "engineerName": "zain.abideen",
+    "projectCode": "—",
+    "projectName": "Unplanned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4482beb0-8e7b-42ca-8109-d0fc27693e43",
+    "engineerName": "irsa.sarfaraz",
+    "projectCode": "VPE26001",
+    "projectName": "EV Program Upgrade - LWIT",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ddf689f1-e9d9-41cd-b0e1-9991d84e481c",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "BDE25004-",
+    "projectName": "PSS Longview ISD Multi Purpose Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "79a828af-98d3-46a6-8125-2b72af0376f0",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Customer Focus Training",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0787c420-8810-45d4-ba12-27a4a7091e51",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "EPS Assignment",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "33595351-a8aa-4bc6-8013-d195fb603990",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "FEI25005-Folsom",
+    "projectName": "Heights Development Water Booster Pump Station",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "dcc16988-4ecd-4fa6-bcd2-91cf803ea056",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Halfday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "2292e101-3e94-468f-a064-3ed26cfca46e",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "HE25003",
+    "projectName": "EED SCHICK SHADLE SCCAF STUDY CO#1",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b0a0c096-3786-4fbc-9c2c-8be3139b9ea5",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Internal Engineering Support (Mustafa)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4fb2d7e6-3924-4dfc-a2a9-958ce7ace4b8",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Internal Training/ Self Development",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "9e095fdc-1898-4b72-9588-cb90e0fbeff1",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Meeting (DO NOT USE)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "87b37ff6-4644-4ce2-a764-a2aadf484032",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Meeting / Sessions with Abdur",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c7743708-6e64-476c-bbe0-4a51358ec71b",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "MESC25002.1",
+    "projectName": "PR DISTRIBUTION ETAP TO SKM",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4b041483-34b9-43e2-87b6-092f1616af9a",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Paid Time Off (PTO)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "17896c25-b07b-49d8-a48e-6f8e857a4002",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Planned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "9c38fef6-6f50-456f-b8ff-804ba2f6ce81",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Public Holiday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0fa3955e-0545-422c-8147-870bf18568a4",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Self Learning (DO NOT USE)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "a11b2243-78b5-43c6-9c72-c214a791882d",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Teaching/Training/Peer Engr. Support",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "878282c4-d6d2-4481-8b1e-55b4466970c8",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Testing Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "af56d55c-04be-4b2d-bd03-cb02db999ff5",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Unplanned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "14440c7b-ba2d-4a44-b4e1-2d2f7c655050",
+    "engineerName": "mustafa.abdullah",
+    "projectCode": "—",
+    "projectName": "Zone 3 Booster Pump Improvements - City of Cle Elum",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "3611e698-b019-4993-b528-c86ad95f1b44",
+    "engineerName": "Areeb",
+    "projectCode": "CLE26002",
+    "projectName": "Amazon LAX 48",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "54232bff-e52a-409a-a3bc-df7ee1778c8f",
+    "engineerName": "Areeb",
+    "projectCode": "JEC26002",
+    "projectName": "Frisco Downtown Plaza",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "5cf60836-d38d-4899-b41a-bcddd08a7e9e",
+    "engineerName": "Areeb",
+    "projectCode": "NC26005",
+    "projectName": "LIGO - CEBEX Laboratory",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8965d29d-afa4-4fec-b916-12b38c9b583d",
+    "engineerName": "Areeb",
+    "projectCode": "PBS26006",
+    "projectName": "Kaiser Medical Center (Anaheim & Irvine) - Panel 1CSH Addition",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "efe69c7f-b0ac-4f34-a0c7-92f3e1f802cd",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "ALX Internal Investment Projects (Wareesha)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "35b27788-6a23-447c-9bf2-8f70260ce1fd",
+    "engineerName": "nawab.naveed",
+    "projectCode": "BDE25004-",
+    "projectName": "PSS Longview ISD Multi Purpose Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "e3f47625-fffd-4e41-83a4-dd01b9886e47",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Internal Engineering Support (Nawab)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "05efb490-f1cf-4526-8d55-53cbe0534d1b",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Internal Training/ Self Development",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "5c9c0f6a-4ab8-4674-93e1-a9d378d0e93a",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Meeting with Zulfiqar",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c51d9dca-6a93-4e40-8034-e0390e7fea3f",
+    "engineerName": "nawab.naveed",
+    "projectCode": "MESC25002.3",
+    "projectName": "PR DISTRIBUTION PROJECT CO#3",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b4ef9f5a-8628-4479-87d3-481825668d41",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Paid Time Off (PTO)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "9448cf0a-9d47-4657-afa7-6f3bc6883a31",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Planned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8c1c5054-3234-442f-8477-481f1a6c6833",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Public Holiday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b48173a2-365e-4e74-a4ee-5cea00d9e917",
+    "engineerName": "nawab.naveed",
+    "projectCode": "—",
+    "projectName": "Unplanned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4e1d0358-254b-42e2-9407-f1cbcf32360a",
+    "engineerName": "irsa.sarfaraz",
+    "projectCode": "MEIC26001",
+    "projectName": "Nordstrom Rack At Las Tiendas - McAllen",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "81ff0223-fe6e-4498-9023-b093ea8e6220",
+    "engineerName": "irsa.sarfaraz",
+    "projectCode": "PBS26006",
+    "projectName": "Kaiser Medical Center (Anaheim & Irvine) - Panel 1CSH Addition",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "25b15955-5a7e-4e0e-a99c-44fb9c5326a2",
+    "engineerName": "zahir.hussain",
+    "projectCode": "BBIE26001",
+    "projectName": "Lift Station 6 Rehabilitation - City of Lacey",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "33f9753a-d6e2-4f2d-85bd-b95ca23bd795",
+    "engineerName": "zahir.hussain",
+    "projectCode": "HE26005",
+    "projectName": "Zones Auburn",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6b9ac799-7412-4a2c-bb30-4f44287190df",
+    "engineerName": "zahir.hussain",
+    "projectCode": "PBS26006",
+    "projectName": "Kaiser Medical Center (Anaheim & Irvine) - Panel 1CSH Addition",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "1c3e2fab-ecd0-4c68-b595-ce9a58fd0a58",
+    "engineerName": "zahir.hussain",
+    "projectCode": "STE26001",
+    "projectName": "Entegris Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6d767b98-4a5e-41cb-bce7-8be50681efb4",
+    "engineerName": "zain.abideen",
+    "projectCode": "BBIE26001",
+    "projectName": "Lift Station 6 Rehabilitation - City of Lacey",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "231f8dbb-398e-47af-8224-e2d489ca07ca",
+    "engineerName": "zain.abideen",
+    "projectCode": "GPS26007",
+    "projectName": "Irvine Valley College - Arts Promenade and Coffee Structure",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "d3473d62-f96e-453b-a8eb-9837f5357c06",
+    "engineerName": "zain.abideen",
+    "projectCode": "JEC26002",
+    "projectName": "Frisco Downtown Plaza",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4d7a489d-873b-4d01-8c79-712efecddf77",
+    "engineerName": "zain.abideen",
+    "projectCode": "PBS26006",
+    "projectName": "Kaiser Medical Center (Anaheim & Irvine) - Panel 1CSH Addition",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "cb863a49-394c-4103-b2c3-12f7cae5b182",
+    "engineerName": "zain.abideen",
+    "projectCode": "STE26001",
+    "projectName": "Entegris Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ea4836e9-c6a1-441c-af16-26d9d94fb5f0",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "AG25001",
+    "projectName": "Yermo School's New Gym",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ceb5c9b2-cbc2-4df6-b3c2-02542d9408ac",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "ALX Internal Investment Projects (Wareesha)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "838eb6b1-8ebe-4d0e-9612-76c365093767",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ALX23001.3",
+    "projectName": "Guide for reviewing submittal documents to determine AIC Rating for Switchgear, Switchboards, and Panelboards",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "45fcd9c7-f7f1-40f5-ad48-26f386cb1105",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ALX24005.2",
+    "projectName": "Review SCCSAF latest report template for Recommendations, Language Errors and Update",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "5f43bebe-7eea-4a0a-bd4b-c599be4b34aa",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "APB26001",
+    "projectName": "Island Transit Coupville Base",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c9aad9db-de27-4d4d-ada8-6824da445e64",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "APE26001",
+    "projectName": "High Island ISD Construction of New K-12th School & Gym",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "592bc308-c71f-4bc0-b760-d5a1f34594f9",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS25008.2-AMD",
+    "projectName": "BUILDING D CO#2",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "96570e3a-8a9c-4a23-8cde-60d7ef14f83b",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS25008.3-AMD",
+    "projectName": "BUILDING D CO#3",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c5135d26-bde0-40c6-8542-065a52ea5873",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS25009",
+    "projectName": "Seton Medical Center Austin Electrical Infrastructure",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "f6ede1b9-f97d-436d-8440-f0d846a935a0",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS26008.1",
+    "projectName": "AMD Building D (Change Order #1)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "03c217a3-40e3-4ab2-ac2c-3f63d29eef46",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS26008.5",
+    "projectName": "AMD Building D (Change Order #5)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "a2441626-261c-43b1-b4fe-cfdd9b1cab0d",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS26008.6",
+    "projectName": "AMD Building D Rev 1 (Change Order #6)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "934d0911-3b29-408b-9716-8ed0e2a943a2",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ATS26015",
+    "projectName": "TxDPS Law Academy & Training Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b63cce8e-0d35-4eeb-9742-5b1e0ac9dd30",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "BBE22002",
+    "projectName": "River Road",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "32331809-e763-4d09-9eb7-bb039281f56f",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "BE25001",
+    "projectName": "SH 6 Pump Station Standby Generator",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ffa51e45-1965-4c14-b49b-fd09450ee71b",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "BEI26001",
+    "projectName": "Cart Wash Replacement - CCRMC",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "03389bae-bb51-4fa9-8e33-69358eabc33d",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "BES25001",
+    "projectName": "City of Lacey S-10 Generator",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "80d2dd31-9c75-42e9-aa65-24beee0fb43a",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "BES25002",
+    "projectName": "City of Lacey - Lift Station 9 Improvements",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "76cf2a5f-d783-4502-9ced-8cf8634127bb",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CDI25001",
+    "projectName": "Canadian Solar Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "aad2c82f-74a5-46ff-836f-d7c4a5d9a0d2",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CDI26002",
+    "projectName": "Canadian Solar Dallas",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8cbfdcbb-3c05-495c-8905-da18a2f6f8fb",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CECI26001",
+    "projectName": "White Oaks Elementary School HVAC Upgrades - San Carlos",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "7af261ab-b460-4b56-a17e-ea0d2f15d728",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CESC25001",
+    "projectName": "Eddyville Fire Station Gear",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c63c3521-712e-4fe0-bc78-6a6b5ee66df7",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CJFE25001",
+    "projectName": "Modesto Library Tenant Improvements",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "504a55c5-af99-487c-8c77-f0a90d599243",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Competency Development: EMTP/ATP",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "97a5c101-96b8-4d01-86c4-465eef4c7a46",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CPE25004",
+    "projectName": "OCH Catheterization Lab",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "bcda9599-bc8f-438c-b706-7cb2b210c238",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CPE25004.1",
+    "projectName": "OCH Catheterization Lab",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ee48a590-9920-44f2-8762-cbe8132da27c",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CPE25004.2",
+    "projectName": "OCH Catheterization Lab CO#2",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "518adb41-02cf-4a4a-a8b3-291b375bdc0e",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CSEC25001",
+    "projectName": "Industrial Wastewater Treatment Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "693f0ca5-efc3-4aed-b3fb-b65a884d842d",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "CSEC26002",
+    "projectName": "Heatherwood & Heather Gardens PS Rehabilitation",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c2b8caa1-e808-4a35-b8f0-7fbe39435d1e",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Customer Focus Training",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "7f70d0a6-8006-4698-aad3-fc6a9b275b1e",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "DE24001",
+    "projectName": "Kimble Creek Lift Station Improvements",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "cadec259-1669-40f0-a7a3-1ca8b46c21d4",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "EPS Team Training Support By ALX",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8124e39b-9799-436a-9482-04584e803867",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "EPS25002",
+    "projectName": "Taylor Farms",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "630cacf1-5574-4069-b241-b746b8ca9c66",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "EPS25005",
+    "projectName": "Horizon Nuts Lost Hills",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6bcb94a3-3b08-4596-a22f-270f4c4ca3a9",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "EPS25009",
+    "projectName": "City of Clovis PUMP STATION E ARC FLASH STUDY",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "96cee43c-c320-4263-b057-7e097aea195d",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ESR23189",
+    "projectName": "SFO-060",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "fd82fc99-9c0b-4606-8591-f8b9e1b4fca7",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ESR23206.1",
+    "projectName": "DCDA Solids Bldg.",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "a721f19a-c360-494d-93a1-80d6aa9a68f6",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "ESR23221",
+    "projectName": "WWTP Near Term Tertiary Treatment Improvements",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0cbe034c-2d34-4e94-997c-777adffc74b7",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "ETAP/SKM Project Training",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "1e141067-e0f6-4307-a2a3-3a982e976a4c",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "FBE24001",
+    "projectName": "Main Plant Electrical Systems Improvements (Sausalito)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "126fa2b0-732d-45e8-8a02-81516cb9aac8",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "FEI26006",
+    "projectName": "Moccasin WTFS Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "e3e9905a-41ca-404b-be3c-599d5cc69640",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "FES25001",
+    "projectName": "Crest Pump Station",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "9eafbb08-f367-4131-a24c-260eaa64f64a",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "GPS26003",
+    "projectName": "Pepperdine University - Mountain (Relay Config)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "5ca743cc-02b6-4504-bcd1-61c7d694aa54",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "GPS26004",
+    "projectName": "West LA-VA Medical Center - New Boiler Plant (Relay Config)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6033987d-7bb9-4ea3-95cf-95c768a6c8b6",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Halfday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "3f91541f-5324-4611-ae5f-fb2bea7ea4ee",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "HE25001",
+    "projectName": "Swire Coca Cola Bellevue Restudy",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "9973c0b9-684c-425c-9bf6-87bc7d3ef4e9",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "HTE25001",
+    "projectName": "CDA Well I-11",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "76091b4b-f4a0-4468-89e6-f6ae7042611a",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Internal Engineering Support (Wareesha)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "22e13893-4785-4023-a692-7d1094fecb27",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Internal Training/ Self Development",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ea21e035-7b06-4dec-8d77-c274a4cdeb5b",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "K&K25002 - Relay Configs Hamilton City Pumping Station",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0201385f-1885-436f-9349-91e4e1f7ee3b",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "MBE26005",
+    "projectName": "Dom 4 Lift Station MCC and CP Replacement Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "66f2e9b9-b11b-45eb-b129-196418d72885",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Meeting / Sessions with Abdur",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c949b8b8-7f0c-4de1-82be-666c386800e1",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Meeting with Zulfiqar",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b5af6db6-fea2-47a3-886b-4f43f28e657c",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "MMI25003",
+    "projectName": "Friendswood LS Mitigation Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "32de8954-3921-478c-b8eb-b7f12b49baa0",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "MMI25004",
+    "projectName": "NW Metro BOF Replacement of ATS & Switch Board",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "5b7831f9-a902-4ed7-93d6-fb2db657e689",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "MMI26005",
+    "projectName": "TJJD Evins Generator Improvements - ERJC",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "f85c70fc-e589-4e5c-98e6-b00a3a3acc09",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "NC26005",
+    "projectName": "LIGO - CEBEX Laboratory",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "afb1205a-eeed-4103-8e19-82b21d3ce9cf",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "OEI26002",
+    "projectName": "West Main Tower Vulcan Arc Flash",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "43150f87-acb4-4f65-8176-feb9ff8b7116",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Paid Time Off (PTO)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "722b1fe0-3879-4ede-b75e-286da3e9623a",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "PBS25005",
+    "projectName": "City of Hope - Helford Special Procedure Room",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b4047164-9920-4eba-9c94-499a12e86029",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "PCLIS24001.2",
+    "projectName": "PHX 72 Neher McGrath Study for MV Duct Banks + LV",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "e6b6af69-47d8-47c5-a14a-6e0a359554e7",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "PDI25001-10MW",
+    "projectName": "ALBQ Data Center Neher McGrath Study",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "a157a393-fa5c-4ad8-8ac1-cbc08e20e0d9",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Planned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "3b801de3-d052-4a39-886e-02208d277a63",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "PRE25003",
+    "projectName": "325 Eastlake",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "7dea6cb4-94d6-4ba0-85bd-5246b7d3136c",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "PRE26004",
+    "projectName": "Skywalker Phase 3.4A",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c3a77bc1-f4e2-4dd7-858c-8c7881c772da",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "PRE26005",
+    "projectName": "West Coast Grocery Co - IRGRA",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4084932b-6294-40b4-a7c5-cef39590360b",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Project Management Overview",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4e0d7285-be9b-4886-bec0-f44df7511a5d",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Public Holiday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "aa642a04-0ffd-4e49-88d4-48b74aca1f6b",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SCCE24001.1",
+    "projectName": "Bayshore, Ravenwood MS, Roseville Galleria Bus Charging & Los Robles",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "612c6703-0336-442c-acc3-b55087590302",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SCCE25002",
+    "projectName": "Linear Park improvements",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "a2801c24-65b7-4376-8088-9f603d273f0f",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SCCE26007",
+    "projectName": "Walnut Grove Elementary School TK Building - PUSD",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6ff40c42-6800-4394-b763-0bd04a7906a2",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SEC26002",
+    "projectName": "Corporate Tenant Improvement - Phase 3",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b21ef074-c301-418e-a76b-57ff7f9f06a9",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SECO25001",
+    "projectName": "City of Burlington - WWTP Influent & Effluent PS Upgrades",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4b7e11cf-4889-41c5-a51c-b4dee91e0a0f",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Self Learning (DO NOT USE)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4bccb298-367c-44b2-9dde-6a1d5279af9f",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SIS26001",
+    "projectName": "Project LAYLA",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "c2b7b6f5-1d7b-4773-83aa-38e6c17036c0",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "SMEP25001",
+    "projectName": "Haley Canopy ZEV Infrastructure Improvements Power System Studies",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "086f8583-a8b7-45ef-a4dc-62cfb4076dd6",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "TCE25001",
+    "projectName": "Simplot Rainier",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "ae3b1189-b9cf-4ab3-87d0-87fe72293923",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Teaching/Training/Peer Engr. Support",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8e63c766-86cf-40a4-85cf-21440196a182",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "TMC25001",
+    "projectName": "Walnut Creek WWTP PTC Tower Crane Power Supply",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "9321c03e-8854-4b63-b6f8-e8225e047bd6",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "TMC25002",
+    "projectName": "Hutto South WWTP Influent Lift Station",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "1edda01c-b978-4c3a-b721-dada6907644c",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "Unplanned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "5c077ad4-5b20-42ec-b792-f38622c2b8b5",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "VEG25002",
+    "projectName": "City of Lacey - LS 3 Replacement",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "037ce259-7458-473b-acd1-ec1f760e7516",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "VEG25003",
+    "projectName": "Country Place PFAS Treatment- Lakewood Water District",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "fa4d9b58-15e9-4c31-b2d7-3343d3429427",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "VEG25003.1",
+    "projectName": "Country Place PFAS Treatment Project - Lakewood Water District",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0f85bffe-530e-4821-ada4-86d274be7247",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "VPE26001",
+    "projectName": "EV Program Upgrade - LWIT",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8d0bb275-5451-44a9-94e0-1a66954dde8a",
+    "engineerName": "Wareesha Azwar",
+    "projectCode": "—",
+    "projectName": "ALX Internal Investment Project",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b172744e-0766-4238-89aa-262ca7366c0e",
+    "engineerName": "nawab.naveed",
+    "projectCode": "ATS26016.1",
+    "projectName": "Wesco Generator CO#1",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "098e0610-0cf6-4bf0-b6dc-7a4252442b22",
+    "engineerName": "Areeb",
+    "projectCode": "BDE25004-",
+    "projectName": "PSS Longview ISD Multi Purpose Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "230ea4d1-f3e2-488f-8de6-b083d5fdef9e",
+    "engineerName": "zahir.hussain",
+    "projectCode": "CEDTC26003",
+    "projectName": "WWTP Administration Building City of Wenatchee",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "dc8b22f7-bf9c-4063-a294-eb2fa8c09f8e",
+    "engineerName": "m.sulaiman",
+    "projectCode": "AG25001",
+    "projectName": "Yermo School's New Gym",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0bb2c443-efc0-4b17-aee5-4173b6a414f8",
+    "engineerName": "m.sulaiman",
+    "projectCode": "APE26001",
+    "projectName": "High Island ISD Construction of New K-12th School & Gym",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "d796acfd-c19b-456f-b77d-cd77f3296795",
+    "engineerName": "m.sulaiman",
+    "projectCode": "ATS26015",
+    "projectName": "TxDPS Law Academy & Training Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "f9841693-126d-4af8-b44a-5fec201fac7e",
+    "engineerName": "m.sulaiman",
+    "projectCode": "BDE25004-",
+    "projectName": "PSS Longview ISD Multi Purpose Facility",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "0545ada1-fb67-4f80-8a7d-cc1f77127b51",
+    "engineerName": "m.sulaiman",
+    "projectCode": "BVE25002",
+    "projectName": "Al Tahoe/Bayview Well Rehab & Emergency Power",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b6caa91c-c2a5-4107-8e7b-f4e6a6c05916",
+    "engineerName": "m.sulaiman",
+    "projectCode": "BVE25003",
+    "projectName": "UC Davis Electrical Panel Replacement - Jungerman hall, Mann laboratory, Sprocket building, Voorhies hall, Young hall",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "4ec2b3e4-50d0-4612-a3a9-bd026e17bef4",
+    "engineerName": "m.sulaiman",
+    "projectCode": "BVE25003.1",
+    "projectName": "UC Davis Electrical Panel Replacement - Young hall CO#1",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b726a64f-0a51-4b86-8bd3-de4b9c336e7d",
+    "engineerName": "m.sulaiman",
+    "projectCode": "CDI26002",
+    "projectName": "Canadian Solar Dallas",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6f257d4a-ffa3-4233-b25d-68d3a4ad48f8",
+    "engineerName": "m.sulaiman",
+    "projectCode": "EPS25009",
+    "projectName": "City of Clovis PUMP STATION E ARC FLASH STUDY",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "b974ea9c-a3bc-4e70-8200-9922e6f91255",
+    "engineerName": "m.sulaiman",
+    "projectCode": "ERE26001",
+    "projectName": "Fire Station 52 - Comal County ESD 3",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "3809aa26-77e6-458f-93ee-27c36df6452f",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Halfday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "a3e8f1ab-d761-43ae-8e4c-fed029a82a0a",
+    "engineerName": "m.sulaiman",
+    "projectCode": "HE26003.2",
+    "projectName": "EED Schick Schadel SCCAF Study CO#2",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "d13c0692-2222-46dc-a42c-98b42afa987c",
+    "engineerName": "m.sulaiman",
+    "projectCode": "HE26005",
+    "projectName": "Zones Auburn",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "943d14ab-52d1-4fb2-80c0-1cc92362b971",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Internal Engineering Support (M Sulaiman)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "eb67a3fd-d566-4f2b-8c07-3273ac4f8141",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Kaiser Medical Center (Anaheim & Irvine) - Panel 1CSH Addition",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "e18ab210-ee86-4d62-91fb-2168881d32aa",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Meeting / Sessions with Abdur",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "d3cf5270-f1c5-41d5-b510-469d0df3b831",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Meeting with Zulfiqar",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "2c3d260f-0b5f-4ad8-b899-8af52f45fa81",
+    "engineerName": "m.sulaiman",
+    "projectCode": "MESC25002.1",
+    "projectName": "PR DISTRIBUTION ETAP TO SKM",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "2aa47abe-f297-4fb2-99df-81cdb3f421cd",
+    "engineerName": "m.sulaiman",
+    "projectCode": "MESC25002.2",
+    "projectName": "PR DISTRIBUTION PROJECT CO#2",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "6a141ce7-1fe4-4f44-84ec-c5b53dccba9a",
+    "engineerName": "m.sulaiman",
+    "projectCode": "MESC25002.3",
+    "projectName": "PR DISTRIBUTION PROJECT CO#3",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "fe96840e-6577-42da-a1be-1d1831a9d568",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Paid Time Off (PTO)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "23d2d1b3-8e4b-4d58-80a4-241ff1312086",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Planned Overhead",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "afdcc34d-2cfe-4468-acd8-af050cced6b3",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Public Holiday",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "db5640c1-b3e4-47c0-9a7a-c765fdfa2dd2",
+    "engineerName": "m.sulaiman",
+    "projectCode": "SEC26006",
+    "projectName": "PSS DWS5 Phase 1E - Everett, WA",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "eec030f9-c297-492d-adcf-3cc984876388",
+    "engineerName": "m.sulaiman",
+    "projectCode": "SECO25001",
+    "projectName": "City of Burlington - WWTP Influent & Effluent PS Upgrades",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "01b6f430-534b-4d96-a00a-78ddb442cbc5",
+    "engineerName": "m.sulaiman",
+    "projectCode": "TMC25002",
+    "projectName": "Hutto South WWTP Influent Lift Station",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "09fc49b8-7e14-4ec0-aca3-eae485ce4b47",
+    "engineerName": "m.sulaiman",
+    "projectCode": "—",
+    "projectName": "Unpaid Time Off (UPTO)",
+    "weekValuesByMonth": {}
+  },
+  {
+    "id": "8cdef518-dd6c-4e73-bc16-69eaeca5e744",
+    "engineerName": "m.sulaiman",
     "projectCode": "—",
     "projectName": "Unplanned Overhead",
     "weekValuesByMonth": {}

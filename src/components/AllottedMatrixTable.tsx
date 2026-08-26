@@ -101,7 +101,7 @@ export function AllottedMatrixTable({
       <div className="analysis-chart-card">
         <div className="analysis-header analysis-header--compact">
           <div>
-            <h3 className="analysis-chart-title">Allotted hours by engineer</h3>
+            <h3 className="analysis-chart-title">Planned hours by engineer</h3>
             <p className="analysis-chart-hint">
               Expand an engineer to see project codes. Total hours is the sum
               across the selected date range.
@@ -150,7 +150,7 @@ export function AllottedMatrixTable({
 
         {selectedEngineers.length === 0 ? (
           <p className="analysis-chart-hint">
-            Select one or more engineers to show allotted hours.
+            Select one or more engineers to show planned hours.
           </p>
         ) : (
           <div className="allotted-matrix-scroll">
@@ -184,7 +184,7 @@ export function AllottedMatrixTable({
               <tfoot>
                 <tr className="allotted-matrix-week-total-row">
                   <th className="allotted-matrix-sticky" scope="row">
-                    Allotted Total Hours
+                    Planned Total Hours
                   </th>
                   {matrix.weeks.map((week) => (
                     <td key={week.key}>

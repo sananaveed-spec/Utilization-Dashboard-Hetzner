@@ -1,16 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AddEngineerDialog } from "@/components/AddEngineerDialog";
-import { Overview2ResultsTable } from "@/components/Overview2ResultsTable";
+import { Overview2GroupedResults } from "@/components/Overview2GroupedResults";
 import type { UtilizationStore } from "@/hooks/useUtilizationStore";
 import {
   createUtilizationEntry,
   type UtilizationEntry,
 } from "@/lib/entries";
 import { isSameEngineerName } from "@/lib/engineers";
+import {
+  getPresetRange,
+  listMonthsInDateRange,
+  type DateRange,
+} from "@/lib/dateRange";
 import { parseProjectParts, projectLookupKey } from "@/lib/projects";
-import { getCurrentMonthCursor, type MonthCursor } from "@/lib/weeks";
+import {
+  getCurrentMonthCursor,
+  monthCursorKey,
+  type MonthCursor,
+} from "@/lib/weeks";
 
 type ClockifyEmployee = {
   id: string;
@@ -87,30 +96,36 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     entries,
     engineerNames,
     holidays,
-    calendarYearRange,
     updateEntries,
     updateEngineerNames,
   } = store;
 
   const [employees, setEmployees] = useState<ClockifyEmployee[]>([]);
-  const [selectedEngineerId, setSelectedEngineerId] = useState("");
-  const [searchedEngineerName, setSearchedEngineerName] = useState<string | null>(
-    null,
+  // Track selection by engineer `name` (stable) rather than Clockify `id` (changes
+  // while the Clockify employee list loads).
+  const [selectedEngineerNames, setSelectedEngineerNames] = useState<Set<string>>(
+    new Set(),
   );
-  const [visibleProjectIds, setVisibleProjectIds] = useState<string[]>([]);
+  const [searchedEngineerNames, setSearchedEngineerNames] = useState<string[]>([]);
+  const [visibleProjectIdsByEngineer, setVisibleProjectIdsByEngineer] = useState<Record<string, string[]>>({});
   const [isAddingEngineer, setIsAddingEngineer] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [month, setMonth] = useState<MonthCursor>(() => getCurrentMonthCursor());
-  const [clockifyHoursByKey, setClockifyHoursByKey] = useState<
-    Record<string, number>
+  const [dateRange, setDateRange] = useState<DateRange>(() => getPresetRange("this-month"));
+  const [clockifyHoursByMonth, setClockifyHoursByMonth] = useState<
+    Record<string, Record<string, number>>
   >({});
   const [clockifyHoursLoading, setClockifyHoursLoading] = useState(false);
   const [clockifyHoursError, setClockifyHoursError] = useState<string | null>(
     null,
+  );
+
+  const monthsInRange = useMemo(
+    () => listMonthsInDateRange(dateRange),
+    [dateRange],
   );
 
   const load = useCallback(async () => {
@@ -143,7 +158,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   }, [load]);
 
   useEffect(() => {
-    if (!searchedEngineerName) {
+    if (searchedEngineerNames.length === 0 || monthsInRange.length === 0) {
       return;
     }
 
@@ -154,25 +169,40 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       setClockifyHoursError(null);
 
       try {
-        const response = await fetch(
-          `/api/clockify/hours?year=${month.year}&month=${month.month}`,
-          { cache: "no-store" },
-        );
-        const payload = await readJsonResponse<{
-          hoursByKey?: Record<string, number>;
-          error?: string;
-        }>(response);
+        const results = await Promise.all(
+          monthsInRange.map(async (cursor) => {
+            const response = await fetch(
+              `/api/clockify/hours?year=${cursor.year}&month=${cursor.month}`,
+              { cache: "no-store" },
+            );
+            const payload = await readJsonResponse<{
+              hoursByKey?: Record<string, number>;
+              error?: string;
+            }>(response);
 
-        if (!response.ok) {
-          throw new Error(payload.error ?? `Request failed (${response.status})`);
-        }
+            if (!response.ok) {
+              throw new Error(
+                payload.error ?? `Request failed (${response.status})`,
+              );
+            }
+
+            return {
+              key: monthCursorKey(cursor),
+              hoursByKey: payload.hoursByKey ?? {},
+            };
+          }),
+        );
 
         if (!cancelled) {
-          setClockifyHoursByKey(payload.hoursByKey ?? {});
+          const next: Record<string, Record<string, number>> = {};
+          for (const result of results) {
+            next[result.key] = result.hoursByKey;
+          }
+          setClockifyHoursByMonth(next);
         }
       } catch (err) {
         if (!cancelled) {
-          setClockifyHoursByKey({});
+          setClockifyHoursByMonth({});
           setClockifyHoursError(
             err instanceof Error
               ? err.message
@@ -191,7 +221,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     return () => {
       cancelled = true;
     };
-  }, [month.year, month.month, searchedEngineerName]);
+  }, [monthsInRange, searchedEngineerNames]);
 
   const listedEmployees = useMemo(() => {
     return engineerNames
@@ -211,6 +241,17 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       );
   }, [employees, engineerNames]);
 
+  const hasAutoSearched = useRef(false);
+
+  // Auto-select all engineers when the list is first populated, then auto-search once
+  useEffect(() => {
+    if (listedEmployees.length > 0 && selectedEngineerNames.size === 0) {
+      setSelectedEngineerNames(new Set(listedEmployees.map((e) => e.name)));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listedEmployees]);
+
+
   const addCandidates = useMemo(() => {
     return employees.filter(
       (employee) =>
@@ -218,9 +259,33 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     );
   }, [employees, engineerNames]);
 
-  const selectedEngineer = listedEmployees.find(
-    (employee) => employee.id === selectedEngineerId,
+  const selectedEngineers = listedEmployees.filter(
+    (employee) => selectedEngineerNames.has(employee.name),
   );
+
+  function toggleEngineer(name: string, checked: boolean) {
+    setSelectedEngineerNames((prev) => {
+      const next = new Set(prev);
+      if (checked) {
+        next.add(name);
+      } else {
+        next.delete(name);
+      }
+      return next;
+    });
+    setActionError(null);
+
+  }
+
+  function selectAllEmployees() {
+    setSelectedEngineerNames(new Set(listedEmployees.map((employee) => employee.name)));
+    setActionError(null);
+  }
+
+  function clearAllEmployees() {
+    setSelectedEngineerNames(new Set());
+    setActionError(null);
+  }
 
   function handleAddEngineer(name: string) {
     const alreadyExists = engineerNames.some((existing) =>
@@ -241,18 +306,24 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       isSameEngineerName(employee.name, name),
     );
     if (match) {
-      setSelectedEngineerId(match.id);
+      setSelectedEngineerNames((prev) => new Set([...prev, match.name]));
     }
   }
 
   function handleDeleteEngineer() {
-    if (!selectedEngineer) {
-      setActionError("Select an engineer before deleting.");
+    if (selectedEngineers.length === 0) {
+      setActionError("Select at least one engineer before deleting.");
       return;
     }
 
+    const names = selectedEngineers.map((e) => e.name);
+    const label =
+      names.length === 1
+        ? `"${names[0]}"`
+        : `${names.length} engineers`;
+
     const confirmed = window.confirm(
-      `Remove "${selectedEngineer.name}" from the engineer list?`,
+      `Remove ${label} from the engineer list?`,
     );
     if (!confirmed) {
       return;
@@ -260,94 +331,120 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
 
     updateEngineerNames(
       engineerNames.filter(
-        (name) => !isSameEngineerName(name, selectedEngineer.name),
+        (name) => !selectedEngineers.some((e) => isSameEngineerName(name, e.name)),
       ),
     );
     updateEntries(
       entries.filter(
-        (entry) => !isSameEngineerName(entry.engineerName, selectedEngineer.name),
+        (entry) =>
+          !selectedEngineers.some((e) =>
+            isSameEngineerName(entry.engineerName, e.name),
+          ),
       ),
     );
-    setSelectedEngineerId("");
-    setSearchedEngineerName(null);
-    setVisibleProjectIds([]);
+    setSelectedEngineerNames(new Set());
+    setSearchedEngineerNames([]);
+    setVisibleProjectIdsByEngineer({});
     setActionError(null);
-    setActionMessage(null);
+
   }
 
   async function handleSearch() {
-    if (!selectedEngineer) {
-      setActionError("Select an engineer name before searching.");
-      setActionMessage(null);
+    if (selectedEngineers.length === 0) {
+      setActionError("Select at least one engineer name before searching.");
+
       return;
     }
 
-    if (!selectedEngineer.linked) {
+    const unlinked = selectedEngineers.filter((e) => !e.linked);
+    if (unlinked.length > 0) {
       setActionError(
-        `"${selectedEngineer.name}" was not found in Clockify. Add them from Clockify employees.`,
+        `${unlinked.map((e) => `"${e.name}"`).join(", ")} ${unlinked.length === 1 ? "was" : "were"} not found in Clockify. Add them from Clockify employees.`,
       );
-      setActionMessage(null);
+
       return;
     }
 
     setSearching(true);
     setActionError(null);
-    setActionMessage(null);
 
-    try {
-      const response = await fetch(
-        `/api/clockify/user-projects?userId=${encodeURIComponent(selectedEngineer.id)}`,
-        { cache: "no-store" },
-      );
-      const payload = await readJsonResponse<{
-        projects?: ClockifyProject[];
-        error?: string;
-      }>(response);
 
-      if (!response.ok) {
-        throw new Error(payload.error ?? `Request failed (${response.status})`);
-      }
+    let allEntries = [...entries];
+    const newVisibleByEngineer: Record<string, string[]> = {};
+    const messages: string[] = [];
+    const errors: string[] = [];
 
-      const clockifyProjects = payload.projects ?? [];
-      const { entries: nextEntries, visibleIds } = syncEngineerClockifyProjects(
-        selectedEngineer.name,
-        clockifyProjects,
-        entries,
-      );
+    await Promise.all(
+      selectedEngineers.map(async (engineer) => {
+        try {
+          const response = await fetch(
+            `/api/clockify/user-projects?userId=${encodeURIComponent(engineer.id)}`,
+            { cache: "no-store" },
+          );
+          const payload = await readJsonResponse<{
+            projects?: ClockifyProject[];
+            error?: string;
+          }>(response);
 
-      updateEntries(nextEntries);
-      setVisibleProjectIds(visibleIds);
-      setMonth(getCurrentMonthCursor());
-      setSearchedEngineerName(selectedEngineer.name);
-      setActionMessage(
-        clockifyProjects.length === 0
-          ? `No active projects with lifetime Clockify time found for ${selectedEngineer.name}.`
-          : `Loaded ${clockifyProjects.length} active project${clockifyProjects.length === 1 ? "" : "s"} for ${selectedEngineer.name}.`,
-      );
-    } catch (err) {
-      setVisibleProjectIds([]);
-      setSearchedEngineerName(null);
-      setActionError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load engineer projects from Clockify.",
-      );
-    } finally {
-      setSearching(false);
+          if (!response.ok) {
+            throw new Error(payload.error ?? `Request failed (${response.status})`);
+          }
+
+          const clockifyProjects = payload.projects ?? [];
+          const { entries: nextEntries, visibleIds } = syncEngineerClockifyProjects(
+            engineer.name,
+            clockifyProjects,
+            allEntries,
+          );
+          allEntries = nextEntries;
+          newVisibleByEngineer[engineer.name] = visibleIds;
+          messages.push(
+            clockifyProjects.length === 0
+              ? `No active projects found for ${engineer.name}.`
+              : `Loaded ${clockifyProjects.length} project${clockifyProjects.length === 1 ? "" : "s"} for ${engineer.name}.`,
+          );
+        } catch (err) {
+          errors.push(
+            `${engineer.name}: ${err instanceof Error ? err.message : "Failed to load projects."}`,
+          );
+        }
+      }),
+    );
+
+    updateEntries(allEntries);
+    setVisibleProjectIdsByEngineer(newVisibleByEngineer);
+    setSearchedEngineerNames(Object.keys(newVisibleByEngineer));
+
+    if (errors.length > 0) {
+      setActionError(errors.join(" "));
     }
+    if (messages.length > 0) {
+
+    }
+
+    setSearching(false);
   }
 
-  function handleClear() {
-    setSelectedEngineerId("");
-    setActionError(null);
-    setActionMessage(null);
-    setSearchedEngineerName(null);
-    setVisibleProjectIds([]);
-    setMonth(getCurrentMonthCursor());
-    setIsAddingEngineer(false);
-  }
+  // Auto-search once on initial load after employees finish loading
+  useEffect(() => {
+    if (
+      !hasAutoSearched.current &&
+      !loading &&
+      !searching &&
+      selectedEngineerNames.size > 0 &&
+      searchedEngineerNames.length === 0
+    ) {
+      hasAutoSearched.current = true;
+      void handleSearch();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, selectedEngineerNames]);
 
   const disabled = loading || Boolean(error) || searching;
+  const searchedEngineerNameSet = useMemo(
+    () => new Set(searchedEngineerNames),
+    [searchedEngineerNames],
+  );
 
   return (
     <div className="utilization-workspace">
@@ -364,19 +461,29 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
           </p>
         ) : null}
 
-        {actionMessage ? (
-          <p className="form-message success" role="status">
-            {actionMessage}
-          </p>
-        ) : null}
-
         <div className="filter-fields-row">
           <div className="engineer-filter filter-field--engineer">
             <div className="field-label-row">
               <span className="field-label" id="overview2-engineer-label">
-                Select Employee Name
+                Employee Name
               </span>
               <div className="field-label-actions">
+                <button
+                  type="button"
+                  className="button secondary button-small"
+                  onClick={selectAllEmployees}
+                  disabled={disabled || listedEmployees.length === 0}
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  className="button secondary button-small"
+                  onClick={clearAllEmployees}
+                  disabled={disabled || selectedEngineerNames.size === 0}
+                >
+                  Clear All
+                </button>
                 <button
                   type="button"
                   className="button secondary button-small"
@@ -392,16 +499,14 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                   type="button"
                   className="button danger button-small"
                   onClick={handleDeleteEngineer}
-                  disabled={disabled || !selectedEngineerId}
+                  disabled={disabled || selectedEngineerNames.size === 0}
                 >
                   Delete
                 </button>
               </div>
             </div>
 
-            {loading ? (
-              <p className="hint">Loading employees…</p>
-            ) : listedEmployees.length === 0 ? (
+            {listedEmployees.length === 0 && !loading ? (
               <p className="hint">
                 No engineers on the list yet. Use Add to include Clockify
                 employees.
@@ -409,7 +514,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             ) : (
               <div
                 className="overview2-radio-row"
-                role="radiogroup"
+                role="group"
                 aria-labelledby="overview2-engineer-label"
               >
                 {listedEmployees.map((employee) => {
@@ -422,16 +527,11 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                     >
                       <input
                         id={inputId}
-                        type="radio"
-                        name="overview2-engineer"
+                        type="checkbox"
                         value={employee.id}
-                        checked={selectedEngineerId === employee.id}
-                        onChange={() => {
-                          setSelectedEngineerId(employee.id);
-                          setSearchedEngineerName(null);
-                          setVisibleProjectIds([]);
-                          setActionError(null);
-                          setActionMessage(null);
+                        checked={selectedEngineerNames.has(employee.name)}
+                        onChange={(e) => {
+                          toggleEngineer(employee.name, e.target.checked);
                         }}
                         disabled={disabled}
                       />
@@ -439,30 +539,14 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                     </label>
                   );
                 })}
+                {searching ? (
+                  <span className="hint" style={{ alignSelf: "center", marginLeft: "0.5rem" }}>
+                    Loading…
+                  </span>
+                ) : null}
               </div>
             )}
           </div>
-        </div>
-
-        <div className="filter-actions">
-          <button
-            type="button"
-            className="button primary"
-            onClick={() => {
-              void handleSearch();
-            }}
-            disabled={disabled}
-          >
-            {searching ? "Searching…" : "Search"}
-          </button>
-          <button
-            type="button"
-            className="button secondary"
-            onClick={handleClear}
-            disabled={disabled}
-          >
-            Clear
-          </button>
         </div>
 
         {isAddingEngineer ? (
@@ -474,33 +558,47 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
         ) : null}
       </section>
 
-      {searchedEngineerName ? (
-        <Overview2ResultsTable
-          engineerName={searchedEngineerName}
-          entries={entries}
-          visibleProjectIds={visibleProjectIds}
-          month={month}
-          onMonthChange={setMonth}
-          calendarYearRange={calendarYearRange}
-          holidayDates={holidays.map((holiday) => holiday.date)}
-          clockifyHoursByKey={clockifyHoursByKey}
-          clockifyHoursLoading={clockifyHoursLoading}
-          clockifyHoursError={clockifyHoursError}
-          onUpdate={(updated) => {
-            updateEntries(
-              entries.map((entry) =>
-                entry.id === updated.id ? updated : entry,
-              ),
-            );
-          }}
-          onDelete={(id) => {
-            updateEntries(entries.filter((entry) => entry.id !== id));
-            setVisibleProjectIds((current) =>
-              current.filter((entryId) => entryId !== id),
-            );
-          }}
-        />
-      ) : null}
+      <Overview2GroupedResults
+        engineers={selectedEngineers
+          .filter((engineer) => searchedEngineerNameSet.has(engineer.name))
+          .map((engineer) => ({
+            engineerName: engineer.name,
+            visibleProjectIds: visibleProjectIdsByEngineer[engineer.name] ?? [],
+            onUpdate: (updated) => {
+              updateEntries(
+                entries.map((entry) =>
+                  entry.id === updated.id ? updated : entry,
+                ),
+              );
+            },
+            onDelete: (id) => {
+              updateEntries(entries.filter((entry) => entry.id !== id));
+              setVisibleProjectIdsByEngineer((current) => ({
+                ...current,
+                [engineer.name]: (current[engineer.name] ?? []).filter(
+                  (entryId) => entryId !== id,
+                ),
+              }));
+            },
+          }))}
+        entries={entries}
+        month={month}
+        dateRange={dateRange}
+        onDateRangeChange={(range) => {
+          setDateRange(range);
+          // Use the *end* month of the selected range.
+          // (If the range spans multiple months, users expect to see the last month.)
+          const parsed = range.end.split("-").map(Number);
+          if (parsed.length === 3) {
+            const [year, month] = parsed;
+            if (year && month) setMonth({ year, month });
+          }
+        }}
+        holidayDates={holidays.map((holiday) => holiday.date)}
+        clockifyHoursByMonth={clockifyHoursByMonth}
+        clockifyHoursLoading={clockifyHoursLoading}
+        clockifyHoursError={clockifyHoursError}
+      />
     </div>
   );
 }

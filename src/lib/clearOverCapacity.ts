@@ -30,8 +30,8 @@ function weekEntryLimit(week: {
 }
 
 /**
- * Clears allotted hour cells for engineer/month/weeks where the sum of
- * allotted hours exceeds Total Forecasted Hours (weekly capacity).
+ * Clears planned hour cells for engineer/month/weeks where the sum of
+ * planned hours exceeds Total Forecasted Hours (weekly capacity).
  * Returns a new entries array (does not mutate input).
  */
 export function clearOverCapacityAllottedHours(

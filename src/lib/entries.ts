@@ -77,79 +77,79 @@ const EXCEL_PROJECT_SEED = [
     projectCode: "BES26005",
     projectName: "Rainier HS Main Service Switchboard Replacement",
   },
-  // m.suleyman — Excel name is m.sulaiman (projects only, no hours)
+  // m.sulaiman (projects only, no hours)
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "PBS25005",
     projectName: "COH - Helford Special Procedure Room",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "CE25001",
     projectName: "ECY - EV Infrastructure",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "AET25001",
     projectName: "Issaquah Transportation Bus Charging",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "AG25001",
     projectName: "Yermo School's New Gym",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "SECO25001",
     projectName: "City of Burlingtom - WWTP Influent & Effluent PS Upgrades",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "SBE25010",
     projectName: "UCD Campus Outdoor Security",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "BVE25002",
     projectName: "Al Tahoe/Bayview Well Rehab & Emergency Power",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "BVE25003",
     projectName: "UC Davis Electrical Panel Replacement",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "PBS25005.1",
     projectName: "City of Hope - Helford Special Procedure Room CO#1",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "MESC25002",
     projectName: "PR Distribution Project",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "BDE25004",
     projectName: "PSS Longview ISD Multi Purpose Facility",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "MESC25002.1",
     projectName: "PR Distribution Project Model Conversion ETAP TO SKM CO#1",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "MESC25002.3",
     projectName: "PR Distribution Project CO#3",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "ERE26001",
     projectName: "Fire Station 52 - Comal County ESD 3",
   },
   {
-    engineerName: "m.suleyman",
+    engineerName: "m.sulaiman",
     projectCode: "MESC25001",
     projectName: "Texas Medical Center (TMC) Transit Center Opportunity",
   },
@@ -242,8 +242,8 @@ const EXCEL_PROJECT_SEED = [
 ];
 
 function canonicalEngineerName(name: string): string {
-  if (name.toLowerCase() === "m.sulaiman") {
-    return "m.suleyman";
+  if (name.toLowerCase() === "m.suleyman") {
+    return "m.sulaiman";
   }
   return name;
 }

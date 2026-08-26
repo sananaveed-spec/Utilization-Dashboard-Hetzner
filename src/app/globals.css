@@ -336,6 +336,47 @@ body {
   text-align: left;
 }
 
+.dialog-panel--add-engineer {
+  width: min(92vw, 40rem);
+  height: 50vh;
+  max-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dialog-panel--add-engineer .dialog-form {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-panel--add-engineer .panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.dialog-panel--add-engineer .searchable-select {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-panel--add-engineer .searchable-options {
+  position: static;
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+  margin-top: 0.5rem;
+}
+
+.dialog-panel--add-engineer .dialog-actions {
+  margin-top: auto;
+  flex-shrink: 0;
+}
+
 .dialog-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -974,15 +1015,17 @@ td.col-project-name {
 .overview2-results-scroll {
   width: 100%;
   max-height: min(70vh, 42rem);
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
-  scrollbar-gutter: stable;
+  container-type: inline-size;
   --overview2-sticky-header-height: 3.75rem;
   --overview2-sticky-engineer-row-height: 2.75rem;
+  position: relative;
 }
 
 .overview2-results-table {
-  width: 100%;
+  width: max-content;
+  min-width: 100%;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
@@ -998,46 +1041,85 @@ td.col-project-name {
   vertical-align: middle;
 }
 
-.overview2-results-table thead th {
+.overview2-results-table thead {
+  position: relative;
+  z-index: 30;
+}
+
+.overview2-results-table thead th,
+.overview2-header-row > th {
   position: sticky;
   top: 0;
-  z-index: 6;
-  background: #0f172a;
-  box-shadow: inset 0 -1px 0 #64748b;
+  z-index: 30;
+  background: #0f172a !important;
+  background-clip: padding-box;
+  box-shadow: inset 0 -2px 0 #e2e8f0;
 }
 
-.overview2-engineer-row--allotted > * {
+/* Engineer summary rows stick under the month header while projects scroll.
+   Slot tops are set in JS from measured row heights; -1px closes subpixel seams. */
+.overview2-sticky-slot-1 > * {
   position: sticky;
   top: var(--overview2-sticky-header-height);
-  z-index: 5;
-  background: #1e293b;
+  z-index: 20;
+  background: #1e293b !important;
+  background-clip: padding-box;
 }
 
-.overview2-engineer-row--allotted .overview2-results-engineer {
-  z-index: 5;
-  top: var(--overview2-sticky-header-height);
-}
-
-.overview2-engineer-row--actual > * {
+.overview2-sticky-slot-2 > * {
   position: sticky;
-  top: calc(
-    var(--overview2-sticky-header-height) +
-      var(--overview2-sticky-engineer-row-height)
+  top: var(
+    --overview2-sticky-slot-2-top,
+    calc(
+      var(--overview2-sticky-header-height) +
+        var(--overview2-sticky-engineer-row-height) - 1px
+    )
   );
-  z-index: 4;
-  background: #1e293b;
+  z-index: 19;
+  background: #1e293b !important;
+  background-clip: padding-box;
+}
+
+.overview2-sticky-slot-3 > * {
+  position: sticky;
+  top: var(
+    --overview2-sticky-slot-3-top,
+    calc(
+      var(--overview2-sticky-header-height) +
+        (2 * var(--overview2-sticky-engineer-row-height)) - 1px
+    )
+  );
+  z-index: 18;
+  background: #1e293b !important;
+  background-clip: padding-box;
+}
+
+.overview2-sticky-slot-1:not(:has(~ .overview2-sticky-slot-2)):not(
+    :has(~ .overview2-sticky-slot-3)
+  )
+  > *,
+.overview2-sticky-slot-2:not(:has(~ .overview2-sticky-slot-3)) > *,
+.overview2-sticky-slot-3 > * {
   box-shadow: 0 2px 0 #e2e8f0;
+}
+
+.overview2-team-row.overview2-sticky-slot-1 > *,
+.overview2-team-row.overview2-sticky-slot-2 > *,
+.overview2-team-row.overview2-sticky-slot-3 > * {
+  position: static;
+  top: auto;
+  z-index: auto;
+  box-shadow: none;
+  background: #0f172a !important;
 }
 
 .overview2-results-date {
   text-align: center;
   font-weight: 600;
   white-space: nowrap;
-  width: 7.25rem;
-  min-width: 7.25rem;
-  max-width: 7.25rem;
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
+  width: 0;
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
 }
 
 .overview2-month-header {
@@ -1112,18 +1194,30 @@ td.col-project-name {
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
+  width: 15rem;
+  min-width: 15rem;
+  max-width: 15rem;
   background: #1e293b;
-  border-left: 2px solid #e2e8f0 !important;
-  border-top: 2px solid #e2e8f0 !important;
-  border-bottom: 2px solid #e2e8f0 !important;
+  border-left: 3px solid var(--engineer-accent, #38bdf8) !important;
+  border-top: 1px solid #475569 !important;
+  border-bottom: 1px solid #475569 !important;
   border-right: 1px solid #475569 !important;
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.overview2-engineer-header {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
+.overview2-team-label {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  color: #f1f5f9;
+}
+
+.overview2-team-row .overview2-results-metric,
+.overview2-team-row .overview2-results-value,
+.overview2-team-row .actions-cell,
+.overview2-team-row .overview2-results-engineer {
+  background: #0f172a !important;
 }
 
 .overview2-header-row th {
@@ -1153,7 +1247,7 @@ td.col-project-name {
 .overview2-engineer-row--allotted .overview2-results-metric,
 .overview2-engineer-row--allotted .overview2-results-value,
 .overview2-engineer-row--allotted .actions-cell {
-  border-top: 2px solid #e2e8f0 !important;
+  border-top: 1px solid #475569 !important;
   border-bottom: 1px solid #475569 !important;
 }
 
@@ -1161,12 +1255,38 @@ td.col-project-name {
 .overview2-engineer-row--actual .overview2-results-value,
 .overview2-engineer-row--actual .actions-cell {
   border-top: 1px solid #475569 !important;
-  border-bottom: 2px solid #e2e8f0 !important;
+  border-bottom: 1px solid #475569 !important;
+}
+
+.overview2-engineer-row--utilization .overview2-results-metric,
+.overview2-engineer-row--utilization .overview2-results-value,
+.overview2-engineer-row--utilization .actions-cell {
+  border-top: 1px solid #475569 !important;
+  border-bottom: 1px solid #475569 !important;
+  background: #1e293b;
+}
+
+/* Single shared divider between Planned / Actual / Utilization (no double-border gap). */
+.overview2-engineer-row--allotted + .overview2-engineer-row--actual > *:not(.overview2-results-engineer),
+.overview2-engineer-row--allotted + .overview2-engineer-row--utilization > *:not(.overview2-results-engineer),
+.overview2-engineer-row--actual + .overview2-engineer-row--utilization > * {
+  border-top: none !important;
+}
+
+.overview2-project-row--allotted + .overview2-project-row--actual > *:not(.overview2-results-project) {
+  border-top: none !important;
+}
+
+/* When actual row is rendered with allotted class (planned hidden), keep bright bottom border */
+.overview2-engineer-row--allotted.overview2-engineer-row--actual-only .overview2-results-metric,
+.overview2-engineer-row--allotted.overview2-engineer-row--actual-only .overview2-results-value,
+.overview2-engineer-row--allotted.overview2-engineer-row--actual-only .actions-cell {
+  border-bottom: 1px solid #475569 !important;
 }
 
 .overview2-engineer-row--allotted .actions-cell,
 .overview2-engineer-row--actual .actions-cell {
-  border-right: 2px solid #e2e8f0 !important;
+  border-right: 1px solid #475569 !important;
 }
 
 .overview2-engineer-row .overview2-results-metric,
@@ -1175,31 +1295,51 @@ td.col-project-name {
   border-right: 1px solid #475569 !important;
 }
 
+/* Do not put accent on metric — it sits inside the name rowspan edge. */
+.overview2-engineer-block .overview2-results-metric {
+  border-left-color: #475569 !important;
+  border-left-width: 1px !important;
+}
+
 .overview2-col-code {
-  width: 7rem;
+  width: 6rem;
+  min-width: 6rem;
+  max-width: 6rem;
 }
 
 .overview2-col-name {
+  /* Absorbs leftover table width so project names can show more text. */
   width: auto;
+  min-width: 14rem;
 }
 
 .overview2-col-metric {
   width: 8.75rem;
+  min-width: 8.75rem;
+  max-width: 8.75rem;
 }
 
 .overview2-col-month {
-  width: 7.25rem;
+  /* Shrink-to-fit in fixed layout; content + nowrap sets real width. */
+  width: 0;
 }
 
 .overview2-col-week {
   width: 3.15rem;
+  min-width: 3.15rem;
+  max-width: 3.15rem;
 }
 
 .overview2-col-actions {
   width: 4.25rem;
+  min-width: 4.25rem;
+  max-width: 4.25rem;
 }
 
 .overview2-results-identity-header {
+  width: auto;
+  min-width: 20rem;
+  background: #0f172a !important;
   border-left: 2px solid #e2e8f0 !important;
   border-right: 1px solid #475569 !important;
 }
@@ -1210,25 +1350,25 @@ td.col-project-name {
   font-size: 0.85rem;
   background: #111827;
   color: #cbd5e1;
-  border-top: 2px solid #e2e8f0 !important;
-  border-bottom: 2px solid #e2e8f0 !important;
+  border-top: 1px solid #475569 !important;
+  border-bottom: 1px solid #475569 !important;
 }
 
 .overview2-results-project-code {
   white-space: nowrap;
-  width: 7rem;
-  min-width: 7rem;
-  max-width: 7rem;
+  width: 6rem;
+  min-width: 6rem;
+  max-width: 6rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  border-left: 2px solid #e2e8f0 !important;
+  border-left: 1px solid #475569 !important;
   border-right: 1px solid #475569 !important;
 }
 
 .overview2-results-project-name {
   width: auto;
-  min-width: 0;
-  white-space: normal;
+  min-width: 14rem;
+  overflow: hidden;
   border-left: 1px solid #475569 !important;
   border-right: 1px solid #475569 !important;
 }
@@ -1244,7 +1384,7 @@ td.col-project-name {
 .overview2-project-row--allotted .overview2-results-metric,
 .overview2-project-row--allotted .overview2-results-value,
 .overview2-project-row--allotted .actions-cell {
-  border-top: 2px solid #e2e8f0 !important;
+  border-top: 1px solid #475569 !important;
   border-bottom: 1px solid #475569 !important;
 }
 
@@ -1252,12 +1392,12 @@ td.col-project-name {
 .overview2-project-row--actual .overview2-results-value,
 .overview2-project-row--actual .actions-cell {
   border-top: 1px solid #475569 !important;
-  border-bottom: 2px solid #e2e8f0 !important;
+  border-bottom: 1px solid #475569 !important;
 }
 
 .overview2-project-row--allotted .actions-cell,
 .overview2-project-row--actual .actions-cell {
-  border-right: 2px solid #e2e8f0 !important;
+  border-right: 1px solid #475569 !important;
 }
 
 .overview2-project-row .overview2-results-metric,
@@ -1272,21 +1412,85 @@ td.col-project-name {
   font-size: 0.9rem;
 }
 
+.overview2-uncoded-toggle-cell {
+  text-align: left;
+  background: #111827;
+  padding: 0.45rem 0.9rem !important;
+  border-left: 1px solid #475569 !important;
+  border-right: 1px solid #475569 !important;
+  border-bottom: 1px solid #475569 !important;
+}
+
+.overview2-uncoded-toggle {
+  font-size: 0.8rem;
+}
+
+/* Employee block outer accent frame (must win over row cell borders). */
+.overview2-engineer-block .overview2-results-engineer,
+.overview2-engineer-block .overview2-results-project-code,
+.overview2-engineer-block .overview2-results-empty,
+.overview2-engineer-block .overview2-uncoded-toggle-cell {
+  border-left: 3px solid var(--engineer-accent, #38bdf8) !important;
+}
+
+.overview2-engineer-block.overview2-engineer-row .actions-cell,
+.overview2-engineer-block.overview2-project-row .actions-cell,
+.overview2-engineer-block .overview2-results-empty,
+.overview2-engineer-block .overview2-uncoded-toggle-cell {
+  border-right: 3px solid var(--engineer-accent, #38bdf8) !important;
+}
+
+.overview2-engineer-block--start > * {
+  border-top: 2px solid var(--engineer-accent, #38bdf8) !important;
+}
+
+.overview2-engineer-block--end > * {
+  border-bottom: 2px solid var(--engineer-accent, #38bdf8) !important;
+}
+
+.overview2-engineer-block--start.overview2-engineer-block--end > * {
+  border-top: 2px solid var(--engineer-accent, #38bdf8) !important;
+  border-bottom: 2px solid var(--engineer-accent, #38bdf8) !important;
+}
+
+/* Keep accent bottom under rowspan name when engineer metric rows close the block. */
+.overview2-engineer-row.overview2-engineer-block--start:has(
+    ~ .overview2-engineer-row.overview2-engineer-block--end
+  ):not(:has(~ .overview2-project-row)):not(:has(~ .overview2-uncoded-toggle-row))
+  .overview2-results-engineer {
+  border-bottom: 2px solid var(--engineer-accent, #38bdf8) !important;
+}
+
+.overview2-results-util-value {
+  color: #7dd3fc;
+  font-weight: 600;
+}
+
+.overview2-project-row--utilization .overview2-results-metric,
+.overview2-project-row--utilization .overview2-results-value,
+.overview2-project-row--utilization .actions-cell {
+  border-top: 1px solid #475569 !important;
+  border-bottom: 1px solid #475569 !important;
+}
+
+/* Close the right edge on month/week cells only when a row has no actions cell
+   (should not happen) — keep Actions inside the frame. */
+.overview2-engineer-block--start > .overview2-results-month-value:last-of-type,
+.overview2-engineer-block--end > .overview2-results-month-value:last-of-type {
+  border-right-color: #475569 !important;
+}
+
 .overview2-results-actions {
   text-align: center;
   font-weight: 600;
   white-space: nowrap;
-  width: 4.25rem;
   min-width: 4.25rem;
-  max-width: 4.25rem;
   padding-left: 0.25rem !important;
   padding-right: 0.25rem !important;
 }
 
 .overview2-results-table .actions-cell {
-  width: 4.25rem;
   min-width: 4.25rem;
-  max-width: 4.25rem;
   padding-left: 0.25rem !important;
   padding-right: 0.25rem !important;
 }
@@ -1320,6 +1524,25 @@ td.col-project-name {
   box-sizing: border-box;
 }
 
+.overview2-results-metric-header {
+  background: #0f172a !important;
+}
+
+.overview2-metric-header-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.overview2-metric-toggle-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
 .overview2-results-value {
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -1328,11 +1551,10 @@ td.col-project-name {
 }
 
 .overview2-results-month-value {
-  width: 7.25rem;
-  min-width: 7.25rem;
-  max-width: 7.25rem;
-  padding-left: 0.5rem !important;
-  padding-right: 0.5rem !important;
+  width: 0;
+  white-space: nowrap;
+  padding-left: 0.35rem !important;
+  padding-right: 0.35rem !important;
 }
 
 .overview2-results-week-value {
@@ -1427,7 +1649,8 @@ td.col-project-name {
 .analysis-cal-popover {
   position: absolute;
   top: calc(100% + 0.55rem);
-  right: 0;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 40;
   display: flex;
   width: max-content;
@@ -1445,7 +1668,8 @@ td.col-project-name {
   content: "";
   position: absolute;
   top: -7px;
-  right: 1.35rem;
+  left: 50%;
+  transform: translateX(-50%);
   width: 12px;
   height: 12px;
   background: #ffffff;

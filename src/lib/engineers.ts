@@ -2,7 +2,7 @@ const STORAGE_KEY = "utilization-dashboard-engineers";
 
 export const DEFAULT_ENGINEER_NAMES = [
   "zain.abideen",
-  "m.suleyman",
+  "m.sulaiman",
   "irsa.sarfaraz",
   "Wareesha Azwar",
   "mustafa.abdullah",

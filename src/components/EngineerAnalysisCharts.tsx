@@ -137,7 +137,7 @@ export function EngineerAnalysisCharts({
 
   const chartData = weeklyStats.map((week) => ({
     name: week.weekLabel,
-    Allotted: week.allotted,
+    Planned: week.allotted,
     Capacity: week.capacity,
   }));
 
@@ -162,7 +162,7 @@ export function EngineerAnalysisCharts({
         <div>
           <h3 className="analysis-chart-title">Engineer drill-down</h3>
           <p className="analysis-chart-hint">
-            Weekly allotted vs capacity for one engineer
+            Weekly planned vs capacity for one engineer
           </p>
         </div>
         <div className="analysis-engineer-select">
@@ -181,7 +181,7 @@ export function EngineerAnalysisCharts({
 
       <div className="analysis-insight-row">
         <div className="analysis-insight-card">
-          <p className="analysis-insight-label">Total allotted</p>
+          <p className="analysis-insight-label">Total planned</p>
           <p className="analysis-insight-value">
             {formatAnalysisNumber(summary.totalAllotted)}
           </p>
@@ -228,7 +228,7 @@ export function EngineerAnalysisCharts({
               <Tooltip content={<ChartTooltip />} />
               <Legend />
               <Bar
-                dataKey="Allotted"
+                dataKey="Planned"
                 fill={CHART_COLORS.allotted}
                 radius={[3, 3, 0, 0]}
               />

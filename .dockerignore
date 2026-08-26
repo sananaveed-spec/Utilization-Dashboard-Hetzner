@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env
+.env.*
+!.env.example
+.vercel
+coverage
+*.log
+.tsbuildinfo
+Utilization Sheet Final.xlsx
+Week Distribution.docx
+scripts
+.cursor
+.vscode

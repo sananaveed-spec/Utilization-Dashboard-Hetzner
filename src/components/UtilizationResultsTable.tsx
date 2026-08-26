@@ -308,7 +308,7 @@ export function UtilizationResultsTable({
         })
         .join(", ");
       setEditError(
-        `Allotted Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${details}. Entry was not saved.`,
+        `Planned Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${details}. Entry was not saved.`,
       );
       return;
     }
@@ -376,7 +376,7 @@ export function UtilizationResultsTable({
     <>
       {showAssigned ? (
         <tr className="total-row total-row--allotted">
-          <td colSpan={2}>Allotted Total Hours</td>
+          <td colSpan={2}>Planned Total Hours</td>
           {weeks.map((week, index) => {
             const totals = weekTotals[index] ?? {
               assigned: 0,
@@ -576,8 +576,8 @@ export function UtilizationResultsTable({
             showAssigned && !showClockify
               ? "Keep at least one of A or C visible"
               : showAssigned
-                ? "Hide allotted forecast hours (A)"
-                : "Show allotted forecast hours (A)"
+                ? "Hide planned forecast hours (A)"
+                : "Show planned forecast hours (A)"
           }
         >
           {showAssigned ? "Hide A" : "Show A"}
@@ -601,7 +601,7 @@ export function UtilizationResultsTable({
       </div>
       <p className="column-legend">
         <span>
-          <strong>A</strong> = Allotted forecast
+          <strong>A</strong> = Planned forecast
         </span>
         <span className="column-legend-sep" aria-hidden="true">
           ·
@@ -649,7 +649,7 @@ export function UtilizationResultsTable({
                     {showAssigned ? (
                       <th
                         className="week-subheader week-col col-fit"
-                        title="Allotted forecasted hours"
+                        title="Planned forecasted hours"
                       >
                         A
                       </th>

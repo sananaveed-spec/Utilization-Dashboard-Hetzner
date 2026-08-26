@@ -71,7 +71,7 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
         <div>
           <h2 className="analysis-title">Analysis</h2>
           <p className="analysis-subtitle">
-            Allotted forecast hours (A) across engineers — spot who is busy,
+            Planned forecast hours (A) across engineers — spot who is busy,
             who has capacity, and whether headcount pressure is rising.
           </p>
         </div>
@@ -80,7 +80,7 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
 
       {!hasData ? (
         <p className="hint analysis-empty">
-          No allotted hours yet. Enter values in the Overview A columns, then
+          No planned hours yet. Enter values in the Overview A columns, then
           return here for firm-wide and engineer charts.
         </p>
       ) : (
