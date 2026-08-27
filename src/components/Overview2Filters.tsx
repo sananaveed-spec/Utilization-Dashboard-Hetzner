@@ -471,22 +471,6 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                 <button
                   type="button"
                   className="button secondary button-small"
-                  onClick={selectAllEmployees}
-                  disabled={disabled || listedEmployees.length === 0}
-                >
-                  Select All
-                </button>
-                <button
-                  type="button"
-                  className="button secondary button-small"
-                  onClick={clearAllEmployees}
-                  disabled={disabled || selectedEngineerNames.size === 0}
-                >
-                  Clear All
-                </button>
-                <button
-                  type="button"
-                  className="button secondary button-small"
                   onClick={() => {
                     setActionError(null);
                     setIsAddingEngineer(true);
@@ -539,14 +523,38 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                     </label>
                   );
                 })}
-                {searching ? (
-                  <span className="hint" style={{ alignSelf: "center", marginLeft: "0.5rem" }}>
-                    Loading…
-                  </span>
-                ) : null}
               </div>
             )}
           </div>
+        </div>
+
+        <div className="filter-actions">
+          <button
+            type="button"
+            className="button primary"
+            onClick={() => {
+              void handleSearch();
+            }}
+            disabled={disabled || selectedEngineerNames.size === 0}
+          >
+            {searching ? "Searching…" : "Search"}
+          </button>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={selectAllEmployees}
+            disabled={disabled || listedEmployees.length === 0}
+          >
+            Select All
+          </button>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={clearAllEmployees}
+            disabled={disabled || selectedEngineerNames.size === 0}
+          >
+            Clear All
+          </button>
         </div>
 
         {isAddingEngineer ? (
