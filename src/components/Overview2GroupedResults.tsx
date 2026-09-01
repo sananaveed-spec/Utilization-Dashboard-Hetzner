@@ -39,15 +39,38 @@ function formatTotal(total: number): string {
     : total.toFixed(2).replace(/\.?0+$/, "");
 }
 
-/** Planned hours / capacity × 100. Empty when capacity is 0. */
-function formatUtilizationPercent(planned: number, capacity: number): string {
-  if (!Number.isFinite(planned) || !Number.isFinite(capacity) || capacity <= 0) {
+/** Hours / total allotted hours × 100. Empty when allotted hours is 0. */
+function formatUtilizationPercent(hours: number, allottedHours: number): string {
+  if (!Number.isFinite(hours) || !Number.isFinite(allottedHours) || allottedHours <= 0) {
     return "";
   }
-  const percent = (planned / capacity) * 100;
+  const percent = (hours / allottedHours) * 100;
   if (!Number.isFinite(percent)) return "";
   const rounded = Math.round(percent * 10) / 10;
   return `${Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)}%`;
+}
+
+function HoursWithUtilization({
+  hours,
+  allottedHours,
+  preferClockifyFormat = false,
+}: {
+  hours: number;
+  allottedHours: number;
+  preferClockifyFormat?: boolean;
+}) {
+  const hoursLabel = preferClockifyFormat
+    ? formatClockifyHours(hours) || formatTotal(hours)
+    : formatTotal(hours);
+  if (!hoursLabel) return null;
+  const utilization = formatUtilizationPercent(hours, allottedHours);
+  if (!utilization) return <>{hoursLabel}</>;
+  return (
+    <span className="overview2-hours-util">
+      <span className="overview2-hours-util-hours">{hoursLabel}</span>
+      <span className="overview2-hours-util-percent">{utilization}</span>
+    </span>
+  );
 }
 
 function sumClockifyForEngineer(
@@ -154,7 +177,6 @@ type EngineerRowGroupProps = {
   weeksExpanded: boolean;
   allottedExpanded: boolean;
   actualExpanded: boolean;
-  utilizationExpanded: boolean;
   clockifyHoursByMonth: Record<string, Record<string, number>>;
   clockifyHoursLoading: boolean;
   onUpdate: (row: UtilizationEntry) => void;
@@ -173,7 +195,6 @@ function EngineerRowGroup({
   weeksExpanded,
   allottedExpanded,
   actualExpanded,
-  utilizationExpanded,
   clockifyHoursByMonth,
   clockifyHoursLoading,
   onUpdate,
@@ -375,7 +396,6 @@ function EngineerRowGroup({
   const metricHeaderRows = [
     ...(allottedExpanded ? (["allotted"] as const) : []),
     ...(actualExpanded ? (["actual"] as const) : []),
-    ...(utilizationExpanded ? (["utilization"] as const) : []),
   ];
   const metricHeaderCount = metricHeaderRows.length;
   const nameRowSpan = Math.max(metricHeaderCount, 1);
@@ -394,7 +414,7 @@ function EngineerRowGroup({
   }
 
   function metricRowKind(
-    row: "allotted" | "actual" | "utilization" | "fallback",
+    row: "allotted" | "actual" | "fallback",
   ): "start" | "end" | "start-end" | "middle" {
     if (row === "fallback") {
       return hasTrailingRows ? "start" : "start-end";
@@ -410,7 +430,7 @@ function EngineerRowGroup({
   }
 
   function stickySlotClass(
-    row: "allotted" | "actual" | "utilization" | "fallback",
+    row: "allotted" | "actual" | "fallback",
   ): string {
     if (row === "fallback") {
       return "overview2-sticky-slot-1";
@@ -522,7 +542,10 @@ function EngineerRowGroup({
         {monthTotals.map((totals) => (
           <Fragment key={`${engineerName}-assigned-block-${totals.monthKey}`}>
             <td className="overview2-results-value overview2-results-month-value">
-              {formatTotal(totals.assigned)}
+              <HoursWithUtilization
+                hours={totals.assigned}
+                allottedHours={monthCapacitiesByKey[totals.monthKey] ?? 0}
+              />
             </td>
             {weeksExpanded && totals.monthKey === weeksMonthKey
               ? weekTotals.map((weekTotal, index) => (
@@ -530,7 +553,10 @@ function EngineerRowGroup({
                     key={`${engineerName}-assigned-${totals.monthKey}-w${weeks[index]?.weekNumber ?? index}`}
                     className="overview2-results-value overview2-results-week-value"
                   >
-                    {formatTotal(weekTotal.assigned)}
+                    <HoursWithUtilization
+                      hours={weekTotal.assigned}
+                      allottedHours={weeks[index]?.capacityHours ?? 0}
+                    />
                   </td>
                 ))
               : null}
@@ -580,7 +606,11 @@ function EngineerRowGroup({
             <td className="overview2-results-value overview2-results-month-value">
               {clockifyHoursLoading
                 ? "…"
-                : formatClockifyHours(totals.clockify) || formatTotal(totals.clockify)}
+                : <HoursWithUtilization
+                    hours={totals.clockify}
+                    allottedHours={monthCapacitiesByKey[totals.monthKey] ?? 0}
+                    preferClockifyFormat
+                  />}
             </td>
             {weeksExpanded && totals.monthKey === weeksMonthKey
               ? weekTotals.map((weekTotal, index) => (
@@ -590,7 +620,11 @@ function EngineerRowGroup({
                   >
                     {clockifyHoursLoading
                       ? "…"
-                      : formatClockifyHours(weekTotal.clockify) || formatTotal(weekTotal.clockify)}
+                      : <HoursWithUtilization
+                          hours={weekTotal.clockify}
+                          allottedHours={weeks[index]?.capacityHours ?? 0}
+                          preferClockifyFormat
+                        />}
                   </td>
                 ))
               : null}
@@ -600,73 +634,8 @@ function EngineerRowGroup({
       </tr>
       ) : null}
 
-      {/* Engineer utilization row */}
-      {utilizationExpanded ? (
-      <tr
-        className={`overview2-engineer-row overview2-engineer-row--utilization ${!allottedExpanded && !actualExpanded ? "overview2-engineer-row--allotted overview2-engineer-row--utilization-only" : ""} ${stickySlotClass("utilization")} ${blockClass(metricRowKind("utilization"))}`}
-        style={engineerAccentStyle}
-      >
-        {!allottedExpanded && !actualExpanded ? (
-          <th
-            scope="row"
-            rowSpan={nameRowSpan}
-            colSpan={2}
-            className="overview2-results-engineer"
-          >
-            <span className="overview2-engineer-header">
-              <span>{engineerName}</span>
-              <button
-                type="button"
-                className="overview2-expand-button"
-                onClick={() => {
-                  setProjectsExpanded((c) => {
-                    const next = !c;
-                    if (!next) setUncodedExpanded(false);
-                    return next;
-                  });
-                }}
-                aria-expanded={projectsExpanded}
-                disabled={Boolean(editingId)}
-                aria-label={projectsExpanded ? "Hide active projects" : "Show active projects"}
-              >
-                {projectsExpanded ? "−" : "+"}
-              </button>
-            </span>
-          </th>
-        ) : null}
-        <th scope="row" className="overview2-results-metric">Utilization %</th>
-        {monthTotals.map((totals) => {
-          const capacity = monthCapacitiesByKey[totals.monthKey] ?? 0;
-          return (
-            <Fragment key={`${engineerName}-util-block-${totals.monthKey}`}>
-              <td className="overview2-results-value overview2-results-month-value overview2-results-util-value">
-                {formatUtilizationPercent(totals.assigned, capacity)}
-              </td>
-              {weeksExpanded && totals.monthKey === weeksMonthKey
-                ? weekTotals.map((weekTotal, index) => {
-                    const week = weeks[index];
-                    return (
-                      <td
-                        key={`${engineerName}-util-${totals.monthKey}-w${week?.weekNumber ?? index}`}
-                        className="overview2-results-value overview2-results-week-value overview2-results-util-value"
-                      >
-                        {formatUtilizationPercent(
-                          weekTotal.assigned,
-                          week?.capacityHours ?? 0,
-                        )}
-                      </td>
-                    );
-                  })
-                : null}
-            </Fragment>
-          );
-        })}
-        <td className="actions-cell" />
-      </tr>
-      ) : null}
-
       {/* Fallback name row when all metric rows are hidden */}
-      {!allottedExpanded && !actualExpanded && !utilizationExpanded ? (
+      {!allottedExpanded && !actualExpanded ? (
       <tr
         className={`overview2-engineer-row overview2-engineer-row--allotted ${stickySlotClass("fallback")} ${blockClass(metricRowKind("fallback"))}`}
         style={engineerAccentStyle}
@@ -739,7 +708,10 @@ function EngineerRowGroup({
                   {byMonth.map((totals) => (
                     <Fragment key={`${entry.id}-a-block-${totals.monthKey}`}>
                       <td className="overview2-results-value overview2-results-month-value">
-                        {formatTotal(totals.assigned)}
+                        <HoursWithUtilization
+                          hours={totals.assigned}
+                          allottedHours={monthCapacitiesByKey[totals.monthKey] ?? 0}
+                        />
                       </td>
                       {weeksExpanded && totals.monthKey === weeksMonthKey
                         ? byWeek.map((weekTotal, index) => {
@@ -760,7 +732,10 @@ function EngineerRowGroup({
                                     onChange={(e) => updateWeekValue(week.weekNumber, e.target.value)}
                                   />
                                 ) : (
-                                  formatTotal(weekTotal.assigned)
+                                  <HoursWithUtilization
+                                    hours={weekTotal.assigned}
+                                    allottedHours={week.capacityHours}
+                                  />
                                 )}
                               </td>
                             );
@@ -806,7 +781,11 @@ function EngineerRowGroup({
                       <td className="overview2-results-value overview2-results-month-value">
                         {clockifyHoursLoading
                           ? "…"
-                          : formatClockifyHours(totals.clockify) || formatTotal(totals.clockify)}
+                          : <HoursWithUtilization
+                              hours={totals.clockify}
+                              allottedHours={monthCapacitiesByKey[totals.monthKey] ?? 0}
+                              preferClockifyFormat
+                            />}
                       </td>
                       {weeksExpanded && totals.monthKey === weeksMonthKey
                         ? byWeek.map((weekTotal, index) => (
@@ -816,8 +795,11 @@ function EngineerRowGroup({
                             >
                               {clockifyHoursLoading
                                 ? "…"
-                                : formatClockifyHours(weekTotal.clockify) ||
-                                  formatTotal(weekTotal.clockify)}
+                                : <HoursWithUtilization
+                                    hours={weekTotal.clockify}
+                                    allottedHours={weeks[index]?.capacityHours ?? 0}
+                                    preferClockifyFormat
+                                  />}
                             </td>
                           ))
                         : null}
@@ -897,7 +879,6 @@ type TeamSummaryRowsProps = {
   weeksExpanded: boolean;
   allottedExpanded: boolean;
   actualExpanded: boolean;
-  utilizationExpanded: boolean;
   clockifyHoursByMonth: Record<string, Record<string, number>>;
   clockifyHoursLoading: boolean;
 };
@@ -912,7 +893,6 @@ function TeamSummaryRows({
   weeksExpanded,
   allottedExpanded,
   actualExpanded,
-  utilizationExpanded,
   clockifyHoursByMonth,
   clockifyHoursLoading,
 }: TeamSummaryRowsProps) {
@@ -980,12 +960,11 @@ function TeamSummaryRows({
   const metricRows = [
     ...(allottedExpanded ? (["allotted"] as const) : []),
     ...(actualExpanded ? (["actual"] as const) : []),
-    ...(utilizationExpanded ? (["utilization"] as const) : []),
   ];
   const nameRowSpan = Math.max(metricRows.length, 1);
   const teamAccentStyle = { ["--engineer-accent" as string]: "#94a3b8" };
 
-  function rowKind(row: "allotted" | "actual" | "utilization"): string {
+  function rowKind(row: "allotted" | "actual"): string {
     const index = metricRows.indexOf(row);
     if (index < 0) return "overview2-engineer-block";
     const isFirst = index === 0;
@@ -1021,7 +1000,10 @@ function TeamSummaryRows({
           {monthTotals.map((totals) => (
             <Fragment key={`team-assigned-${totals.monthKey}`}>
               <td className="overview2-results-value overview2-results-month-value">
-                {formatTotal(totals.assigned)}
+                <HoursWithUtilization
+                  hours={totals.assigned}
+                  allottedHours={(monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize}
+                />
               </td>
               {weeksExpanded && totals.monthKey === weeksMonthKey
                 ? weekTotals.map((weekTotal, index) => (
@@ -1029,7 +1011,10 @@ function TeamSummaryRows({
                       key={`team-assigned-w${weeks[index]?.weekNumber ?? index}`}
                       className="overview2-results-value overview2-results-week-value"
                     >
-                      {formatTotal(weekTotal.assigned)}
+                      <HoursWithUtilization
+                        hours={weekTotal.assigned}
+                        allottedHours={(weeks[index]?.capacityHours ?? 0) * teamSize}
+                      />
                     </td>
                   ))
                 : null}
@@ -1062,8 +1047,11 @@ function TeamSummaryRows({
               <td className="overview2-results-value overview2-results-month-value">
                 {clockifyHoursLoading
                   ? "…"
-                  : formatClockifyHours(totals.clockify) ||
-                    formatTotal(totals.clockify)}
+                  : <HoursWithUtilization
+                      hours={totals.clockify}
+                      allottedHours={(monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize}
+                      preferClockifyFormat
+                    />}
               </td>
               {weeksExpanded && totals.monthKey === weeksMonthKey
                 ? weekTotals.map((weekTotal, index) => (
@@ -1073,62 +1061,16 @@ function TeamSummaryRows({
                     >
                       {clockifyHoursLoading
                         ? "…"
-                        : formatClockifyHours(weekTotal.clockify) ||
-                          formatTotal(weekTotal.clockify)}
+                        : <HoursWithUtilization
+                            hours={weekTotal.clockify}
+                            allottedHours={(weeks[index]?.capacityHours ?? 0) * teamSize}
+                            preferClockifyFormat
+                          />}
                     </td>
                   ))
                 : null}
             </Fragment>
           ))}
-          <td className="actions-cell" />
-        </tr>
-      ) : null}
-
-      {utilizationExpanded ? (
-        <tr
-          className={`overview2-engineer-row overview2-engineer-row--utilization overview2-team-row ${!allottedExpanded && !actualExpanded ? "overview2-engineer-row--allotted overview2-engineer-row--utilization-only" : ""} ${rowKind("utilization")}`}
-          style={teamAccentStyle}
-        >
-          {!allottedExpanded && !actualExpanded ? (
-            <th
-              scope="row"
-              rowSpan={nameRowSpan}
-              colSpan={2}
-              className="overview2-results-engineer overview2-team-label"
-            >
-              Team
-            </th>
-          ) : null}
-          <th scope="row" className="overview2-results-metric">
-            Utilization %
-          </th>
-          {monthTotals.map((totals) => {
-            const capacity =
-              (monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize;
-            return (
-              <Fragment key={`team-util-${totals.monthKey}`}>
-                <td className="overview2-results-value overview2-results-month-value overview2-results-util-value">
-                  {formatUtilizationPercent(totals.assigned, capacity)}
-                </td>
-                {weeksExpanded && totals.monthKey === weeksMonthKey
-                  ? weekTotals.map((weekTotal, index) => {
-                      const week = weeks[index];
-                      return (
-                        <td
-                          key={`team-util-w${week?.weekNumber ?? index}`}
-                          className="overview2-results-value overview2-results-week-value overview2-results-util-value"
-                        >
-                          {formatUtilizationPercent(
-                            weekTotal.assigned,
-                            (week?.capacityHours ?? 0) * teamSize,
-                          )}
-                        </td>
-                      );
-                    })
-                  : null}
-              </Fragment>
-            );
-          })}
           <td className="actions-cell" />
         </tr>
       ) : null}
@@ -1171,7 +1113,6 @@ export function Overview2GroupedResults({
   const [expandedMonthKey, setExpandedMonthKey] = useState<string | null>(null);
   const [allottedExpanded, setAllottedExpanded] = useState(true);
   const [actualExpanded, setActualExpanded] = useState(true);
-  const [utilizationExpanded, setUtilizationExpanded] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
   const headerRowRef = useRef<HTMLTableRowElement>(null);
 
@@ -1241,7 +1182,6 @@ export function Overview2GroupedResults({
     dateRange.end,
     allottedExpanded,
     actualExpanded,
-    utilizationExpanded,
     engineers.length,
   ]);
 
@@ -1361,25 +1301,6 @@ export function Overview2GroupedResults({
                       {actualExpanded ? "−" : "+"}
                     </button>
                   </span>
-                  <span
-                    className="overview2-metric-toggle-label"
-                    title="Toggle Utilization % rows"
-                  >
-                    Util %
-                    <button
-                      type="button"
-                      className="overview2-expand-button"
-                      onClick={() => setUtilizationExpanded((c) => !c)}
-                      aria-expanded={utilizationExpanded}
-                      aria-label={
-                        utilizationExpanded
-                          ? "Hide utilization percent"
-                          : "Show utilization percent"
-                      }
-                    >
-                      {utilizationExpanded ? "−" : "+"}
-                    </button>
-                  </span>
                 </span>
               </th>
               {monthsInRange.map((cursor, index) => {
@@ -1446,7 +1367,6 @@ export function Overview2GroupedResults({
                 weeksExpanded={weeksExpanded}
                 allottedExpanded={allottedExpanded}
                 actualExpanded={actualExpanded}
-                utilizationExpanded={utilizationExpanded}
                 clockifyHoursByMonth={clockifyHoursByMonth}
                 clockifyHoursLoading={clockifyHoursLoading}
                 onUpdate={eng.onUpdate}
@@ -1465,7 +1385,6 @@ export function Overview2GroupedResults({
               weeksExpanded={weeksExpanded}
               allottedExpanded={allottedExpanded}
               actualExpanded={actualExpanded}
-              utilizationExpanded={utilizationExpanded}
               clockifyHoursByMonth={clockifyHoursByMonth}
               clockifyHoursLoading={clockifyHoursLoading}
             />
