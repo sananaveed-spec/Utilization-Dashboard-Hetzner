@@ -1122,32 +1122,20 @@ td.col-project-name {
   padding-right: 0.35rem !important;
 }
 
+/* Current month: thicker borders (match table family, uniform dark edge) */
 .overview2-results-date--current {
-  background: #0e4a5c !important;
-  color: #ecfeff;
-  box-shadow: inset 0 -3px 0 #22d3ee;
-}
-
-.overview2-results-date--current .overview2-month-forecast {
-  color: #a5f3fc;
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
+  border-top: 5px solid #94a3b8 !important;
 }
 
 .overview2-results-month-value--current {
-  background: rgba(34, 211, 238, 0.16) !important;
-}
-
-.overview2-sticky-slot-1 > .overview2-results-month-value--current,
-.overview2-sticky-slot-2 > .overview2-results-month-value--current,
-.overview2-engineer-row .overview2-results-month-value--current {
-  background: #1a3f4d !important;
-}
-
-.overview2-project-row .overview2-results-month-value--current {
-  background: #143744 !important;
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
 }
 
 .overview2-team-row .overview2-results-month-value--current {
-  background: #0f3542 !important;
+  border-bottom: 5px solid #94a3b8 !important;
 }
 
 /* Utilization heatmap — Excel-style pastel fills + dark text */
@@ -1445,7 +1433,7 @@ td.col-project-name {
 .overview2-results-project {
   text-align: left;
   font-weight: 400;
-  font-size: 0.65rem;
+  font-size: calc(0.65rem + 3px);
   background: #111827;
   color: #cbd5e1;
   border-top: 1px solid #475569 !important;
@@ -1768,8 +1756,9 @@ td.col-project-name {
 .analysis-cal-popover {
   position: absolute;
   top: calc(100% + 0.55rem);
-  left: 50%;
-  transform: translateX(-50%);
+  left: auto;
+  right: 0;
+  transform: none;
   z-index: 40;
   display: flex;
   width: max-content;
@@ -1787,8 +1776,8 @@ td.col-project-name {
   content: "";
   position: absolute;
   top: -7px;
-  left: 50%;
-  transform: translateX(-50%);
+  left: auto;
+  right: 1.75rem;
   width: 12px;
   height: 12px;
   background: #ffffff;
@@ -1965,9 +1954,13 @@ td.col-project-name {
 @media (max-width: 40rem) {
   .analysis-cal-popover {
     flex-direction: column;
-    right: auto;
     left: 0;
+    right: 0;
     max-width: min(92vw, 22rem);
+  }
+
+  .analysis-cal-popover::before {
+    right: 1.25rem;
   }
 
   .analysis-cal-presets {
@@ -2501,38 +2494,14 @@ body {
   color: #334155;
 }
 
+/* Current month column frame — thick gray outer border like a column box */
 .overview2-results-date--current {
-  background: #ebf0f7 !important;
+  background: #f8fafc !important;
   color: #0f172a;
-  box-shadow: inset 0 -3px 0 #94a3b8;
-  border-color: #cbd5e1 !important;
 }
 
 .overview2-results-date--current .overview2-month-forecast {
   color: #64748b;
-}
-
-.overview2-results-month-value--current {
-  background: #ebf0f7 !important;
-}
-
-.overview2-sticky-slot-1 > .overview2-results-month-value--current,
-.overview2-sticky-slot-2 > .overview2-results-month-value--current,
-.overview2-engineer-row .overview2-results-month-value--current {
-  background: #ebf0f7 !important;
-}
-
-.overview2-project-row .overview2-results-month-value--current {
-  background: #ebf0f7 !important;
-}
-
-.overview2-team-row .overview2-results-month-value--current {
-  background: #ebf0f7 !important;
-}
-
-/* Heatmap wins on filled cells; keep an edge so current month stays visible */
-.overview2-results-month-value--current.overview2-util-heat {
-  box-shadow: inset 3px 0 0 #94a3b8;
 }
 
 .overview2-month-forecast,
@@ -2651,12 +2620,12 @@ body {
 .overview2-results-project-name,
 .overview2-results-project-name .project-name-text {
   color: #0f172a;
-  font-size: 0.65rem;
+  font-size: calc(0.65rem + 3px);
 }
 
 .overview2-results-project-name .project-name-toggle {
   color: #2563eb;
-  font-size: 0.6rem;
+  font-size: calc(0.6rem + 3px);
 }
 
 .overview2-results-project-name .project-name-toggle:hover {
@@ -2688,5 +2657,126 @@ body {
   .dashboard-sidebar {
     border-bottom-color: #d1d5db;
   }
+}
+
+/* Match Overview light theme on Analysis / Holidays / Users */
+.analysis-title,
+.analysis-insight-value,
+.analysis-chart-title,
+.users-add-label {
+  color: #0f172a;
+}
+
+.analysis-subtitle,
+.analysis-chart-hint,
+.analysis-empty,
+.analysis-insight-detail,
+.holidays-empty {
+  color: #64748b;
+}
+
+.analysis-chart-card,
+.holidays-table-wrap {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.holidays-table th {
+  background: #f8fafc;
+  color: #000000;
+}
+
+.holidays-table th,
+.holidays-table td {
+  border-bottom-color: #e2e8f0;
+  color: #000000;
+}
+
+.holidays-panel .analysis-title,
+.holidays-panel .analysis-subtitle,
+.holidays-empty,
+.holidays-value,
+.holidays-input,
+.holidays-date {
+  color: #000000;
+}
+
+.holidays-input,
+.analysis-range-trigger.field-input,
+.users-add-row .holidays-input {
+  background: #ffffff;
+  color: #000000;
+  border-color: #cbd5e1;
+}
+
+.holidays-date {
+  color-scheme: light;
+}
+
+.analysis-range-trigger-icon {
+  color: #64748b;
+}
+
+.dashboard-nav-item {
+  background: transparent;
+  color: #334155;
+}
+
+.dashboard-nav-item:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.dashboard-nav-item--active {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+/* Current month — uniform border color on all sides + soft drop shadow */
+.overview2-results-table thead th.overview2-results-date.overview2-results-date--current {
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
+  border-top: 5px solid #94a3b8 !important;
+  box-shadow: 4px 2px 8px rgba(15, 23, 42, 0.12) !important;
+}
+
+.overview2-results-table tbody td.overview2-results-month-value.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-engineer-row
+  td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-project-row
+  td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-sticky-slot-1
+  > td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-sticky-slot-2
+  > td.overview2-results-month-value--current {
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
+  border-left-color: #94a3b8 !important;
+  border-right-color: #94a3b8 !important;
+  box-shadow: 4px 0 8px rgba(15, 23, 42, 0.12) !important;
+}
+
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-month-value--current {
+  border-bottom: 5px solid #94a3b8 !important;
+  box-shadow: 4px 3px 8px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Keep engineer accent on the name column only — not on Planned Hours when scrolled */
+.overview2-engineer-block--start > .overview2-results-metric,
+.overview2-engineer-block--end > .overview2-results-metric,
+.overview2-engineer-block--start.overview2-engineer-block--end
+  > .overview2-results-metric {
+  border-top-color: #cbd5e1 !important;
+  border-bottom-color: #cbd5e1 !important;
 }
 
