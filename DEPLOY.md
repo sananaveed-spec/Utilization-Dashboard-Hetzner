@@ -4,9 +4,51 @@ Docker access on the server is resolved when `docker ps` works as your user with
 
 This app is a Next.js container (see `Dockerfile`) with JSON files under `DATA_DIR`. Deploy with **Coolify** on `ubuntu-4gb-sin-2`.
 
+## How deployment works (local → GitHub → server)
+
+Your teammate’s flow:
+
+1. **Work locally** (this repo on your PC)
+2. **Commit + push** to GitHub (`main`)
+3. **Server pulls from GitHub** (Coolify uses an SSH deploy key) and rebuilds
+
+You do **not** upload files over SCP for normal updates. GitHub is the source of truth; Coolify auto-picks new commits.
+
+Repo: `https://github.com/sananaveed-spec/Utilization-Dashboard-Hetzner`
+
+### Connect GitHub to Coolify via SSH (one-time)
+
+1. In Coolify → **Sources** (or **Git** / private keys): generate or paste an **SSH deploy key** for this app
+2. On GitHub → repo **Settings** → **Deploy keys** → **Add deploy key**
+   - Paste the **public** key Coolify shows
+   - Allow read access (write not required for deploy)
+3. In Coolify → Application → set repository to:
+   - SSH URL: `git@github.com:sananaveed-spec/Utilization-Dashboard-Hetzner.git`
+   - Branch: `main`
+4. Enable **Auto Deploy** (deploy on push / webhook) so a push to `main` triggers build + restart
+5. Click **Deploy** once to confirm the server can clone via SSH
+
+If Auto Deploy is off, after each push either click **Deploy** in Coolify or on the server:
+
+```bash
+cd /path/to/app   # only if you maintain a bare git checkout outside Coolify
+git pull origin main
+# then rebuild via Coolify UI (preferred) or docker compose build/up
+```
+
+### Day-to-day (developers)
+
+```bash
+git add .
+git commit -m "Your message"
+git push origin main
+```
+
+Coolify pulls that commit and redeploys. Keep `DATA_DIR` / volume mounted so JSON data is not wiped.
+
 ## Prerequisites
 
-1. Latest code pushed to GitHub: `https://github.com/sananaveed-spec/Utilization-Dashboard.git`
+1. Repo connected in Coolify with SSH deploy key (see above)
 2. Coolify UI open on the Hetzner server
 3. Azure AD app registration you can edit (redirect URIs)
 4. Timesheets API token and organization id
@@ -14,20 +56,24 @@ This app is a Next.js container (see `Dockerfile`) with JSON files under `DATA_D
 ## 1. Create the application in Coolify
 
 1. **New Resource** → **Application**
-2. Connect the GitHub repository above (branch: `main`)
+2. Connect `Utilization-Dashboard-Hetzner` via SSH (branch: `main`) — see “Connect GitHub to Coolify via SSH”
 3. Build pack: **Dockerfile** (repo root [`Dockerfile`](Dockerfile))  
    - Alternate: **Docker Compose** using [`docker-compose.yml`](docker-compose.yml) (volume `utilization-data` → `/app/data` is already declared)
 4. Port: **3000**
 5. Do **not** override the start command (image runs `node server.js`)
+6. Turn on **Auto Deploy** so pushes to `main` rebuild automatically
 
 Coolify settings that must match this repo:
 
 | Setting | Value |
 |---------|-------|
+| Repository | `git@github.com:sananaveed-spec/Utilization-Dashboard-Hetzner.git` |
+| Branch | `main` |
 | Build pack | Dockerfile |
 | Dockerfile location | `/Dockerfile` |
 | Ports exposes | `3000` |
 | Persistent storage destination | `/app/data` |
+| Auto Deploy | On |
 
 ## 2. Persistent volume for JSON data
 
@@ -92,10 +138,11 @@ Save, then wait a minute for propagation.
 
 ## 6. Deploy and verify
 
-1. Coolify → **Deploy**
-2. Open the public URL → sign in with an `@allumiax.com` account
-3. Create or edit an entry
-4. Coolify → **Restart** (or redeploy) and confirm the data is still there (volume works)
+1. Push to `main` (or Coolify → **Deploy** if Auto Deploy is off)
+2. Wait for Coolify build to finish (SSH pull from GitHub + Docker build)
+3. Open the public URL → sign in with an `@allumiax.com` account
+4. Create or edit an entry
+5. Coolify → **Restart** (or redeploy) and confirm the data is still there (volume works)
 
 ### Quick health checks on the server
 

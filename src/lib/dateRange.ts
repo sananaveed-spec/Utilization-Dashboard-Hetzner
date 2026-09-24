@@ -289,3 +289,18 @@ export function formatMonthYear(cursor: MonthCursor): string {
 export function getDefaultAnalysisDateRange(now = new Date()): DateRange {
   return getPresetRange("this-month", now);
 }
+
+/**
+ * Overview default: full months from 6 months before the current month
+ * through 6 months after (13 months total, centered on the current month).
+ */
+export function getDefaultOverviewDateRange(now = new Date()): DateRange {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const start = startOfMonth(
+    new Date(today.getFullYear(), today.getMonth() - 6, 1),
+  );
+  const end = endOfMonth(
+    new Date(today.getFullYear(), today.getMonth() + 6, 1),
+  );
+  return { start: toDateKey(start), end: toDateKey(end) };
+}

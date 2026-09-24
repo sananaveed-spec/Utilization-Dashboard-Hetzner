@@ -1122,6 +1122,104 @@ td.col-project-name {
   padding-right: 0.35rem !important;
 }
 
+.overview2-results-date--current {
+  background: #0e4a5c !important;
+  color: #ecfeff;
+  box-shadow: inset 0 -3px 0 #22d3ee;
+}
+
+.overview2-results-date--current .overview2-month-forecast {
+  color: #a5f3fc;
+}
+
+.overview2-results-month-value--current {
+  background: rgba(34, 211, 238, 0.16) !important;
+}
+
+.overview2-sticky-slot-1 > .overview2-results-month-value--current,
+.overview2-sticky-slot-2 > .overview2-results-month-value--current,
+.overview2-engineer-row .overview2-results-month-value--current {
+  background: #1a3f4d !important;
+}
+
+.overview2-project-row .overview2-results-month-value--current {
+  background: #143744 !important;
+}
+
+.overview2-team-row .overview2-results-month-value--current {
+  background: #0f3542 !important;
+}
+
+/* Utilization heatmap — Excel-style pastel fills + dark text */
+.overview2-util-heat--0-25 {
+  background: #bdd7ee !important;
+  color: #1f4e79;
+}
+
+.overview2-util-heat--25-50 {
+  background: #a8d5c8 !important;
+  color: #0d5c4d;
+}
+
+.overview2-util-heat--50-75 {
+  background: #c6efce !important;
+  color: #006100;
+}
+
+.overview2-util-heat--75-100 {
+  background: #a9d08e !important;
+  color: #375623;
+}
+
+.overview2-util-heat--over {
+  background: #ffc7ce !important;
+  color: #9c0006;
+}
+
+.overview2-util-heat .overview2-hours-util-hours,
+.overview2-util-heat .overview2-hours-util-percent {
+  color: inherit;
+}
+
+.overview2-util-heat .overview2-hours-util-hours {
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.overview2-util-heat .overview2-hours-util-percent {
+  font-weight: 700;
+}
+
+.overview2-sticky-slot-1 > .overview2-util-heat--0-25,
+.overview2-sticky-slot-2 > .overview2-util-heat--0-25 {
+  background: #bdd7ee !important;
+  color: #1f4e79;
+}
+
+.overview2-sticky-slot-1 > .overview2-util-heat--25-50,
+.overview2-sticky-slot-2 > .overview2-util-heat--25-50 {
+  background: #a8d5c8 !important;
+  color: #0d5c4d;
+}
+
+.overview2-sticky-slot-1 > .overview2-util-heat--50-75,
+.overview2-sticky-slot-2 > .overview2-util-heat--50-75 {
+  background: #c6efce !important;
+  color: #006100;
+}
+
+.overview2-sticky-slot-1 > .overview2-util-heat--75-100,
+.overview2-sticky-slot-2 > .overview2-util-heat--75-100 {
+  background: #a9d08e !important;
+  color: #375623;
+}
+
+.overview2-sticky-slot-1 > .overview2-util-heat--over,
+.overview2-sticky-slot-2 > .overview2-util-heat--over {
+  background: #ffc7ce !important;
+  color: #9c0006;
+}
+
 .overview2-month-header {
   display: inline-flex;
   align-items: center;
@@ -1194,9 +1292,9 @@ td.col-project-name {
   text-align: left;
   font-weight: 600;
   white-space: nowrap;
-  width: 15rem;
-  min-width: 15rem;
-  max-width: 15rem;
+  width: 22rem;
+  min-width: 22rem;
+  max-width: 22rem;
   background: #1e293b;
   border-left: 3px solid var(--engineer-accent, #38bdf8) !important;
   border-top: 1px solid #475569 !important;
@@ -1308,9 +1406,9 @@ td.col-project-name {
 }
 
 .overview2-col-name {
-  /* Absorbs leftover table width so project names can show more text. */
-  width: auto;
-  min-width: 14rem;
+  width: 16rem;
+  min-width: 16rem;
+  max-width: 16rem;
 }
 
 .overview2-col-metric {
@@ -1338,7 +1436,7 @@ td.col-project-name {
 
 .overview2-results-identity-header {
   width: auto;
-  min-width: 20rem;
+  min-width: 22rem;
   background: #0f172a !important;
   border-left: 2px solid #e2e8f0 !important;
   border-right: 1px solid #475569 !important;
@@ -1347,7 +1445,7 @@ td.col-project-name {
 .overview2-results-project {
   text-align: left;
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 0.65rem;
   background: #111827;
   color: #cbd5e1;
   border-top: 1px solid #475569 !important;
@@ -1366,8 +1464,9 @@ td.col-project-name {
 }
 
 .overview2-results-project-name {
-  width: auto;
-  min-width: 14rem;
+  width: 16rem;
+  min-width: 16rem;
+  max-width: 16rem;
   overflow: hidden;
   border-left: 1px solid #475569 !important;
   border-right: 1px solid #475569 !important;
@@ -2287,6 +2386,307 @@ td.col-project-name {
   .dashboard-nav-item {
     flex: 1 1 8rem;
     text-align: center;
+  }
+}
+
+/* ─── Light Excel-style full dashboard theme ─── */
+body {
+  background: #f3f4f6;
+  color: #0f172a;
+}
+
+.auth-header,
+.card {
+  background: #ffffff;
+  border-color: #d1d5db;
+}
+
+.auth-header-title,
+.dashboard-title {
+  color: #0f172a;
+}
+
+.auth-header-meta,
+.login-subtitle {
+  color: #64748b;
+}
+
+.dashboard-sidebar {
+  background: #eef2f7;
+  border-right-color: #d1d5db;
+}
+
+.dashboard-sidebar-brand {
+  color: #64748b;
+}
+
+.dashboard-nav-item {
+  color: #334155;
+}
+
+.dashboard-nav-item:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.dashboard-nav-item--active {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+.dashboard-main {
+  background: #ffffff;
+}
+
+.overview2-radio-row {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+.overview2-radio-option {
+  color: #000000;
+}
+
+.field-label {
+  color: #000000;
+}
+
+.overview2-results-table {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.overview2-results-table th,
+.overview2-results-table td {
+  border-color: #cbd5e1;
+}
+
+.overview2-results-table thead th,
+.overview2-header-row > th {
+  background: #f8fafc !important;
+  color: #0f172a;
+  box-shadow: inset 0 -2px 0 #94a3b8;
+}
+
+.overview2-header-row th {
+  border-top-color: #94a3b8 !important;
+  border-bottom-color: #94a3b8 !important;
+}
+
+.overview2-header-row th:first-child {
+  border-left-color: #94a3b8 !important;
+}
+
+.overview2-header-row th:last-child {
+  border-right-color: #94a3b8 !important;
+}
+
+.overview2-header-row th:not(:first-child):not(:last-child) {
+  border-left-color: #cbd5e1 !important;
+  border-right-color: #cbd5e1 !important;
+}
+
+.overview2-results-identity-header,
+.overview2-results-metric-header {
+  background: #f8fafc !important;
+  color: #0f172a;
+}
+
+.overview2-metric-toggle-label {
+  color: #334155;
+}
+
+.overview2-results-metric {
+  color: #334155;
+}
+
+.overview2-results-date--current {
+  background: #ebf0f7 !important;
+  color: #0f172a;
+  box-shadow: inset 0 -3px 0 #94a3b8;
+  border-color: #cbd5e1 !important;
+}
+
+.overview2-results-date--current .overview2-month-forecast {
+  color: #64748b;
+}
+
+.overview2-results-month-value--current {
+  background: #ebf0f7 !important;
+}
+
+.overview2-sticky-slot-1 > .overview2-results-month-value--current,
+.overview2-sticky-slot-2 > .overview2-results-month-value--current,
+.overview2-engineer-row .overview2-results-month-value--current {
+  background: #ebf0f7 !important;
+}
+
+.overview2-project-row .overview2-results-month-value--current {
+  background: #ebf0f7 !important;
+}
+
+.overview2-team-row .overview2-results-month-value--current {
+  background: #ebf0f7 !important;
+}
+
+/* Heatmap wins on filled cells; keep an edge so current month stays visible */
+.overview2-results-month-value--current.overview2-util-heat {
+  box-shadow: inset 3px 0 0 #94a3b8;
+}
+
+.overview2-month-forecast,
+.overview2-week-forecast {
+  color: #64748b;
+}
+
+.overview2-expand-button {
+  background: #ffffff;
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.overview2-expand-button:hover {
+  background: #e2e8f0;
+}
+
+.overview2-results-engineer {
+  background: #f1f5f9;
+  color: #000000;
+}
+
+.overview2-results-engineer .overview2-engineer-header {
+  color: #000000;
+}
+
+.overview2-sticky-slot-1 > .overview2-results-engineer,
+.overview2-sticky-slot-2 > .overview2-results-engineer {
+  color: #000000 !important;
+}
+
+.overview2-team-label {
+  color: #0f172a;
+}
+
+.overview2-team-row .overview2-results-metric,
+.overview2-team-row .overview2-results-value,
+.overview2-team-row .actions-cell,
+.overview2-team-row .overview2-results-engineer {
+  background: #e2e8f0 !important;
+}
+
+.overview2-engineer-row .overview2-results-metric,
+.overview2-engineer-row .overview2-results-value,
+.overview2-engineer-row .actions-cell {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.overview2-engineer-row--allotted .overview2-results-metric,
+.overview2-engineer-row--allotted .overview2-results-value,
+.overview2-engineer-row--allotted .actions-cell,
+.overview2-engineer-row--actual .overview2-results-metric,
+.overview2-engineer-row--actual .overview2-results-value,
+.overview2-engineer-row--actual .actions-cell {
+  border-top-color: #cbd5e1 !important;
+  border-bottom-color: #cbd5e1 !important;
+}
+
+.overview2-engineer-row .overview2-results-metric,
+.overview2-engineer-row .overview2-results-value {
+  border-left-color: #cbd5e1 !important;
+  border-right-color: #cbd5e1 !important;
+}
+
+.overview2-sticky-slot-1 > *,
+.overview2-sticky-slot-2 > *,
+.overview2-sticky-slot-3 > * {
+  background: #ffffff !important;
+}
+
+.overview2-sticky-slot-1:not(:has(~ .overview2-sticky-slot-2)):not(
+    :has(~ .overview2-sticky-slot-3)
+  )
+  > *,
+.overview2-sticky-slot-2:not(:has(~ .overview2-sticky-slot-3)) > *,
+.overview2-sticky-slot-3 > * {
+  box-shadow: 0 2px 0 #94a3b8;
+}
+
+.overview2-results-project {
+  background: #f8fafc;
+  color: #334155;
+  border-top-color: #cbd5e1 !important;
+  border-bottom-color: #cbd5e1 !important;
+}
+
+.overview2-project-row .overview2-results-metric,
+.overview2-project-row .overview2-results-value,
+.overview2-project-row .actions-cell {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.overview2-project-row--allotted .overview2-results-metric,
+.overview2-project-row--allotted .overview2-results-value,
+.overview2-project-row--allotted .actions-cell,
+.overview2-project-row--actual .overview2-results-metric,
+.overview2-project-row--actual .overview2-results-value,
+.overview2-project-row--actual .actions-cell {
+  border-top-color: #cbd5e1 !important;
+  border-bottom-color: #cbd5e1 !important;
+}
+
+.overview2-project-row .overview2-results-metric,
+.overview2-project-row .overview2-results-value {
+  border-left-color: #cbd5e1 !important;
+  border-right-color: #cbd5e1 !important;
+}
+
+.overview2-results-empty {
+  color: #64748b;
+}
+
+.overview2-results-project,
+.overview2-results-project-name,
+.overview2-results-project-name .project-name-text {
+  color: #0f172a;
+  font-size: 0.65rem;
+}
+
+.overview2-results-project-name .project-name-toggle {
+  color: #2563eb;
+  font-size: 0.6rem;
+}
+
+.overview2-results-project-name .project-name-toggle:hover {
+  color: #1d4ed8;
+}
+
+.overview2-uncoded-toggle-cell {
+  background: #f8fafc;
+  border-left-color: #cbd5e1 !important;
+  border-right-color: #cbd5e1 !important;
+  border-bottom-color: #cbd5e1 !important;
+}
+
+.overview2-hours-util-hours {
+  color: #475569;
+}
+
+.overview2-hours-util-percent {
+  color: #0369a1;
+}
+
+.overview2-results-table .week-input {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #94a3b8;
+}
+
+@media (max-width: 56rem) {
+  .dashboard-sidebar {
+    border-bottom-color: #d1d5db;
   }
 }
 

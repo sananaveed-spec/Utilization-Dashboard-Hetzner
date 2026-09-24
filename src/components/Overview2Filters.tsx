@@ -10,7 +10,7 @@ import {
 } from "@/lib/entries";
 import { isSameEngineerName } from "@/lib/engineers";
 import {
-  getPresetRange,
+  getDefaultOverviewDateRange,
   listMonthsInDateRange,
   type DateRange,
 } from "@/lib/dateRange";
@@ -114,7 +114,9 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [month, setMonth] = useState<MonthCursor>(() => getCurrentMonthCursor());
-  const [dateRange, setDateRange] = useState<DateRange>(() => getPresetRange("this-month"));
+  const [dateRange, setDateRange] = useState<DateRange>(() =>
+    getDefaultOverviewDateRange(),
+  );
   const [clockifyHoursByMonth, setClockifyHoursByMonth] = useState<
     Record<string, Record<string, number>>
   >({});
