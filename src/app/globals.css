@@ -1134,17 +1134,25 @@ td.col-project-name {
   padding-right: 0.35rem !important;
 }
 
-/* Current month: thicker borders (match table family, uniform dark edge) */
+/* Current month frame: one outline around month + its weeks when expanded */
 .overview2-results-date--current {
   border-left: 5px solid #94a3b8 !important;
   border-right: 5px solid #94a3b8 !important;
   border-top: 5px solid #94a3b8 !important;
 }
 
+.overview2-results-date--current-open {
+  border-right: 1px solid #cbd5e1 !important;
+}
+
 .overview2-results-week--current {
-  border-left: 5px solid #94a3b8 !important;
-  border-right: 5px solid #94a3b8 !important;
   border-top: 5px solid #94a3b8 !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+.overview2-results-week--current-end {
+  border-right: 5px solid #94a3b8 !important;
 }
 
 .overview2-results-month-value--current {
@@ -1152,8 +1160,16 @@ td.col-project-name {
   border-right: 5px solid #94a3b8 !important;
 }
 
+.overview2-results-month-value--current-open {
+  border-right: 1px solid #cbd5e1 !important;
+}
+
 .overview2-results-week-value--current {
-  border-left: 5px solid #94a3b8 !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+}
+
+.overview2-results-week-value--current-end {
   border-right: 5px solid #94a3b8 !important;
 }
 
@@ -2870,51 +2886,114 @@ body {
   color: #0f172a;
 }
 
-/* Current month — uniform border color on all sides + soft drop shadow */
-.overview2-results-table thead th.overview2-results-date.overview2-results-date--current,
-.overview2-results-table thead th.overview2-results-week.overview2-results-week--current {
+/* Current month — one frame from month column through last week */
+.overview2-results-table thead th.overview2-results-date.overview2-results-date--current {
   border-left: 5px solid #94a3b8 !important;
   border-right: 5px solid #94a3b8 !important;
   border-top: 5px solid #94a3b8 !important;
   box-shadow: 4px 2px 8px rgba(15, 23, 42, 0.12) !important;
 }
 
+.overview2-results-table
+  thead
+  th.overview2-results-date.overview2-results-date--current-open {
+  border-right: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.overview2-results-table thead th.overview2-results-week.overview2-results-week--current {
+  border-top: 5px solid #94a3b8 !important;
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.overview2-results-table
+  thead
+  th.overview2-results-week.overview2-results-week--current-end {
+  border-right: 5px solid #94a3b8 !important;
+  box-shadow: 4px 2px 8px rgba(15, 23, 42, 0.12) !important;
+}
+
 .overview2-results-table tbody td.overview2-results-month-value.overview2-results-month-value--current,
-.overview2-results-table tbody td.overview2-results-week-value.overview2-results-week-value--current,
 .overview2-results-table
   .overview2-engineer-row
   td.overview2-results-month-value--current,
 .overview2-results-table
-  .overview2-engineer-row
-  td.overview2-results-week-value--current,
-.overview2-results-table
   .overview2-project-row
   td.overview2-results-month-value--current,
 .overview2-results-table
-  .overview2-project-row
-  td.overview2-results-week-value--current,
-.overview2-results-table
   .overview2-team-row
   td.overview2-results-month-value--current,
-.overview2-results-table
-  .overview2-team-row
-  td.overview2-results-week-value--current,
 .overview2-results-table
   .overview2-sticky-slot-1
   > td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-sticky-slot-2
+  > td.overview2-results-month-value--current {
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
+  box-shadow: 4px 0 8px rgba(15, 23, 42, 0.12) !important;
+}
+
+.overview2-results-table tbody td.overview2-results-month-value--current-open,
+.overview2-results-table
+  .overview2-engineer-row
+  td.overview2-results-month-value--current-open,
+.overview2-results-table
+  .overview2-project-row
+  td.overview2-results-month-value--current-open,
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-month-value--current-open,
+.overview2-results-table
+  .overview2-sticky-slot-1
+  > td.overview2-results-month-value--current-open,
+.overview2-results-table
+  .overview2-sticky-slot-2
+  > td.overview2-results-month-value--current-open {
+  border-right: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.overview2-results-table tbody td.overview2-results-week-value--current,
+.overview2-results-table
+  .overview2-engineer-row
+  td.overview2-results-week-value--current,
+.overview2-results-table
+  .overview2-project-row
+  td.overview2-results-week-value--current,
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-week-value--current,
 .overview2-results-table
   .overview2-sticky-slot-1
   > td.overview2-results-week-value--current,
 .overview2-results-table
   .overview2-sticky-slot-2
-  > td.overview2-results-month-value--current,
+  > td.overview2-results-week-value--current {
+  border-left: 1px solid #cbd5e1 !important;
+  border-right: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+}
+
+.overview2-results-table tbody td.overview2-results-week-value--current-end,
+.overview2-results-table
+  .overview2-engineer-row
+  td.overview2-results-week-value--current-end,
+.overview2-results-table
+  .overview2-project-row
+  td.overview2-results-week-value--current-end,
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-week-value--current-end,
+.overview2-results-table
+  .overview2-sticky-slot-1
+  > td.overview2-results-week-value--current-end,
 .overview2-results-table
   .overview2-sticky-slot-2
-  > td.overview2-results-week-value--current {
-  border-left: 5px solid #94a3b8 !important;
+  > td.overview2-results-week-value--current-end {
   border-right: 5px solid #94a3b8 !important;
-  border-left-color: #94a3b8 !important;
-  border-right-color: #94a3b8 !important;
   box-shadow: 4px 0 8px rgba(15, 23, 42, 0.12) !important;
 }
 
@@ -2925,6 +3004,11 @@ body {
   .overview2-team-row
   td.overview2-results-week-value--current {
   border-bottom: 5px solid #94a3b8 !important;
+}
+
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-week-value--current-end {
   box-shadow: 4px 3px 8px rgba(15, 23, 42, 0.12) !important;
 }
 

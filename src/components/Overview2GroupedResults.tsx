@@ -75,6 +75,7 @@ function monthValueClass(
   currentMonthKey: string,
   hours: number,
   allottedHours: number,
+  weeksOpenForCurrent = false,
 ): string {
   const parts = [
     "overview2-results-value",
@@ -82,6 +83,9 @@ function monthValueClass(
   ];
   if (monthKey === currentMonthKey) {
     parts.push("overview2-results-month-value--current");
+    if (weeksOpenForCurrent) {
+      parts.push("overview2-results-month-value--current-open");
+    }
   }
   const heat = utilizationHeatClass(hours, allottedHours);
   if (heat) parts.push(heat);
@@ -92,10 +96,15 @@ function weekValueClass(
   hours: number,
   allottedHours: number,
   isCurrentMonthWeeks = false,
+  weekIndex = 0,
+  weekCount = 0,
 ): string {
   const parts = ["overview2-results-value", "overview2-results-week-value"];
-  if (isCurrentMonthWeeks) {
+  if (isCurrentMonthWeeks && weekCount > 0) {
     parts.push("overview2-results-week-value--current");
+    if (weekIndex === weekCount - 1) {
+      parts.push("overview2-results-week-value--current-end");
+    }
   }
   const heat = utilizationHeatClass(hours, allottedHours);
   if (heat) parts.push(heat);
@@ -620,6 +629,7 @@ function EngineerRowGroup({
                 currentMonthKey,
                 totals.assigned,
                 monthCapacitiesByKey[totals.monthKey] ?? 0,
+                weeksExpanded && weeksMonthKey === currentMonthKey,
               )}
             >
               <HoursWithUtilization
@@ -635,6 +645,8 @@ function EngineerRowGroup({
                       weekTotal.assigned,
                       weeks[index]?.capacityHours ?? 0,
                       weeksMonthKey === currentMonthKey,
+                      index,
+                      weeks.length,
                     )}
                   >
                     <HoursWithUtilization
@@ -693,6 +705,7 @@ function EngineerRowGroup({
                 currentMonthKey,
                 totals.clockify,
                 monthCapacitiesByKey[totals.monthKey] ?? 0,
+                weeksExpanded && weeksMonthKey === currentMonthKey,
               )}
             >
               {clockifyHoursLoading
@@ -711,6 +724,8 @@ function EngineerRowGroup({
                       weekTotal.clockify,
                       weeks[index]?.capacityHours ?? 0,
                       weeksMonthKey === currentMonthKey,
+                      index,
+                      weeks.length,
                     )}
                   >
                     {clockifyHoursLoading
@@ -808,6 +823,7 @@ function EngineerRowGroup({
                           currentMonthKey,
                           totals.assigned,
                           monthCapacitiesByKey[totals.monthKey] ?? 0,
+                          weeksExpanded && weeksMonthKey === currentMonthKey,
                         )}
                       >
                         <HoursWithUtilization
@@ -826,6 +842,8 @@ function EngineerRowGroup({
                                   weekTotal.assigned,
                                   week.capacityHours,
                                   weeksMonthKey === currentMonthKey,
+                                  index,
+                                  byWeek.length,
                                 )}
                               >
                                 {isEditing ? (
@@ -892,6 +910,7 @@ function EngineerRowGroup({
                           currentMonthKey,
                           totals.clockify,
                           monthCapacitiesByKey[totals.monthKey] ?? 0,
+                          weeksExpanded && weeksMonthKey === currentMonthKey,
                         )}
                       >
                         {clockifyHoursLoading
@@ -910,6 +929,8 @@ function EngineerRowGroup({
                                 weekTotal.clockify,
                                 weeks[index]?.capacityHours ?? 0,
                                 weeksMonthKey === currentMonthKey,
+                                index,
+                                weeks.length,
                               )}
                             >
                               {clockifyHoursLoading
@@ -1128,6 +1149,7 @@ function TeamSummaryRows({
                   currentMonthKey,
                   totals.assigned,
                   (monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize,
+                  weeksExpanded && weeksMonthKey === currentMonthKey,
                 )}
               >
                 <HoursWithUtilization
@@ -1143,6 +1165,8 @@ function TeamSummaryRows({
                         weekTotal.assigned,
                         (weeks[index]?.capacityHours ?? 0) * teamSize,
                         weeksMonthKey === currentMonthKey,
+                        index,
+                        weeks.length,
                       )}
                     >
                       <HoursWithUtilization
@@ -1184,6 +1208,7 @@ function TeamSummaryRows({
                   currentMonthKey,
                   totals.clockify,
                   (monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize,
+                  weeksExpanded && weeksMonthKey === currentMonthKey,
                 )}
               >
                 {clockifyHoursLoading
@@ -1202,6 +1227,8 @@ function TeamSummaryRows({
                         weekTotal.clockify,
                         (weeks[index]?.capacityHours ?? 0) * teamSize,
                         weeksMonthKey === currentMonthKey,
+                        index,
+                        weeks.length,
                       )}
                     >
                       {clockifyHoursLoading
@@ -1503,7 +1530,9 @@ export function Overview2GroupedResults({
                       scope="col"
                       className={
                         isCurrentMonth
-                          ? "overview2-results-date overview2-results-date--current"
+                          ? isExpanded
+                            ? "overview2-results-date overview2-results-date--current overview2-results-date--current-open"
+                            : "overview2-results-date overview2-results-date--current"
                           : "overview2-results-date"
                       }
                     >
@@ -1533,13 +1562,15 @@ export function Overview2GroupedResults({
                       </span>
                     </th>
                     {isExpanded
-                      ? weeks.map((week) => (
+                      ? weeks.map((week, weekIndex) => (
                           <th
                             key={`${cursorKey}-w${week.weekNumber}`}
                             scope="col"
                             className={
                               isCurrentMonth
-                                ? "overview2-results-week overview2-results-week--current"
+                                ? weekIndex === weeks.length - 1
+                                  ? "overview2-results-week overview2-results-week--current overview2-results-week--current-end"
+                                  : "overview2-results-week overview2-results-week--current"
                                 : "overview2-results-week"
                             }
                             title={`Total Forecasted Hours: ${week.capacityHours}`}
