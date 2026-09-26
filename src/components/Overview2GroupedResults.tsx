@@ -1362,19 +1362,19 @@ export function Overview2GroupedResults({
    * columns. Scrolling left then moves backward through earlier months.
    */
   useEffect(() => {
-    const scroll = scrollRef.current;
-    if (!scroll) return;
-
     function scrollCurrentMonthIntoView() {
-      const currentHeader = scroll.querySelector<HTMLElement>(
+      const root = scrollRef.current;
+      if (!root) return;
+
+      const currentHeader = root.querySelector<HTMLElement>(
         "th.overview2-results-date--current",
       );
       if (!currentHeader) return;
 
-      const identity = scroll.querySelector<HTMLElement>(
+      const identity = root.querySelector<HTMLElement>(
         "th.overview2-results-identity-header",
       );
-      const metric = scroll.querySelector<HTMLElement>(
+      const metric = root.querySelector<HTMLElement>(
         "th.overview2-results-metric-header",
       );
       const stickyWidth =
@@ -1383,7 +1383,7 @@ export function Overview2GroupedResults({
 
       // offsetLeft is relative to the table; subtract sticky pane so Sep sits next to Planned.
       const target = Math.max(0, currentHeader.offsetLeft - stickyWidth);
-      scroll.scrollLeft = target;
+      root.scrollLeft = target;
     }
 
     // Wait a frame so sticky widths / col layout are settled.
