@@ -66,7 +66,27 @@ type RawProject = {
 };
 
 const MAX_RETRIES = 4;
-const LIFETIME_START = "2015-01-01T00:00:00Z";
+
+/** Shared across requests so Search doesn’t re-download the project list per engineer. */
+let sharedActiveProjectsCache: {
+  organizationId: string;
+  projects: ClockifyProject[];
+  fetchedAt: number;
+} | null = null;
+const ACTIVE_PROJECTS_CACHE_MS = 60_000;
+
+/** Match Overview default: current month ± 6 months (13 months total). */
+function getDefaultOverviewWindowISO(now = new Date()): {
+  startISO: string;
+  endISO: string;
+} {
+  const start = new Date(now.getFullYear(), now.getMonth() - 6, 1, 0, 0, 0);
+  const end = new Date(now.getFullYear(), now.getMonth() + 7, 0, 23, 59, 59);
+  return {
+    startISO: toApiDate(start),
+    endISO: toApiDate(end),
+  };
+}
 
 function buildHeaders(apiToken: string): HeadersInit {
   return {
@@ -156,6 +176,7 @@ export class ClockifyClient {
   private readonly apiToken: string;
   private readonly organizationId: string;
   private readonly baseUrl: string;
+  private activeProjectsCache: ClockifyProject[] | null = null;
 
   constructor(config: ClientConfig) {
     this.apiToken = config.apiKey;
@@ -287,10 +308,27 @@ export class ClockifyClient {
   }
 
   async getActiveProjects(): Promise<ClockifyProject[]> {
+    if (this.activeProjectsCache) {
+      return this.activeProjectsCache;
+    }
+    if (
+      sharedActiveProjectsCache &&
+      sharedActiveProjectsCache.organizationId === this.organizationId &&
+      Date.now() - sharedActiveProjectsCache.fetchedAt < ACTIVE_PROJECTS_CACHE_MS
+    ) {
+      this.activeProjectsCache = sharedActiveProjectsCache.projects;
+      return this.activeProjectsCache;
+    }
     const projects = await this.getProjects();
-    return projects
+    this.activeProjectsCache = projects
       .filter((project) => !project.archived && !project.template)
       .sort((a, b) => a.name.localeCompare(b.name));
+    sharedActiveProjectsCache = {
+      organizationId: this.organizationId,
+      projects: this.activeProjectsCache,
+      fetchedAt: Date.now(),
+    };
+    return this.activeProjectsCache;
   }
 
   private async fetchTimeEntries(options: {
@@ -343,12 +381,18 @@ export class ClockifyClient {
   }
 
   /**
-   * Unique project IDs the member has logged time against (from 2015 → now).
+   * Unique project IDs the member has logged time against in a date window.
+   * Prefer an explicit range (from the Overview date picker). Fallback is only
+   * for callers that omit one — same as the initial ±6 month Overview default.
    */
-  async getLifetimeWorkedProjectIds(userId: string): Promise<Set<string>> {
+  async getWorkedProjectIds(
+    userId: string,
+    range?: { startISO: string; endISO: string },
+  ): Promise<Set<string>> {
+    const window = range ?? getDefaultOverviewWindowISO();
     const entries = await this.fetchTimeEntries({
-      startISO: LIFETIME_START,
-      endISO: new Date().toISOString(),
+      startISO: window.startISO,
+      endISO: window.endISO,
       memberId: userId,
     });
 
@@ -362,14 +406,21 @@ export class ClockifyClient {
     return projectIds;
   }
 
+  /** @deprecated Use getWorkedProjectIds — kept for callers that still use the old name. */
+  async getLifetimeWorkedProjectIds(userId: string): Promise<Set<string>> {
+    return this.getWorkedProjectIds(userId);
+  }
+
   /**
-   * Active (non-archived) projects the user has worked on at any time.
+   * Active (non-archived) projects the user has worked on in the given window
+   * (default: current month ± 6 months).
    */
   async getActiveProjectsWorkedByUser(
     userId: string,
+    range?: { startISO: string; endISO: string },
   ): Promise<ClockifyProject[]> {
     const [workedProjectIds, activeProjects] = await Promise.all([
-      this.getLifetimeWorkedProjectIds(userId),
+      this.getWorkedProjectIds(userId, range),
       this.getActiveProjects(),
     ]);
 

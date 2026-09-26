@@ -88,8 +88,15 @@ function monthValueClass(
   return parts.join(" ");
 }
 
-function weekValueClass(hours: number, allottedHours: number): string {
+function weekValueClass(
+  hours: number,
+  allottedHours: number,
+  isCurrentMonthWeeks = false,
+): string {
   const parts = ["overview2-results-value", "overview2-results-week-value"];
+  if (isCurrentMonthWeeks) {
+    parts.push("overview2-results-week-value--current");
+  }
   const heat = utilizationHeatClass(hours, allottedHours);
   if (heat) parts.push(heat);
   return parts.join(" ");
@@ -269,6 +276,14 @@ function EngineerRowGroup({
     setEditError(null);
   }, [weeksMonth.year, weeksMonth.month, engineerName]);
 
+  useEffect(() => {
+    if (!weeksExpanded) {
+      setEditingId(null);
+      setDraftWeeks({});
+      setEditError(null);
+    }
+  }, [weeksExpanded]);
+
   const engineerEntries = useMemo(
     () => entries.filter((e) => isSameEngineerName(e.engineerName, engineerName)),
     [entries, engineerName],
@@ -434,7 +449,10 @@ function EngineerRowGroup({
     ],
   );
 
-  const emptyColSpan = 3 + monthKeysInRange.length + (weeksExpanded ? weeks.length : 0) + 1;
+  const emptyColSpan =
+    3 +
+    monthKeysInRange.length +
+    (weeksExpanded ? weeks.length + 1 : 0);
   const engineerAccentStyle = {
     ["--engineer-accent" as string]: engineerAccentColor(engineerName),
   };
@@ -616,6 +634,7 @@ function EngineerRowGroup({
                     className={weekValueClass(
                       weekTotal.assigned,
                       weeks[index]?.capacityHours ?? 0,
+                      weeksMonthKey === currentMonthKey,
                     )}
                   >
                     <HoursWithUtilization
@@ -627,7 +646,7 @@ function EngineerRowGroup({
               : null}
           </Fragment>
         ))}
-        <td className="actions-cell" />
+        {weeksExpanded ? <td className="actions-cell" /> : null}
       </tr>
       ) : null}
 
@@ -691,6 +710,7 @@ function EngineerRowGroup({
                     className={weekValueClass(
                       weekTotal.clockify,
                       weeks[index]?.capacityHours ?? 0,
+                      weeksMonthKey === currentMonthKey,
                     )}
                   >
                     {clockifyHoursLoading
@@ -705,7 +725,7 @@ function EngineerRowGroup({
               : null}
           </Fragment>
         ))}
-        <td className="actions-cell" />
+        {weeksExpanded ? <td className="actions-cell" /> : null}
       </tr>
       ) : null}
 
@@ -741,7 +761,7 @@ function EngineerRowGroup({
           </span>
         </th>
         <td colSpan={1 + monthKeysInRange.length + (weeksExpanded ? weeks.length : 0)} />
-        <td className="actions-cell" />
+        {weeksExpanded ? <td className="actions-cell" /> : null}
       </tr>
       ) : null}
 
@@ -805,6 +825,7 @@ function EngineerRowGroup({
                                 className={weekValueClass(
                                   weekTotal.assigned,
                                   week.capacityHours,
+                                  weeksMonthKey === currentMonthKey,
                                 )}
                               >
                                 {isEditing ? (
@@ -828,6 +849,7 @@ function EngineerRowGroup({
                         : null}
                     </Fragment>
                   ))}
+                  {weeksExpanded ? (
                   <td className="actions-cell">
                     <div className="row-actions">
                       {isEditing ? (
@@ -843,6 +865,7 @@ function EngineerRowGroup({
                       )}
                     </div>
                   </td>
+                  ) : null}
                 </tr>
                 ) : null}
                 {actualExpanded ? (
@@ -886,6 +909,7 @@ function EngineerRowGroup({
                               className={weekValueClass(
                                 weekTotal.clockify,
                                 weeks[index]?.capacityHours ?? 0,
+                                weeksMonthKey === currentMonthKey,
                               )}
                             >
                               {clockifyHoursLoading
@@ -900,6 +924,7 @@ function EngineerRowGroup({
                         : null}
                     </Fragment>
                   ))}
+                  {weeksExpanded ? (
                   <td className="actions-cell">
                     {!allottedExpanded ? (
                       <div className="row-actions">
@@ -917,6 +942,7 @@ function EngineerRowGroup({
                       </div>
                     ) : null}
                   </td>
+                  ) : null}
                 </tr>
                 ) : null}
               </Fragment>
@@ -1116,6 +1142,7 @@ function TeamSummaryRows({
                       className={weekValueClass(
                         weekTotal.assigned,
                         (weeks[index]?.capacityHours ?? 0) * teamSize,
+                        weeksMonthKey === currentMonthKey,
                       )}
                     >
                       <HoursWithUtilization
@@ -1127,7 +1154,7 @@ function TeamSummaryRows({
                 : null}
             </Fragment>
           ))}
-          <td className="actions-cell" />
+          {weeksExpanded ? <td className="actions-cell" /> : null}
         </tr>
       ) : null}
 
@@ -1174,6 +1201,7 @@ function TeamSummaryRows({
                       className={weekValueClass(
                         weekTotal.clockify,
                         (weeks[index]?.capacityHours ?? 0) * teamSize,
+                        weeksMonthKey === currentMonthKey,
                       )}
                     >
                       {clockifyHoursLoading
@@ -1188,7 +1216,7 @@ function TeamSummaryRows({
                 : null}
             </Fragment>
           ))}
-          <td className="actions-cell" />
+          {weeksExpanded ? <td className="actions-cell" /> : null}
         </tr>
       ) : null}
     </>
@@ -1302,6 +1330,50 @@ export function Overview2GroupedResults({
     engineers.length,
   ]);
 
+  /**
+   * Pin the viewport so the current month sits just after the sticky name/metric
+   * columns. Scrolling left then moves backward through earlier months.
+   */
+  useEffect(() => {
+    const scroll = scrollRef.current;
+    if (!scroll) return;
+
+    function scrollCurrentMonthIntoView() {
+      const currentHeader = scroll.querySelector<HTMLElement>(
+        "th.overview2-results-date--current",
+      );
+      if (!currentHeader) return;
+
+      const identity = scroll.querySelector<HTMLElement>(
+        "th.overview2-results-identity-header",
+      );
+      const metric = scroll.querySelector<HTMLElement>(
+        "th.overview2-results-metric-header",
+      );
+      const stickyWidth =
+        (identity?.getBoundingClientRect().width ?? 0) +
+        (metric?.getBoundingClientRect().width ?? 0);
+
+      // offsetLeft is relative to the table; subtract sticky pane so Sep sits next to Planned.
+      const target = Math.max(0, currentHeader.offsetLeft - stickyWidth);
+      scroll.scrollLeft = target;
+    }
+
+    // Wait a frame so sticky widths / col layout are settled.
+    const id = window.requestAnimationFrame(() => {
+      scrollCurrentMonthIntoView();
+      window.requestAnimationFrame(scrollCurrentMonthIntoView);
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [
+    dateRange.start,
+    dateRange.end,
+    expandedMonthKey,
+    engineers.length,
+    allottedExpanded,
+    actualExpanded,
+  ]);
+
   const monthsInRange = useMemo(
     () => listMonthsInDateRange(dateRange),
     [dateRange],
@@ -1382,7 +1454,7 @@ export function Overview2GroupedResults({
                 </Fragment>
               );
             })}
-            <col className="overview2-col-actions" />
+            {weeksExpanded ? <col className="overview2-col-actions" /> : null}
           </colgroup>
           <thead>
             <tr className="overview2-header-row" ref={headerRowRef}>
@@ -1465,7 +1537,11 @@ export function Overview2GroupedResults({
                           <th
                             key={`${cursorKey}-w${week.weekNumber}`}
                             scope="col"
-                            className="overview2-results-week"
+                            className={
+                              isCurrentMonth
+                                ? "overview2-results-week overview2-results-week--current"
+                                : "overview2-results-week"
+                            }
                             title={`Total Forecasted Hours: ${week.capacityHours}`}
                           >
                             <span className="overview2-week-label">W{week.weekNumber}</span>
@@ -1476,7 +1552,9 @@ export function Overview2GroupedResults({
                   </Fragment>
                 );
               })}
-              <th scope="col" className="overview2-results-actions">Actions</th>
+              {weeksExpanded ? (
+                <th scope="col" className="overview2-results-actions">Actions</th>
+              ) : null}
             </tr>
           </thead>
           {engineers.map((eng) => (

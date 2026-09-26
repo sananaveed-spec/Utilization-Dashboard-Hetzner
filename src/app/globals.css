@@ -1020,6 +1020,10 @@ td.col-project-name {
   container-type: inline-size;
   --overview2-sticky-header-height: 3.75rem;
   --overview2-sticky-engineer-row-height: 2.75rem;
+  /* Horizontal pin: code 6rem + name 16rem = 22rem; metric after that */
+  --overview2-sticky-code-left: 0;
+  --overview2-sticky-name-left: 6rem;
+  --overview2-sticky-metric-left: 22rem;
   position: relative;
 }
 
@@ -1043,17 +1047,25 @@ td.col-project-name {
 
 .overview2-results-table thead {
   position: relative;
-  z-index: 30;
+  z-index: 40;
 }
 
 .overview2-results-table thead th,
 .overview2-header-row > th {
   position: sticky;
   top: 0;
-  z-index: 30;
+  z-index: 31;
   background: #0f172a !important;
   background-clip: padding-box;
   box-shadow: inset 0 -2px 0 #e2e8f0;
+}
+
+/* Month / week / actions headers: stick to top only — never pin left */
+.overview2-results-table thead th.overview2-results-date,
+.overview2-results-table thead th.overview2-results-week,
+.overview2-results-table thead th.overview2-results-actions {
+  left: auto;
+  z-index: 31;
 }
 
 /* Engineer summary rows stick under the month header while projects scroll.
@@ -1129,12 +1141,24 @@ td.col-project-name {
   border-top: 5px solid #94a3b8 !important;
 }
 
+.overview2-results-week--current {
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
+  border-top: 5px solid #94a3b8 !important;
+}
+
 .overview2-results-month-value--current {
   border-left: 5px solid #94a3b8 !important;
   border-right: 5px solid #94a3b8 !important;
 }
 
-.overview2-team-row .overview2-results-month-value--current {
+.overview2-results-week-value--current {
+  border-left: 5px solid #94a3b8 !important;
+  border-right: 5px solid #94a3b8 !important;
+}
+
+.overview2-team-row .overview2-results-month-value--current,
+.overview2-team-row .overview2-results-week-value--current {
   border-bottom: 5px solid #94a3b8 !important;
 }
 
@@ -1428,6 +1452,24 @@ td.col-project-name {
   background: #0f172a !important;
   border-left: 2px solid #e2e8f0 !important;
   border-right: 1px solid #475569 !important;
+  /* Corner cell: stick top + left above scrolling month headers */
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 50;
+}
+
+/* Pin engineer / project code+name on horizontal scroll */
+.overview2-results-engineer {
+  position: sticky;
+  left: 0;
+  z-index: 25;
+}
+
+.overview2-sticky-slot-1 > .overview2-results-engineer,
+.overview2-sticky-slot-2 > .overview2-results-engineer,
+.overview2-sticky-slot-3 > .overview2-results-engineer {
+  z-index: 25;
 }
 
 .overview2-results-project {
@@ -1449,6 +1491,10 @@ td.col-project-name {
   text-overflow: ellipsis;
   border-left: 1px solid #475569 !important;
   border-right: 1px solid #475569 !important;
+  position: sticky;
+  left: var(--overview2-sticky-code-left, 0);
+  z-index: 12;
+  background-clip: padding-box;
 }
 
 .overview2-results-project-name {
@@ -1458,6 +1504,10 @@ td.col-project-name {
   overflow: hidden;
   border-left: 1px solid #475569 !important;
   border-right: 1px solid #475569 !important;
+  position: sticky;
+  left: var(--overview2-sticky-name-left, 6rem);
+  z-index: 11;
+  background-clip: padding-box;
 }
 
 .overview2-project-row .overview2-results-metric,
@@ -1609,10 +1659,47 @@ td.col-project-name {
   overflow: hidden;
   text-overflow: clip;
   box-sizing: border-box;
+  /* Pin Planned / Actual label column with identity cols */
+  position: sticky;
+  left: var(--overview2-sticky-metric-left, 22rem);
+  background-clip: padding-box;
+  box-shadow: 4px 0 8px rgba(15, 23, 42, 0.12);
+}
+
+.overview2-results-metric {
+  z-index: 13;
 }
 
 .overview2-results-metric-header {
   background: #0f172a !important;
+  /* Corner cell with Planned/Actual toggles — stay above month headers */
+  top: 0;
+  z-index: 49;
+}
+
+.overview2-results-table thead th.overview2-results-identity-header,
+.overview2-results-table thead th.overview2-results-metric-header {
+  position: sticky;
+  top: 0;
+}
+
+.overview2-results-table thead th.overview2-results-identity-header {
+  left: 0;
+  z-index: 50;
+}
+
+.overview2-results-table thead th.overview2-results-metric-header {
+  left: var(--overview2-sticky-metric-left, 22rem);
+  z-index: 49;
+  box-shadow:
+    inset 0 -2px 0 #e2e8f0,
+    4px 0 8px rgba(15, 23, 42, 0.12);
+}
+
+.overview2-sticky-slot-1 > .overview2-results-metric,
+.overview2-sticky-slot-2 > .overview2-results-metric,
+.overview2-sticky-slot-3 > .overview2-results-metric {
+  z-index: 22;
 }
 
 .overview2-metric-header-group {
@@ -2486,6 +2573,17 @@ body {
   color: #0f172a;
 }
 
+.overview2-results-table thead th.overview2-results-identity-header,
+.overview2-results-table thead th.overview2-results-metric-header {
+  background: #f8fafc !important;
+}
+
+.overview2-results-table thead th.overview2-results-metric-header {
+  box-shadow:
+    inset 0 -2px 0 #94a3b8,
+    4px 0 8px rgba(15, 23, 42, 0.1);
+}
+
 .overview2-metric-toggle-label {
   color: #334155;
 }
@@ -2587,6 +2685,45 @@ body {
   color: #334155;
   border-top-color: #cbd5e1 !important;
   border-bottom-color: #cbd5e1 !important;
+}
+
+/* Opaque sticky backgrounds so scrolled month columns don't bleed through */
+.overview2-results-project-code,
+.overview2-results-project-name {
+  background: #f8fafc !important;
+}
+
+.overview2-results-engineer {
+  background: #f1f5f9 !important;
+}
+
+.overview2-team-row .overview2-results-engineer {
+  background: #e2e8f0 !important;
+}
+
+.overview2-sticky-slot-1 > .overview2-results-engineer,
+.overview2-sticky-slot-2 > .overview2-results-engineer,
+.overview2-sticky-slot-3 > .overview2-results-engineer {
+  background: #f1f5f9 !important;
+}
+
+.overview2-results-metric,
+.overview2-results-metric-header {
+  background: #ffffff !important;
+}
+
+.overview2-team-row .overview2-results-metric {
+  background: #e2e8f0 !important;
+}
+
+.overview2-project-row .overview2-results-metric {
+  background: #f8fafc !important;
+}
+
+.overview2-sticky-slot-1 > .overview2-results-metric,
+.overview2-sticky-slot-2 > .overview2-results-metric,
+.overview2-sticky-slot-3 > .overview2-results-metric {
+  background: #ffffff !important;
 }
 
 .overview2-project-row .overview2-results-metric,
@@ -2734,7 +2871,8 @@ body {
 }
 
 /* Current month — uniform border color on all sides + soft drop shadow */
-.overview2-results-table thead th.overview2-results-date.overview2-results-date--current {
+.overview2-results-table thead th.overview2-results-date.overview2-results-date--current,
+.overview2-results-table thead th.overview2-results-week.overview2-results-week--current {
   border-left: 5px solid #94a3b8 !important;
   border-right: 5px solid #94a3b8 !important;
   border-top: 5px solid #94a3b8 !important;
@@ -2742,21 +2880,37 @@ body {
 }
 
 .overview2-results-table tbody td.overview2-results-month-value.overview2-results-month-value--current,
+.overview2-results-table tbody td.overview2-results-week-value.overview2-results-week-value--current,
 .overview2-results-table
   .overview2-engineer-row
   td.overview2-results-month-value--current,
 .overview2-results-table
+  .overview2-engineer-row
+  td.overview2-results-week-value--current,
+.overview2-results-table
   .overview2-project-row
   td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-project-row
+  td.overview2-results-week-value--current,
 .overview2-results-table
   .overview2-team-row
   td.overview2-results-month-value--current,
 .overview2-results-table
+  .overview2-team-row
+  td.overview2-results-week-value--current,
+.overview2-results-table
   .overview2-sticky-slot-1
   > td.overview2-results-month-value--current,
 .overview2-results-table
+  .overview2-sticky-slot-1
+  > td.overview2-results-week-value--current,
+.overview2-results-table
   .overview2-sticky-slot-2
-  > td.overview2-results-month-value--current {
+  > td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-sticky-slot-2
+  > td.overview2-results-week-value--current {
   border-left: 5px solid #94a3b8 !important;
   border-right: 5px solid #94a3b8 !important;
   border-left-color: #94a3b8 !important;
@@ -2766,7 +2920,10 @@ body {
 
 .overview2-results-table
   .overview2-team-row
-  td.overview2-results-month-value--current {
+  td.overview2-results-month-value--current,
+.overview2-results-table
+  .overview2-team-row
+  td.overview2-results-week-value--current {
   border-bottom: 5px solid #94a3b8 !important;
   box-shadow: 4px 3px 8px rgba(15, 23, 42, 0.12) !important;
 }

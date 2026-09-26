@@ -292,7 +292,9 @@ export function getDefaultAnalysisDateRange(now = new Date()): DateRange {
 
 /**
  * Overview default: full months from 6 months before the current month
- * through 6 months after (13 months total, centered on the current month).
+/**
+ * Initial Overview date range only (current month −6 … +6 = 13 months).
+ * After load, the date picker controls the range — do not re-apply this.
  */
 export function getDefaultOverviewDateRange(now = new Date()): DateRange {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());

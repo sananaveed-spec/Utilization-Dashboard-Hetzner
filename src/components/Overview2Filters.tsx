@@ -114,6 +114,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [month, setMonth] = useState<MonthCursor>(() => getCurrentMonthCursor());
+  // Initial load only: current month ±6. User date-picker changes replace this.
   const [dateRange, setDateRange] = useState<DateRange>(() =>
     getDefaultOverviewDateRange(),
   );
@@ -244,6 +245,8 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   }, [employees, engineerNames]);
 
   const hasAutoSearched = useRef(false);
+  /** Range used for the last projects fetch — so date-picker changes re-sync. */
+  const lastProjectsRangeRef = useRef<string>("");
 
   // Auto-select all engineers when the list is first populated, then auto-search once
   useEffect(() => {
@@ -370,17 +373,32 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     setSearching(true);
     setActionError(null);
 
-
-    let allEntries = [...entries];
     const newVisibleByEngineer: Record<string, string[]> = {};
-    const messages: string[] = [];
     const errors: string[] = [];
+    const projectResults: {
+      engineerName: string;
+      projects: ClockifyProject[];
+    }[] = [];
 
-    await Promise.all(
-      selectedEngineers.map(async (engineer) => {
+    // Limit concurrency — Main org has many engineers; unbounded Promise.all stalls Searching…
+    const concurrency = 3;
+    let cursor = 0;
+
+    async function worker() {
+      while (cursor < selectedEngineers.length) {
+        const index = cursor;
+        cursor += 1;
+        const engineer = selectedEngineers[index];
+        if (!engineer) continue;
+
         try {
+          const params = new URLSearchParams({
+            userId: engineer.id,
+            start: dateRange.start,
+            end: dateRange.end,
+          });
           const response = await fetch(
-            `/api/clockify/user-projects?userId=${encodeURIComponent(engineer.id)}`,
+            `/api/clockify/user-projects?${params.toString()}`,
             { cache: "no-store" },
           );
           const payload = await readJsonResponse<{
@@ -392,42 +410,50 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             throw new Error(payload.error ?? `Request failed (${response.status})`);
           }
 
-          const clockifyProjects = payload.projects ?? [];
-          const { entries: nextEntries, visibleIds } = syncEngineerClockifyProjects(
-            engineer.name,
-            clockifyProjects,
-            allEntries,
-          );
-          allEntries = nextEntries;
-          newVisibleByEngineer[engineer.name] = visibleIds;
-          messages.push(
-            clockifyProjects.length === 0
-              ? `No active projects found for ${engineer.name}.`
-              : `Loaded ${clockifyProjects.length} project${clockifyProjects.length === 1 ? "" : "s"} for ${engineer.name}.`,
-          );
+          projectResults.push({
+            engineerName: engineer.name,
+            projects: payload.projects ?? [],
+          });
         } catch (err) {
           errors.push(
             `${engineer.name}: ${err instanceof Error ? err.message : "Failed to load projects."}`,
           );
         }
-      }),
-    );
-
-    updateEntries(allEntries);
-    setVisibleProjectIdsByEngineer(newVisibleByEngineer);
-    setSearchedEngineerNames(Object.keys(newVisibleByEngineer));
-
-    if (errors.length > 0) {
-      setActionError(errors.join(" "));
-    }
-    if (messages.length > 0) {
-
+      }
     }
 
-    setSearching(false);
+    try {
+      await Promise.all(
+        Array.from({ length: Math.min(concurrency, selectedEngineers.length) }, () =>
+          worker(),
+        ),
+      );
+
+      let allEntries = [...entries];
+      for (const result of projectResults) {
+        const { entries: nextEntries, visibleIds } = syncEngineerClockifyProjects(
+          result.engineerName,
+          result.projects,
+          allEntries,
+        );
+        allEntries = nextEntries;
+        newVisibleByEngineer[result.engineerName] = visibleIds;
+      }
+
+      updateEntries(allEntries);
+      setVisibleProjectIdsByEngineer(newVisibleByEngineer);
+      setSearchedEngineerNames(Object.keys(newVisibleByEngineer));
+      lastProjectsRangeRef.current = `${dateRange.start}|${dateRange.end}`;
+
+      if (errors.length > 0) {
+        setActionError(errors.join(" "));
+      }
+    } finally {
+      setSearching(false);
+    }
   }
 
-  // Auto-search once on initial load after employees finish loading
+  // Auto-search once on initial load (with the default ±6 month window)
   useEffect(() => {
     if (
       !hasAutoSearched.current &&
@@ -441,6 +467,17 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, selectedEngineerNames]);
+
+  // After load: when the user changes the date range, reload projects for that window
+  useEffect(() => {
+    const key = `${dateRange.start}|${dateRange.end}`;
+    if (!hasAutoSearched.current) return;
+    if (searchedEngineerNames.length === 0) return;
+    if (lastProjectsRangeRef.current === key) return;
+    if (searching || loading) return;
+    void handleSearch();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateRange.start, dateRange.end]);
 
   const disabled = loading || Boolean(error) || searching;
   const searchedEngineerNameSet = useMemo(

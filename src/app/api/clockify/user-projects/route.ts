@@ -3,6 +3,21 @@ import { ClockifyClient, getClockifyConfig } from "@/lib/clockify/client";
 
 export const dynamic = "force-dynamic";
 
+function toWindowISO(
+  start: string | null,
+  end: string | null,
+): { startISO: string; endISO: string } | undefined {
+  const startKey = start?.trim() ?? "";
+  const endKey = end?.trim() ?? "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(startKey) || !/^\d{4}-\d{2}-\d{2}$/.test(endKey)) {
+    return undefined;
+  }
+  return {
+    startISO: `${startKey}T00:00:00Z`,
+    endISO: `${endKey}T23:59:59Z`,
+  };
+}
+
 export async function GET(request: NextRequest) {
   const config = getClockifyConfig();
 
@@ -24,9 +39,14 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  const range = toWindowISO(
+    request.nextUrl.searchParams.get("start"),
+    request.nextUrl.searchParams.get("end"),
+  );
+
   try {
     const client = new ClockifyClient(config);
-    const projects = await client.getActiveProjectsWorkedByUser(userId);
+    const projects = await client.getActiveProjectsWorkedByUser(userId, range);
 
     return NextResponse.json({
       projects: projects.map((project) => ({
