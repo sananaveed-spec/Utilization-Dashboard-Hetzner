@@ -77,9 +77,15 @@ export function projectLookupKey(
   projectName: string,
 ): string {
   const code = projectCode.trim();
-  if (code && code !== "—") {
+  if (code && code !== "—" && isProjectCode(code)) {
     return code.toLowerCase();
   }
 
-  return `name:${projectName.trim().toLowerCase()}`;
+  const name =
+    projectName.trim() && projectName.trim() !== "—"
+      ? projectName.trim()
+      : code && code !== "—"
+        ? code
+        : "";
+  return `name:${name.toLowerCase()}`;
 }

@@ -14,7 +14,7 @@ import {
   listMonthsInDateRange,
   type DateRange,
 } from "@/lib/dateRange";
-import { isProjectCode } from "@/lib/projects";
+import { isProjectCode, projectLookupKey } from "@/lib/projects";
 import {
   getWorkWeeksForMonth,
   monthCursorKey,
@@ -163,10 +163,6 @@ function projectLabel(entry: UtilizationEntry): string {
   return entry.projectName || "—";
 }
 
-function entryHasProjectCode(entry: UtilizationEntry): boolean {
-  return Boolean(entry.projectCode && entry.projectCode !== "—" && isProjectCode(entry.projectCode));
-}
-
 function sortProjectEntries(entries: UtilizationEntry[]): UtilizationEntry[] {
   return [...entries].sort((a, b) =>
     projectLabel(a).localeCompare(projectLabel(b), undefined, { sensitivity: "base" }),
@@ -233,10 +229,15 @@ function ProjectNameCell({ name }: { name: string }) {
 
 // ─── per-engineer row group ──────────────────────────────────────────────────
 
+type VisibleProject = {
+  projectCode: string;
+  projectName: string;
+};
+
 type EngineerRowGroupProps = {
   engineerName: string;
   entries: UtilizationEntry[];
-  visibleProjectIds: string[];
+  visibleProjects: VisibleProject[];
   monthsInRange: MonthCursor[];
   monthCapacitiesByKey: Record<string, number>;
   /** Month whose week columns are shown / edited when weeks are expanded. */
@@ -256,7 +257,7 @@ type EngineerRowGroupProps = {
 function EngineerRowGroup({
   engineerName,
   entries,
-  visibleProjectIds,
+  visibleProjects,
   monthsInRange,
   monthCapacitiesByKey,
   weeksMonth,
@@ -299,22 +300,42 @@ function EngineerRowGroup({
   );
 
   const { codedProjectRows, uncodedProjectRows } = useMemo(() => {
-    const idSet = new Set(visibleProjectIds);
-    const visible = engineerEntries.filter((e) => idSet.has(e.id));
     const coded: UtilizationEntry[] = [];
     const uncoded: UtilizationEntry[] = [];
-    for (const entry of visible) {
-      if (entryHasProjectCode(entry)) {
+
+    for (const project of visibleProjects) {
+      const lookupKey = projectLookupKey(
+        project.projectCode,
+        project.projectName,
+      );
+      const existing = engineerEntries.find(
+        (entry) =>
+          projectLookupKey(entry.projectCode, entry.projectName) === lookupKey,
+      );
+      const entry: UtilizationEntry = existing ?? {
+        id: `pending:${normalizeEngineerName(engineerName)}:${lookupKey}`,
+        engineerName,
+        projectCode: project.projectCode,
+        projectName: project.projectName,
+        weekValuesByMonth: {},
+      };
+
+      if (
+        project.projectCode &&
+        project.projectCode !== "—" &&
+        isProjectCode(project.projectCode)
+      ) {
         coded.push(entry);
       } else {
         uncoded.push(entry);
       }
     }
+
     return {
       codedProjectRows: sortProjectEntries(coded),
       uncodedProjectRows: sortProjectEntries(uncoded),
     };
-  }, [engineerEntries, visibleProjectIds]);
+  }, [engineerEntries, engineerName, visibleProjects]);
 
   const projectRows = useMemo(() => {
     // If this engineer has no coded projects, show uncoded immediately.
@@ -976,10 +997,13 @@ function EngineerRowGroup({
           className={`overview2-uncoded-toggle-row ${blockClass("end")}`}
           style={engineerAccentStyle}
         >
-          <td colSpan={emptyColSpan} className="overview2-uncoded-toggle-cell">
+          <td
+            colSpan={2}
+            className="overview2-uncoded-toggle-cell overview2-uncoded-toggle-cell--pin"
+          >
             <button
               type="button"
-              className="project-name-toggle overview2-uncoded-toggle"
+              className="overview2-uncoded-toggle"
               onClick={() => {
                 setUncodedExpanded((current) => {
                   const next = !current;
@@ -1003,13 +1027,15 @@ function EngineerRowGroup({
                 : `see more (${uncodedProjectRows.length} without code)`}
             </button>
           </td>
+          <td
+            colSpan={Math.max(emptyColSpan - 2, 1)}
+            className="overview2-uncoded-toggle-fill"
+          />
         </tr>
       ) : null}
     </>
   );
 }
-
-// ─── team summary (aggregates all listed engineers) ──────────────────────────
 
 type TeamSummaryRowsProps = {
   engineerNames: string[];
@@ -1254,7 +1280,7 @@ function TeamSummaryRows({
 
 export type GroupedEngineerResult = {
   engineerName: string;
-  visibleProjectIds: string[];
+  visibleProjects: VisibleProject[];
   onUpdate: (row: UtilizationEntry) => void;
   onDelete: (id: string) => void;
 };
@@ -1593,7 +1619,7 @@ export function Overview2GroupedResults({
               <EngineerRowGroup
                 engineerName={eng.engineerName}
                 entries={entries}
-                visibleProjectIds={eng.visibleProjectIds}
+                visibleProjects={eng.visibleProjects}
                 monthsInRange={monthsInRange}
                 monthCapacitiesByKey={monthCapacitiesByKey}
                 weeksMonth={weeksMonth}

@@ -8,13 +8,13 @@ import {
   createUtilizationEntry,
   type UtilizationEntry,
 } from "@/lib/entries";
-import { isSameEngineerName } from "@/lib/engineers";
+import { isSameEngineerName, normalizeEngineerName } from "@/lib/engineers";
 import {
   getDefaultOverviewDateRange,
   listMonthsInDateRange,
   type DateRange,
 } from "@/lib/dateRange";
-import { parseProjectParts, projectLookupKey } from "@/lib/projects";
+import { parseProjectParts, projectLookupKey, isProjectCode } from "@/lib/projects";
 import {
   getCurrentMonthCursor,
   monthCursorKey,
@@ -52,12 +52,17 @@ function syncEngineerClockifyProjects(
   engineerName: string,
   clockifyProjects: ClockifyProject[],
   existingEntries: UtilizationEntry[],
-): { entries: UtilizationEntry[]; visibleIds: string[] } {
+): {
+  entries: UtilizationEntry[];
+  visibleProjects: Array<{ projectCode: string; projectName: string }>;
+} {
   const next = [...existingEntries];
-  const visibleIds: string[] = [];
+  const visibleProjects: Array<{ projectCode: string; projectName: string }> =
+    [];
 
   for (const project of clockifyProjects) {
     const { projectCode, projectName } = parseProjectParts(project.name);
+    visibleProjects.push({ projectCode, projectName });
     const lookupKey = projectLookupKey(projectCode, projectName);
 
     const existingIndex = next.findIndex(
@@ -68,23 +73,25 @@ function syncEngineerClockifyProjects(
 
     if (existingIndex >= 0) {
       const existing = next[existingIndex];
-      if (existing.projectName !== projectName) {
-        next[existingIndex] = { ...existing, projectName };
+      if (
+        existing.projectCode !== projectCode ||
+        existing.projectName !== projectName
+      ) {
+        next[existingIndex] = { ...existing, projectCode, projectName };
       }
-      visibleIds.push(next[existingIndex].id);
       continue;
     }
 
-    const entry = createUtilizationEntry({
-      engineerName,
-      projectCode,
-      projectName,
-    });
-    next.push(entry);
-    visibleIds.push(entry.id);
+    next.push(
+      createUtilizationEntry({
+        engineerName,
+        projectCode,
+        projectName,
+      }),
+    );
   }
 
-  return { entries: next, visibleIds };
+  return { entries: next, visibleProjects };
 }
 
 type Overview2FiltersProps = {
@@ -96,6 +103,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     entries,
     engineerNames,
     holidays,
+    loading: storeLoading,
     updateEntries,
     updateEngineerNames,
   } = store;
@@ -107,12 +115,17 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     new Set(),
   );
   const [searchedEngineerNames, setSearchedEngineerNames] = useState<string[]>([]);
-  const [visibleProjectIdsByEngineer, setVisibleProjectIdsByEngineer] = useState<Record<string, string[]>>({});
+  /** Parsed Clockify projects from last Search — source of truth for visible rows. */
+  const [visibleProjectsByEngineer, setVisibleProjectsByEngineer] = useState<
+    Record<string, Array<{ projectCode: string; projectName: string }>>
+  >({});
   const [isAddingEngineer, setIsAddingEngineer] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
+  const [searchProgress, setSearchProgress] = useState({ done: 0, total: 0 });
+  const [searchElapsedSec, setSearchElapsedSec] = useState(0);
   const [month, setMonth] = useState<MonthCursor>(() => getCurrentMonthCursor());
   // Initial load only: current month ±6. User date-picker changes replace this.
   const [dateRange, setDateRange] = useState<DateRange>(() =>
@@ -125,6 +138,8 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   const [clockifyHoursError, setClockifyHoursError] = useState<string | null>(
     null,
   );
+  const entriesRef = useRef(entries);
+  entriesRef.current = entries;
 
   const monthsInRange = useMemo(
     () => listMonthsInDateRange(dateRange),
@@ -202,6 +217,49 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             next[result.key] = result.hoursByKey;
           }
           setClockifyHoursByMonth(next);
+
+          // Merge any projects that have hours in-range into the visible list
+          // (covers uncoded names if Search state was incomplete).
+          setVisibleProjectsByEngineer((current) => {
+            if (searchedEngineerNames.length === 0) return current;
+            const merged: typeof current = { ...current };
+            for (const engineerName of searchedEngineerNames) {
+              const prefix = `${normalizeEngineerName(engineerName)}::`;
+              const byKey = new Map<
+                string,
+                { projectCode: string; projectName: string }
+              >();
+              for (const project of merged[engineerName] ?? []) {
+                byKey.set(
+                  projectLookupKey(project.projectCode, project.projectName),
+                  project,
+                );
+              }
+              for (const hoursByKey of Object.values(next)) {
+                for (const [key, hours] of Object.entries(hoursByKey)) {
+                  if (!Number.isFinite(hours) || hours <= 0) continue;
+                  if (!key.startsWith(prefix)) continue;
+                  const parts = key.split("::");
+                  if (parts.length !== 3) continue;
+                  const lookup = parts[1] ?? "";
+                  if (!lookup || byKey.has(lookup)) continue;
+                  if (lookup.startsWith("name:")) {
+                    byKey.set(lookup, {
+                      projectCode: "—",
+                      projectName: lookup.slice("name:".length),
+                    });
+                  } else if (isProjectCode(lookup)) {
+                    byKey.set(lookup, {
+                      projectCode: lookup,
+                      projectName: "—",
+                    });
+                  }
+                }
+              }
+              merged[engineerName] = [...byKey.values()];
+            }
+            return merged;
+          });
         }
       } catch (err) {
         if (!cancelled) {
@@ -245,8 +303,19 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   }, [employees, engineerNames]);
 
   const hasAutoSearched = useRef(false);
-  /** Range used for the last projects fetch — so date-picker changes re-sync. */
-  const lastProjectsRangeRef = useRef<string>("");
+  const lastSearchedRangeRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!searching) {
+      setSearchElapsedSec(0);
+      return;
+    }
+    setSearchElapsedSec(0);
+    const timer = window.setInterval(() => {
+      setSearchElapsedSec((sec) => sec + 1);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [searching]);
 
   // Auto-select all engineers when the list is first populated, then auto-search once
   useEffect(() => {
@@ -349,7 +418,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     );
     setSelectedEngineerNames(new Set());
     setSearchedEngineerNames([]);
-    setVisibleProjectIdsByEngineer({});
+    setVisibleProjectsByEngineer({});
     setActionError(null);
 
   }
@@ -371,9 +440,13 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     }
 
     setSearching(true);
+    setSearchProgress({ done: 0, total: selectedEngineers.length });
     setActionError(null);
 
-    const newVisibleByEngineer: Record<string, string[]> = {};
+    const newVisibleProjectsByEngineer: Record<
+      string,
+      Array<{ projectCode: string; projectName: string }>
+    > = {};
     const errors: string[] = [];
     const projectResults: {
       engineerName: string;
@@ -383,6 +456,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     // Limit concurrency — Main org has many engineers; unbounded Promise.all stalls Searching…
     const concurrency = 3;
     let cursor = 0;
+    let completed = 0;
 
     async function worker() {
       while (cursor < selectedEngineers.length) {
@@ -392,13 +466,8 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
         if (!engineer) continue;
 
         try {
-          const params = new URLSearchParams({
-            userId: engineer.id,
-            start: dateRange.start,
-            end: dateRange.end,
-          });
           const response = await fetch(
-            `/api/clockify/user-projects?${params.toString()}`,
+            `/api/clockify/user-projects?userId=${encodeURIComponent(engineer.id)}`,
             { cache: "no-store" },
           );
           const payload = await readJsonResponse<{
@@ -418,6 +487,12 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
           errors.push(
             `${engineer.name}: ${err instanceof Error ? err.message : "Failed to load projects."}`,
           );
+        } finally {
+          completed += 1;
+          setSearchProgress({
+            done: completed,
+            total: selectedEngineers.length,
+          });
         }
       }
     }
@@ -429,34 +504,37 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
         ),
       );
 
-      let allEntries = [...entries];
+      let allEntries = [...entriesRef.current];
       for (const result of projectResults) {
-        const { entries: nextEntries, visibleIds } = syncEngineerClockifyProjects(
-          result.engineerName,
-          result.projects,
-          allEntries,
-        );
+        const { entries: nextEntries, visibleProjects } =
+          syncEngineerClockifyProjects(
+            result.engineerName,
+            result.projects,
+            allEntries,
+          );
         allEntries = nextEntries;
-        newVisibleByEngineer[result.engineerName] = visibleIds;
+        newVisibleProjectsByEngineer[result.engineerName] = visibleProjects;
       }
 
       updateEntries(allEntries);
-      setVisibleProjectIdsByEngineer(newVisibleByEngineer);
-      setSearchedEngineerNames(Object.keys(newVisibleByEngineer));
-      lastProjectsRangeRef.current = `${dateRange.start}|${dateRange.end}`;
+      setVisibleProjectsByEngineer(newVisibleProjectsByEngineer);
+      setSearchedEngineerNames(Object.keys(newVisibleProjectsByEngineer));
+      lastSearchedRangeRef.current = `${dateRange.start}|${dateRange.end}`;
 
       if (errors.length > 0) {
         setActionError(errors.join(" "));
       }
     } finally {
       setSearching(false);
+      setSearchProgress({ done: 0, total: 0 });
     }
   }
 
-  // Auto-search once on initial load (with the default ±6 month window)
+  // Auto-search once on initial load (lifetime active projects)
   useEffect(() => {
     if (
       !hasAutoSearched.current &&
+      !storeLoading &&
       !loading &&
       !searching &&
       selectedEngineerNames.size > 0 &&
@@ -466,15 +544,16 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       void handleSearch();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [loading, selectedEngineerNames]);
+  }, [storeLoading, loading, selectedEngineerNames]);
 
-  // After load: when the user changes the date range, reload projects for that window
+  // Re-run Search when the date range changes after the initial load.
   useEffect(() => {
     const key = `${dateRange.start}|${dateRange.end}`;
     if (!hasAutoSearched.current) return;
     if (searchedEngineerNames.length === 0) return;
-    if (lastProjectsRangeRef.current === key) return;
-    if (searching || loading) return;
+    if (lastSearchedRangeRef.current === key) return;
+    if (searching || loading || storeLoading) return;
+    lastSearchedRangeRef.current = key;
     void handleSearch();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange.start, dateRange.end]);
@@ -576,7 +655,11 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             }}
             disabled={disabled || selectedEngineerNames.size === 0}
           >
-            {searching ? "Searching…" : "Search"}
+            {searching
+              ? searchProgress.total > 0
+                ? `Searching… ${searchProgress.done}/${searchProgress.total} · ${searchElapsedSec}s`
+                : `Searching… ${searchElapsedSec}s`
+              : "Search"}
           </button>
           <button
             type="button"
@@ -595,6 +678,17 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             Clear All
           </button>
         </div>
+        {searching ? (
+          <p className="hint search-progress-hint" aria-live="polite">
+            Still searching
+            {searchProgress.total > 0
+              ? ` — ${Math.max(searchProgress.total - searchProgress.done, 0)} employee${
+                  searchProgress.total - searchProgress.done === 1 ? "" : "s"
+                } left`
+              : ""}
+            {` (${searchElapsedSec}s)`}
+          </p>
+        ) : null}
 
         {isAddingEngineer ? (
           <AddEngineerDialog
@@ -610,7 +704,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
           .filter((engineer) => searchedEngineerNameSet.has(engineer.name))
           .map((engineer) => ({
             engineerName: engineer.name,
-            visibleProjectIds: visibleProjectIdsByEngineer[engineer.name] ?? [],
+            visibleProjects: visibleProjectsByEngineer[engineer.name] ?? [],
             onUpdate: (updated) => {
               updateEntries(
                 entries.map((entry) =>
@@ -619,11 +713,19 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
               );
             },
             onDelete: (id) => {
+              const removed = entries.find((entry) => entry.id === id);
               updateEntries(entries.filter((entry) => entry.id !== id));
-              setVisibleProjectIdsByEngineer((current) => ({
+              if (!removed) return;
+              const removedKey = projectLookupKey(
+                removed.projectCode,
+                removed.projectName,
+              );
+              setVisibleProjectsByEngineer((current) => ({
                 ...current,
                 [engineer.name]: (current[engineer.name] ?? []).filter(
-                  (entryId) => entryId !== id,
+                  (project) =>
+                    projectLookupKey(project.projectCode, project.projectName) !==
+                    removedKey,
                 ),
               }));
             },

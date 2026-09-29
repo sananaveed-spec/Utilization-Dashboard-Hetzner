@@ -75,16 +75,14 @@ let sharedActiveProjectsCache: {
 } | null = null;
 const ACTIVE_PROJECTS_CACHE_MS = 60_000;
 
-/** Match Overview default: current month ± 6 months (13 months total). */
-function getDefaultOverviewWindowISO(now = new Date()): {
+/** Lifetime window for discovering which projects an employee has ever worked on. */
+function getLifetimeWindowISO(now = new Date()): {
   startISO: string;
   endISO: string;
 } {
-  const start = new Date(now.getFullYear(), now.getMonth() - 6, 1, 0, 0, 0);
-  const end = new Date(now.getFullYear(), now.getMonth() + 7, 0, 23, 59, 59);
   return {
-    startISO: toApiDate(start),
-    endISO: toApiDate(end),
+    startISO: toApiDate(new Date(Date.UTC(2015, 0, 1, 0, 0, 0))),
+    endISO: toApiDate(now),
   };
 }
 
@@ -381,25 +379,34 @@ export class ClockifyClient {
   }
 
   /**
-   * Unique project IDs the member has logged time against in a date window.
-   * Prefer an explicit range (from the Overview date picker). Fallback is only
-   * for callers that omit one — same as the initial ±6 month Overview default.
+   * Unique project IDs the member has ever logged time against (lifetime).
+   * Uses SolidTime aggregate (one request) instead of paging every time entry.
    */
-  async getWorkedProjectIds(
-    userId: string,
-    range?: { startISO: string; endISO: string },
-  ): Promise<Set<string>> {
-    const window = range ?? getDefaultOverviewWindowISO();
-    const entries = await this.fetchTimeEntries({
-      startISO: window.startISO,
-      endISO: window.endISO,
-      memberId: userId,
-    });
+  async getWorkedProjectIds(userId: string): Promise<Set<string>> {
+    const window = getLifetimeWindowISO();
+    const url = new URL(this.orgPath("/time-entries/aggregate"));
+    url.searchParams.set("start", window.startISO);
+    url.searchParams.set("end", window.endISO);
+    url.searchParams.set("group", "project");
+    url.searchParams.append("member_ids[]", userId);
+
+    const response = await this.fetchWithRetry(url);
+    if (!response.ok) {
+      throw new Error(
+        `Timesheets aggregate request failed: ${response.status}`,
+      );
+    }
+
+    const json = (await response.json()) as {
+      data?: {
+        grouped_data?: Array<{ key?: string | null; seconds?: number }>;
+      };
+    };
 
     const projectIds = new Set<string>();
-    for (const entry of entries) {
-      const projectId = entry.project_id?.trim();
-      if (projectId) {
+    for (const row of json.data?.grouped_data ?? []) {
+      const projectId = row.key?.trim();
+      if (projectId && (row.seconds ?? 0) > 0) {
         projectIds.add(projectId);
       }
     }
@@ -412,15 +419,14 @@ export class ClockifyClient {
   }
 
   /**
-   * Active (non-archived) projects the user has worked on in the given window
-   * (default: current month ± 6 months).
+   * Active (non-archived) projects the user has ever worked on (lifetime).
+   * Date range for hours/columns is applied separately when loading time entries.
    */
   async getActiveProjectsWorkedByUser(
     userId: string,
-    range?: { startISO: string; endISO: string },
   ): Promise<ClockifyProject[]> {
     const [workedProjectIds, activeProjects] = await Promise.all([
-      this.getWorkedProjectIds(userId, range),
+      this.getWorkedProjectIds(userId),
       this.getActiveProjects(),
     ]);
 
