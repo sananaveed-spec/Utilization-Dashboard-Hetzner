@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   DATE_RANGE_PRESETS,
   compareDateKeys,
@@ -39,7 +40,11 @@ export function AnalysisDateRangePicker({
 }: AnalysisDateRangePickerProps) {
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [popoverStyle, setPopoverStyle] = useState<React.CSSProperties>({});
   const [draft, setDraft] = useState<DateRange>(value);
   const [pendingStart, setPendingStart] = useState<string | null>(null);
   const [leftMonth, setLeftMonth] = useState<MonthCursor>(() =>
@@ -51,6 +56,10 @@ export function AnalysisDateRangePicker({
     () => shiftMonthCursor(leftMonth.year, leftMonth.month, 1),
     [leftMonth],
   );
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -68,9 +77,14 @@ export function AnalysisDateRangePicker({
     }
 
     function onPointerDown(event: MouseEvent) {
-      if (!rootRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      const target = event.target as Node;
+      if (rootRef.current?.contains(target)) {
+        return;
       }
+      if (popoverRef.current?.contains(target)) {
+        return;
+      }
+      setOpen(false);
     }
 
     function onKeyDown(event: KeyboardEvent) {
@@ -86,6 +100,71 @@ export function AnalysisDateRangePicker({
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    function positionPopover() {
+      const trigger = triggerRef.current;
+      const popover = popoverRef.current;
+      if (!trigger || !popover) {
+        return;
+      }
+
+      const margin = 8;
+      const gap = 8;
+      const triggerRect = trigger.getBoundingClientRect();
+      const popoverRect = popover.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+
+      // Prefer opening to the right of the trigger (beside the sidebar).
+      let left = triggerRect.right + gap;
+      if (left + popoverRect.width > viewportWidth - margin) {
+        left = triggerRect.left - popoverRect.width - gap;
+      }
+      if (left < margin) {
+        left = Math.max(
+          margin,
+          Math.min(
+            triggerRect.left,
+            viewportWidth - popoverRect.width - margin,
+          ),
+        );
+      }
+
+      // Align with the trigger; flip/clamp vertically if needed.
+      let top = triggerRect.top;
+      if (top + popoverRect.height > viewportHeight - margin) {
+        top = Math.max(
+          margin,
+          viewportHeight - popoverRect.height - margin,
+        );
+      }
+
+      setPopoverStyle({
+        position: "fixed",
+        top: `${top}px`,
+        left: `${left}px`,
+        right: "auto",
+        transform: "none",
+        zIndex: 10000,
+        maxWidth: `min(calc(100vw - ${margin * 2}px), 48rem)`,
+        maxHeight: `calc(100vh - ${margin * 2}px)`,
+        overflow: "auto",
+      });
+    }
+
+    positionPopover();
+    window.addEventListener("resize", positionPopover);
+    window.addEventListener("scroll", positionPopover, true);
+    return () => {
+      window.removeEventListener("resize", positionPopover);
+      window.removeEventListener("scroll", positionPopover, true);
+    };
+  }, [open, leftMonth, draft, pendingStart]);
 
   function commitRange(next: DateRange) {
     const normalized = normalizeDateRange(next.start, next.end);
@@ -207,9 +286,49 @@ export function AnalysisDateRangePicker({
     );
   }
 
+  const popover =
+    open && mounted
+      ? createPortal(
+          <div
+            ref={popoverRef}
+            id={panelId}
+            className="analysis-cal-popover analysis-cal-popover--fixed"
+            style={popoverStyle}
+            role="dialog"
+            aria-label="Select analysis date range"
+          >
+            <aside className="analysis-cal-presets">
+              {DATE_RANGE_PRESETS.map((preset) => (
+                <button
+                  key={preset.id}
+                  type="button"
+                  className={
+                    activePreset === preset.id
+                      ? "analysis-cal-preset analysis-cal-preset--active"
+                      : "analysis-cal-preset"
+                  }
+                  onClick={() => applyPreset(preset.id)}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </aside>
+
+            <div className="analysis-cal-body">
+              <div className="analysis-cal-months">
+                {renderMonth(leftMonth, "prev")}
+                {renderMonth(rightMonth, "next")}
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )
+      : null;
+
   return (
     <div className="analysis-range-picker" ref={rootRef}>
       <button
+        ref={triggerRef}
         type="button"
         className="field-input analysis-range-trigger"
         aria-expanded={open}
@@ -222,39 +341,7 @@ export function AnalysisDateRangePicker({
           ▾
         </span>
       </button>
-
-      {open ? (
-        <div
-          id={panelId}
-          className="analysis-cal-popover"
-          role="dialog"
-          aria-label="Select analysis date range"
-        >
-          <aside className="analysis-cal-presets">
-            {DATE_RANGE_PRESETS.map((preset) => (
-              <button
-                key={preset.id}
-                type="button"
-                className={
-                  activePreset === preset.id
-                    ? "analysis-cal-preset analysis-cal-preset--active"
-                    : "analysis-cal-preset"
-                }
-                onClick={() => applyPreset(preset.id)}
-              >
-                {preset.label}
-              </button>
-            ))}
-          </aside>
-
-          <div className="analysis-cal-body">
-            <div className="analysis-cal-months">
-              {renderMonth(leftMonth, "prev")}
-              {renderMonth(rightMonth, "next")}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {popover}
     </div>
   );
 }

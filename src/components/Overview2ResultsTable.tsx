@@ -385,39 +385,6 @@ export function Overview2ResultsTable({
   }
 
   function saveEditing(row: UtilizationEntry) {
-    const exceededWeeks = weeks.filter((week) => {
-      const weekId = String(week.weekNumber);
-      let total = 0;
-
-      for (const current of engineerEntries) {
-        const values =
-          current.id === row.id
-            ? draftWeeks
-            : (current.weekValuesByMonth[monthKey] ?? {});
-        total += parseHours(values[weekId]);
-      }
-
-      const maxHours = week.isWeekendOnly
-        ? week.dayCount * 8
-        : week.capacityHours;
-      return total > maxHours;
-    });
-
-    if (exceededWeeks.length > 0) {
-      const details = exceededWeeks
-        .map((week) => {
-          const maxHours = week.isWeekendOnly
-            ? week.dayCount * 8
-            : week.capacityHours;
-          return `Week ${week.weekNumber} (${maxHours}h max)`;
-        })
-        .join(", ");
-      setEditError(
-        `Planned Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${details}. Entry was not saved.`,
-      );
-      return;
-    }
-
     onUpdate({
       ...row,
       weekValuesByMonth: {
@@ -448,7 +415,7 @@ export function Overview2ResultsTable({
 
       {clockifyHoursError ? (
         <p className="form-message error" role="alert">
-          Clockify hours: {clockifyHoursError}
+          ATS hours: {clockifyHoursError}
         </p>
       ) : null}
 
@@ -484,7 +451,7 @@ export function Overview2ResultsTable({
             }}
           />
           {clockifyHoursLoading ? (
-            <p className="week-nav-status">Loading Clockify…</p>
+            <p className="week-nav-status">Loading ATS…</p>
           ) : null}
         </div>
         <button
@@ -645,7 +612,7 @@ export function Overview2ResultsTable({
             {projectsExpanded && projectWeekTotals.length === 0 ? (
               <tr>
                 <td colSpan={emptyColSpan} className="overview2-results-empty">
-                  No active projects with lifetime Clockify time for this
+                  No active projects with lifetime ATS time for this
                   engineer.
                 </td>
               </tr>

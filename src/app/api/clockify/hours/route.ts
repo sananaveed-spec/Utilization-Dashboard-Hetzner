@@ -86,6 +86,7 @@ export async function GET(request: Request) {
     );
 
     const hoursByKey: Record<string, number> = {};
+    const billableHoursByKey: Record<string, number> = {};
 
     for (const entry of entries) {
       if (!entry.projectName) {
@@ -122,18 +123,26 @@ export async function GET(request: Request) {
         week.weekNumber,
         projectName,
       );
-      hoursByKey[key] = (hoursByKey[key] ?? 0) + seconds / 3600;
+      const hours = seconds / 3600;
+      hoursByKey[key] = (hoursByKey[key] ?? 0) + hours;
+      if (entry.billable) {
+        billableHoursByKey[key] = (billableHoursByKey[key] ?? 0) + hours;
+      }
     }
 
     // Round to 2 decimals for stable display
     for (const key of Object.keys(hoursByKey)) {
       hoursByKey[key] = Math.round(hoursByKey[key] * 100) / 100;
     }
+    for (const key of Object.keys(billableHoursByKey)) {
+      billableHoursByKey[key] = Math.round(billableHoursByKey[key] * 100) / 100;
+    }
 
     return NextResponse.json({
       year,
       month,
       hoursByKey,
+      billableHoursByKey,
     });
   } catch (error) {
     const message =

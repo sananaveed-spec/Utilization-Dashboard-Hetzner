@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useAccess } from "@/auth/accessContext";
 import {
   ALLOWED_USERS_CHANGED_EVENT,
   isValidEmail,
@@ -15,11 +16,22 @@ type AllowedUsersResponse = {
 };
 
 export function UsersPanel() {
+  const { email: signedInEmail } = useAccess();
   const [emails, setEmails] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  function writeHeaders(): HeadersInit {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (signedInEmail) {
+      headers["x-user-email"] = signedInEmail;
+    }
+    return headers;
+  }
 
   const loadEmails = useCallback(async () => {
     setError(null);
@@ -67,7 +79,7 @@ export function UsersPanel() {
     try {
       const response = await fetch("/api/allowed-users", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: writeHeaders(),
         body: JSON.stringify({ email }),
       });
       const data = (await response.json()) as AllowedUsersResponse;
@@ -97,7 +109,7 @@ export function UsersPanel() {
     try {
       const response = await fetch("/api/allowed-users", {
         method: "DELETE",
-        headers: { "Content-Type": "application/json" },
+        headers: writeHeaders(),
         body: JSON.stringify({ email }),
       });
       const data = (await response.json()) as AllowedUsersResponse;
@@ -123,8 +135,8 @@ export function UsersPanel() {
         <div>
           <h2 className="analysis-title">Users</h2>
           <p className="analysis-subtitle">
-            Only these Microsoft 365 email addresses can sign in to the
-            Utilization Dashboard.
+            Anyone with an @allumiax.com account can view the dashboard. Emails
+            listed here can edit data (hours, engineers, holidays, and users).
           </p>
         </div>
       </div>
@@ -180,7 +192,7 @@ export function UsersPanel() {
             ) : emails.length === 0 ? (
               <tr>
                 <td colSpan={2} className="holidays-empty">
-                  No allowed users yet. Add an email to enable sign-in.
+                  No editors yet. Add an email to grant edit access.
                 </td>
               </tr>
             ) : (

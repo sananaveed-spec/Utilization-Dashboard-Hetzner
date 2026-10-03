@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useAccess } from "@/auth/accessContext";
 import type { UtilizationStore } from "@/hooks/useUtilizationStore";
 import {
   createHoliday,
@@ -14,6 +15,7 @@ type HolidaysPanelProps = {
 };
 
 export function HolidaysPanel({ store }: HolidaysPanelProps) {
+  const { canEdit } = useAccess();
   const { holidays, updateHolidays } = store;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<{ name: string; date: string } | null>(
@@ -21,7 +23,7 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
   );
 
   function handleAdd() {
-    if (editingId) {
+    if (!canEdit || editingId) {
       return;
     }
 
@@ -32,6 +34,9 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
   }
 
   function handleDelete(holiday: Holiday) {
+    if (!canEdit) {
+      return;
+    }
     const label = holiday.name.trim() || "this holiday";
     const confirmed = window.confirm(`Delete "${label}"?`);
     if (!confirmed) {
@@ -47,7 +52,7 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
   }
 
   function handleMove(id: string, direction: -1 | 1) {
-    if (editingId) {
+    if (!canEdit || editingId) {
       return;
     }
 
@@ -68,6 +73,9 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
   }
 
   function startEditing(holiday: Holiday) {
+    if (!canEdit) {
+      return;
+    }
     setEditingId(holiday.id);
     setDraft({ name: holiday.name, date: holiday.date });
   }
@@ -120,7 +128,8 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
           type="button"
           className="button primary button-small"
           onClick={handleAdd}
-          disabled={Boolean(editingId)}
+          disabled={Boolean(editingId) || !canEdit}
+          title={canEdit ? undefined : "View only — editing requires Users access"}
         >
           + Add holiday
         </button>
@@ -213,7 +222,7 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
                           type="button"
                           className="icon-button"
                           onClick={() => handleMove(holiday.id, -1)}
-                          disabled={Boolean(editingId) || index === 0}
+                          disabled={!canEdit || Boolean(editingId) || index === 0}
                           title="Move up"
                           aria-label="Move holiday up"
                         >
@@ -224,6 +233,7 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
                           className="icon-button"
                           onClick={() => handleMove(holiday.id, 1)}
                           disabled={
+                            !canEdit ||
                             Boolean(editingId) ||
                             index === holidays.length - 1
                           }
@@ -259,7 +269,7 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
                               type="button"
                               className="icon-button icon-button--edit"
                               onClick={() => startEditing(holiday)}
-                              disabled={Boolean(editingId)}
+                              disabled={!canEdit || Boolean(editingId)}
                               aria-label="Edit"
                               title="Edit"
                             >
@@ -270,7 +280,8 @@ export function HolidaysPanel({ store }: HolidaysPanelProps) {
                               className="icon-button icon-button--delete"
                               onClick={() => handleDelete(holiday)}
                               disabled={
-                                Boolean(editingId) && editingId !== holiday.id
+                                !canEdit ||
+                                (Boolean(editingId) && editingId !== holiday.id)
                               }
                               aria-label="Delete"
                               title="Delete"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { clearOverCapacityAllottedHours } from "@/lib/clearOverCapacity";
+import { useAccess } from "@/auth/accessContext";
 import {
   fetchDashboardData,
   saveCalendarYearRange as persistCalendarYearRange,
@@ -21,7 +21,6 @@ import {
   isSameEngineerName,
 } from "@/lib/engineers";
 import {
-  getHolidayDateSet,
   loadHolidays,
   saveHolidays,
   type Holiday,
@@ -52,14 +51,9 @@ export type UtilizationStore = {
 function sanitizeEntries(
   entries: UtilizationEntry[],
   engineerNames: string[],
-  holidays: Holiday[],
 ): UtilizationEntry[] {
-  const activeEntries = entries.filter((entry) =>
+  return entries.filter((entry) =>
     engineerNames.some((name) => isSameEngineerName(name, entry.engineerName)),
-  );
-  return clearOverCapacityAllottedHours(
-    activeEntries,
-    getHolidayDateSet(holidays),
   );
 }
 
@@ -80,6 +74,7 @@ function isServerDashboardEmpty(data: {
 }
 
 export function useUtilizationStore(): UtilizationStore {
+  const { canEdit } = useAccess();
   const [entries, setEntries] = useState<UtilizationEntry[]>([]);
   const [engineerNames, setEngineerNames] = useState<string[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
@@ -92,6 +87,8 @@ export function useUtilizationStore(): UtilizationStore {
     null,
   );
   const pendingEntriesRef = useRef<UtilizationEntry[] | null>(null);
+  const canEditRef = useRef(canEdit);
+  canEditRef.current = canEdit;
 
   useEffect(() => {
     let cancelled = false;
@@ -123,7 +120,6 @@ export function useUtilizationStore(): UtilizationStore {
           const migratedEntries = sanitizeEntries(
             localEntries.length > 0 ? localEntries : data.entries,
             migratedEngineers,
-            migratedHolidays,
           );
           const migratedRange = localRange;
 
@@ -150,7 +146,6 @@ export function useUtilizationStore(): UtilizationStore {
         const sanitizedEntries = sanitizeEntries(
           data.entries,
           data.engineers,
-          data.holidays,
         );
 
         if (sanitizedEntries.length !== data.entries.length) {
@@ -209,11 +204,17 @@ export function useUtilizationStore(): UtilizationStore {
   }
 
   function updateEntries(next: UtilizationEntry[]) {
+    if (!canEditRef.current) {
+      return;
+    }
     setEntries(next);
     queueEntriesSave(next);
   }
 
   function updateEngineerNames(next: string[]) {
+    if (!canEditRef.current) {
+      return;
+    }
     const sorted = sortEngineerNames(next);
     setEngineerNames(sorted);
     saveEngineerNames(sorted);
@@ -225,18 +226,11 @@ export function useUtilizationStore(): UtilizationStore {
   }
 
   function updateHolidays(next: Holiday[]) {
+    if (!canEditRef.current) {
+      return;
+    }
     setHolidays(next);
     saveHolidays(next);
-    setEntries((current) => {
-      const cleaned = clearOverCapacityAllottedHours(
-        current,
-        getHolidayDateSet(next),
-      );
-      if (cleaned !== current) {
-        queueEntriesSave(cleaned);
-      }
-      return cleaned;
-    });
     void persistHolidays(next).catch((error) => {
       setSaveError(
         error instanceof Error ? error.message : "Failed to save holidays.",
@@ -245,6 +239,9 @@ export function useUtilizationStore(): UtilizationStore {
   }
 
   function updateCalendarYearRange(next: CalendarYearRange) {
+    if (!canEditRef.current) {
+      return;
+    }
     setCalendarYearRange(next);
     saveCalendarYearRange(next);
     void persistCalendarYearRange(next).catch((error) => {

@@ -278,41 +278,6 @@ export function UtilizationResultsTable({
   }
 
   function saveEditing(row: UtilizationEntry) {
-    const exceededWeeks = weeks.filter((week) => {
-      const weekId = String(week.weekNumber);
-      let total = 0;
-
-      for (const current of rows) {
-        const values =
-          current.id === row.id
-            ? draftWeeks
-            : (current.weekValuesByMonth[key] ?? {});
-        total += parseHours(values[weekId]);
-      }
-
-      // Weekend-only stubs still allow limited OT entry, but forecasted
-      // capacity stays 0 for Saturdays/Sundays.
-      const maxHours = week.isWeekendOnly
-        ? week.dayCount * 8
-        : week.capacityHours;
-      return total > maxHours;
-    });
-
-    if (exceededWeeks.length > 0) {
-      const details = exceededWeeks
-        .map((week) => {
-          const maxHours = week.isWeekendOnly
-            ? week.dayCount * 8
-            : week.capacityHours;
-          return `Week ${week.weekNumber} (${maxHours}h max)`;
-        })
-        .join(", ");
-      setEditError(
-        `Planned Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${details}. Entry was not saved.`,
-      );
-      return;
-    }
-
     onUpdate({
       ...row,
       weekValuesByMonth: {
@@ -478,7 +443,7 @@ export function UtilizationResultsTable({
       <section className="results-section">
         <p className="hint">
           {emptyHint ??
-            "Select an engineer and click Search to load active Clockify projects."}
+            "Select an engineer and click Search to load active ATS projects."}
         </p>
       </section>
     );
@@ -494,7 +459,7 @@ export function UtilizationResultsTable({
 
       {clockifyHoursError ? (
         <p className="form-message error" role="alert">
-          Clockify hours: {clockifyHoursError}
+          ATS hours: {clockifyHoursError}
         </p>
       ) : null}
 
@@ -530,7 +495,7 @@ export function UtilizationResultsTable({
             }}
           />
           {clockifyHoursLoading ? (
-            <p className="week-nav-status">Loading Clockify…</p>
+            <p className="week-nav-status">Loading ATS…</p>
           ) : null}
         </div>
         <button
@@ -592,8 +557,8 @@ export function UtilizationResultsTable({
             showClockify && !showAssigned
               ? "Keep at least one of A or C visible"
               : showClockify
-                ? "Hide actual Clockify hours (C)"
-                : "Show actual Clockify hours (C)"
+                ? "Hide actual ATS hours (C)"
+                : "Show actual ATS hours (C)"
           }
         >
           {showClockify ? "Hide C" : "Show C"}
@@ -607,7 +572,7 @@ export function UtilizationResultsTable({
           ·
         </span>
         <span>
-          <strong>C</strong> = Actual (Clockify)
+          <strong>C</strong> = Actual (ATS)
         </span>
       </p>
 
@@ -657,7 +622,7 @@ export function UtilizationResultsTable({
                     {showClockify ? (
                       <th
                         className="week-subheader week-col col-fit"
-                        title="Total actual hours (Clockify)"
+                        title="Total actual hours (ATS)"
                       >
                         C
                       </th>
@@ -714,7 +679,7 @@ export function UtilizationResultsTable({
                           {showClockify ? (
                             <td
                               className="week-cell week-cell--clockify week-col col-fit"
-                              title="Clockify hours (read-only)"
+                              title="ATS hours (read-only)"
                             >
                               {clockifyDisplay || (
                                 <span className="week-empty">—</span>

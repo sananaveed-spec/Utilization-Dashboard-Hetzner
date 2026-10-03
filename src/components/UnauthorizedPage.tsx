@@ -10,8 +10,8 @@ export function UnauthorizedPage() {
     <div className="unauthorized-panel">
       <h2>Access restricted</h2>
       <p>
-        This application is only available to Microsoft 365 accounts that have
-        been added under the Users tab.
+        This application is available to Microsoft 365 accounts with an
+        @allumiax.com email address.
       </p>
       {email ? <p className="unauthorized-email">Signed in as: {email}</p> : null}
       <p className="unauthorized-hint">Use Log out above to switch accounts.</p>

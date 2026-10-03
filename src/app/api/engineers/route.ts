@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { readEngineers, writeEngineers } from "@/lib/dashboardDataStore";
+import { requireEditor } from "@/lib/requireEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,11 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const denied = await requireEditor(request);
+  if (denied) {
+    return denied;
+  }
+
   try {
     const body = (await request.json()) as { engineers?: unknown };
     const engineers = await writeEngineers(body.engineers ?? []);

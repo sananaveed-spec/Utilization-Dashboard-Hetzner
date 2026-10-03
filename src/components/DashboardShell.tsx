@@ -1,21 +1,70 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
+import { useAccess } from "@/auth/accessContext";
 import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
 import { Overview2Filters } from "@/components/Overview2Filters";
 import { UsersPanel } from "@/components/UsersPanel";
 import { useUtilizationStore } from "@/hooks/useUtilizationStore";
 
-type DashboardTab =
+export type DashboardTab =
   | "overview2"
   | "analysis"
   | "holidays"
   | "users";
 
-export function DashboardShell() {
+export const DASHBOARD_NAV_ITEMS: Array<{ id: DashboardTab; label: string }> = [
+  { id: "overview2", label: "Overview" },
+  { id: "analysis", label: "Analysis" },
+  { id: "holidays", label: "Holidays" },
+  { id: "users", label: "Users" },
+];
+
+type DashboardShellProps = {
+  tab: DashboardTab;
+  onTabChange: (tab: DashboardTab) => void;
+};
+
+export function DashboardNav({
+  tab,
+  onTabChange,
+  canEdit,
+}: {
+  tab: DashboardTab;
+  onTabChange: (tab: DashboardTab) => void;
+  canEdit: boolean;
+}) {
+  const items = canEdit
+    ? DASHBOARD_NAV_ITEMS
+    : DASHBOARD_NAV_ITEMS.filter((item) => item.id !== "users");
+
+  return (
+    <nav className="dashboard-nav" aria-label="Dashboard navigation">
+      {items.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className={`dashboard-nav-item${tab === item.id ? " dashboard-nav-item--active" : ""}`}
+          onClick={() => onTabChange(item.id)}
+          aria-current={tab === item.id ? "page" : undefined}
+        >
+          {item.label}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
+  const { canEdit } = useAccess();
   const store = useUtilizationStore();
-  const [tab, setTab] = useState<DashboardTab>("overview2");
+
+  useEffect(() => {
+    if (!canEdit && tab === "users") {
+      onTabChange("overview2");
+    }
+  }, [canEdit, tab, onTabChange]);
 
   if (store.loading) {
     return (
@@ -29,48 +78,18 @@ export function DashboardShell() {
 
   return (
     <div className="dashboard-shell">
+      {!canEdit ? (
+        <p className="dashboard-view-only-banner" role="status">
+          View only — you can browse the dashboard. Editing is limited to users
+          added under Users.
+        </p>
+      ) : null}
+
       {store.saveError ? (
         <p className="users-error dashboard-save-error" role="alert">
           {store.saveError}
         </p>
       ) : null}
-      <aside className="dashboard-sidebar" aria-label="Dashboard navigation">
-        <p className="dashboard-sidebar-brand">Utilization</p>
-        <nav className="dashboard-nav">
-          <button
-            type="button"
-            className={`dashboard-nav-item${tab === "overview2" ? " dashboard-nav-item--active" : ""}`}
-            onClick={() => setTab("overview2")}
-            aria-current={tab === "overview2" ? "page" : undefined}
-          >
-            Overview
-          </button>
-          <button
-            type="button"
-            className={`dashboard-nav-item${tab === "analysis" ? " dashboard-nav-item--active" : ""}`}
-            onClick={() => setTab("analysis")}
-            aria-current={tab === "analysis" ? "page" : undefined}
-          >
-            Analysis
-          </button>
-          <button
-            type="button"
-            className={`dashboard-nav-item${tab === "holidays" ? " dashboard-nav-item--active" : ""}`}
-            onClick={() => setTab("holidays")}
-            aria-current={tab === "holidays" ? "page" : undefined}
-          >
-            Holidays
-          </button>
-          <button
-            type="button"
-            className={`dashboard-nav-item${tab === "users" ? " dashboard-nav-item--active" : ""}`}
-            onClick={() => setTab("users")}
-            aria-current={tab === "users" ? "page" : undefined}
-          >
-            Users
-          </button>
-        </nav>
-      </aside>
 
       <div className="dashboard-main">
         {tab === "overview2" ? (
@@ -79,8 +98,10 @@ export function DashboardShell() {
           <AnalysisPanel store={store} />
         ) : tab === "holidays" ? (
           <HolidaysPanel store={store} />
-        ) : (
+        ) : canEdit ? (
           <UsersPanel />
+        ) : (
+          <Overview2Filters store={store} />
         )}
       </div>
     </div>

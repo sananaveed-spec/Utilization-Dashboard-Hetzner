@@ -134,7 +134,7 @@ export function UtilizationFilters({ store }: UtilizationFiltersProps) {
     } catch (err) {
       setEmployees([]);
       setError(
-        err instanceof Error ? err.message : "Failed to load Clockify data.",
+        err instanceof Error ? err.message : "Failed to load ATS data.",
       );
     } finally {
       setLoading(false);
@@ -179,7 +179,7 @@ export function UtilizationFilters({ store }: UtilizationFiltersProps) {
           setClockifyHoursError(
             err instanceof Error
               ? err.message
-              : "Failed to load Clockify hours.",
+              : "Failed to load ATS hours.",
           );
         }
       } finally {
@@ -295,7 +295,7 @@ export function UtilizationFilters({ store }: UtilizationFiltersProps) {
 
     if (!selectedEngineer.linked) {
       setActionError(
-        `"${selectedEngineer.name}" was not found in Clockify. Add them from Clockify employees.`,
+        `"${selectedEngineer.name}" was not found in ATS. Add them from ATS employees.`,
       );
       setActionMessage(null);
       return;
@@ -332,7 +332,7 @@ export function UtilizationFilters({ store }: UtilizationFiltersProps) {
       setViewMode("results");
       setActionMessage(
         clockifyProjects.length === 0
-          ? `No active projects with lifetime Clockify time found for ${selectedEngineer.name}.`
+          ? `No active projects with lifetime ATS time found for ${selectedEngineer.name}.`
           : `Showing ${clockifyProjects.length} active project${clockifyProjects.length === 1 ? "" : "s"} ${selectedEngineer.name} has worked on.`,
       );
     } catch (err) {
@@ -341,7 +341,7 @@ export function UtilizationFilters({ store }: UtilizationFiltersProps) {
       setActionError(
         err instanceof Error
           ? err.message
-          : "Failed to load engineer projects from Clockify.",
+          : "Failed to load engineer projects from ATS.",
       );
     } finally {
       setSearching(false);
@@ -471,7 +471,7 @@ export function UtilizationFilters({ store }: UtilizationFiltersProps) {
           onMonthChange={setMonth}
           calendarYearRange={calendarYearRange}
           onCalendarYearRangeChange={updateCalendarYearRange}
-          emptyHint="No active projects with lifetime Clockify time for this engineer."
+          emptyHint="No project has been selected for this engineer from their lifetime active projects in ATS."
           clockifyHoursByKey={clockifyHoursByKey}
           clockifyHoursLoading={clockifyHoursLoading}
           clockifyHoursError={clockifyHoursError}

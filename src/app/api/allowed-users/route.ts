@@ -5,6 +5,7 @@ import {
   readAllowedEmails,
   removeAllowedEmail,
 } from "@/lib/allowedUsersStore";
+import { requireEditor } from "@/lib/requireEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireEditor(request);
+  if (denied) {
+    return denied;
+  }
+
   try {
     const body = (await request.json()) as { email?: unknown };
     const email =
@@ -53,6 +59,11 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await requireEditor(request);
+  if (denied) {
+    return denied;
+  }
+
   try {
     const body = (await request.json()) as { email?: unknown };
     const email =

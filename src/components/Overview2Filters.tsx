@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAccess } from "@/auth/accessContext";
 import { AddEngineerDialog } from "@/components/AddEngineerDialog";
+import { AnalysisDateRangePicker } from "@/components/AnalysisDateRangePicker";
 import { Overview2GroupedResults } from "@/components/Overview2GroupedResults";
 import type { UtilizationStore } from "@/hooks/useUtilizationStore";
 import {
@@ -99,6 +101,7 @@ type Overview2FiltersProps = {
 };
 
 export function Overview2Filters({ store }: Overview2FiltersProps) {
+  const { canEdit } = useAccess();
   const {
     entries,
     engineerNames,
@@ -109,13 +112,13 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   } = store;
 
   const [employees, setEmployees] = useState<ClockifyEmployee[]>([]);
-  // Track selection by engineer `name` (stable) rather than Clockify `id` (changes
-  // while the Clockify employee list loads).
+  // Track selection by engineer `name` (stable) rather than ATS `id` (changes
+  // while the ATS employee list loads).
   const [selectedEngineerNames, setSelectedEngineerNames] = useState<Set<string>>(
     new Set(),
   );
   const [searchedEngineerNames, setSearchedEngineerNames] = useState<string[]>([]);
-  /** Parsed Clockify projects from last Search — source of truth for visible rows. */
+  /** Parsed ATS projects from last Search — source of truth for visible rows. */
   const [visibleProjectsByEngineer, setVisibleProjectsByEngineer] = useState<
     Record<string, Array<{ projectCode: string; projectName: string }>>
   >({});
@@ -132,6 +135,9 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     getDefaultOverviewDateRange(),
   );
   const [clockifyHoursByMonth, setClockifyHoursByMonth] = useState<
+    Record<string, Record<string, number>>
+  >({});
+  const [billableHoursByMonth, setBillableHoursByMonth] = useState<
     Record<string, Record<string, number>>
   >({});
   const [clockifyHoursLoading, setClockifyHoursLoading] = useState(false);
@@ -164,7 +170,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     } catch (err) {
       setEmployees([]);
       setError(
-        err instanceof Error ? err.message : "Failed to load Clockify data.",
+        err instanceof Error ? err.message : "Failed to load ATS data.",
       );
     } finally {
       setLoading(false);
@@ -195,6 +201,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             );
             const payload = await readJsonResponse<{
               hoursByKey?: Record<string, number>;
+              billableHoursByKey?: Record<string, number>;
               error?: string;
             }>(response);
 
@@ -207,16 +214,20 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             return {
               key: monthCursorKey(cursor),
               hoursByKey: payload.hoursByKey ?? {},
+              billableHoursByKey: payload.billableHoursByKey ?? {},
             };
           }),
         );
 
         if (!cancelled) {
           const next: Record<string, Record<string, number>> = {};
+          const nextBillable: Record<string, Record<string, number>> = {};
           for (const result of results) {
             next[result.key] = result.hoursByKey;
+            nextBillable[result.key] = result.billableHoursByKey;
           }
           setClockifyHoursByMonth(next);
+          setBillableHoursByMonth(nextBillable);
 
           // Merge any projects that have hours in-range into the visible list
           // (covers uncoded names if Search state was incomplete).
@@ -264,10 +275,11 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       } catch (err) {
         if (!cancelled) {
           setClockifyHoursByMonth({});
+          setBillableHoursByMonth({});
           setClockifyHoursError(
             err instanceof Error
               ? err.message
-              : "Failed to load Clockify hours.",
+              : "Failed to load ATS hours.",
           );
         }
       } finally {
@@ -423,25 +435,30 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
 
   }
 
-  async function handleSearch() {
+  async function handleSearch(options?: { quietUnlinked?: boolean }) {
     if (selectedEngineers.length === 0) {
       setActionError("Select at least one engineer name before searching.");
 
       return;
     }
 
+    const linkedEngineers = selectedEngineers.filter((e) => e.linked);
     const unlinked = selectedEngineers.filter((e) => !e.linked);
-    if (unlinked.length > 0) {
-      setActionError(
-        `${unlinked.map((e) => `"${e.name}"`).join(", ")} ${unlinked.length === 1 ? "was" : "were"} not found in Clockify. Add them from Clockify employees.`,
-      );
 
+    if (linkedEngineers.length === 0) {
+      setActionError(
+        `${unlinked.map((e) => `"${e.name}"`).join(", ")} ${unlinked.length === 1 ? "was" : "were"} not found in ATS. Add them from ATS employees.`,
+      );
       return;
     }
 
     setSearching(true);
-    setSearchProgress({ done: 0, total: selectedEngineers.length });
-    setActionError(null);
+    setSearchProgress({ done: 0, total: linkedEngineers.length });
+    setActionError(
+      unlinked.length > 0 && !options?.quietUnlinked
+        ? `${unlinked.map((e) => `"${e.name}"`).join(", ")} ${unlinked.length === 1 ? "was" : "were"} not found in ATS and skipped. Add them from ATS employees.`
+        : null,
+    );
 
     const newVisibleProjectsByEngineer: Record<
       string,
@@ -459,10 +476,10 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     let completed = 0;
 
     async function worker() {
-      while (cursor < selectedEngineers.length) {
+      while (cursor < linkedEngineers.length) {
         const index = cursor;
         cursor += 1;
-        const engineer = selectedEngineers[index];
+        const engineer = linkedEngineers[index];
         if (!engineer) continue;
 
         try {
@@ -491,7 +508,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
           completed += 1;
           setSearchProgress({
             done: completed,
-            total: selectedEngineers.length,
+            total: linkedEngineers.length,
           });
         }
       }
@@ -499,7 +516,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
 
     try {
       await Promise.all(
-        Array.from({ length: Math.min(concurrency, selectedEngineers.length) }, () =>
+        Array.from({ length: Math.min(concurrency, linkedEngineers.length) }, () =>
           worker(),
         ),
       );
@@ -522,7 +539,9 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       lastSearchedRangeRef.current = `${dateRange.start}|${dateRange.end}`;
 
       if (errors.length > 0) {
-        setActionError(errors.join(" "));
+        setActionError((current) =>
+          [current, errors.join(" ")].filter(Boolean).join(" "),
+        );
       }
     } finally {
       setSearching(false);
@@ -541,7 +560,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       searchedEngineerNames.length === 0
     ) {
       hasAutoSearched.current = true;
-      void handleSearch();
+      void handleSearch({ quietUnlinked: true });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storeLoading, loading, selectedEngineerNames]);
@@ -554,163 +573,201 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     if (lastSearchedRangeRef.current === key) return;
     if (searching || loading || storeLoading) return;
     lastSearchedRangeRef.current = key;
-    void handleSearch();
+    void handleSearch({ quietUnlinked: true });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateRange.start, dateRange.end]);
 
   const disabled = loading || Boolean(error) || searching;
+  const editDisabled = disabled || !canEdit;
   const searchedEngineerNameSet = useMemo(
     () => new Set(searchedEngineerNames),
     [searchedEngineerNames],
   );
 
   return (
-    <div className="utilization-workspace">
-      <section className="filters">
-        {error ? (
-          <p className="form-message error" role="alert">
-            {error}
-          </p>
-        ) : null}
+    <div className="utilization-workspace utilization-workspace--overview-sidebar">
+      {(error || actionError) ? (
+        <div className="utilization-workspace__alerts">
+          {error ? (
+            <p className="form-message error" role="alert">
+              {error}
+            </p>
+          ) : null}
+          {actionError ? (
+            <p className="form-message error" role="alert">
+              {actionError}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
 
-        {actionError ? (
-          <p className="form-message error" role="alert">
-            {actionError}
-          </p>
-        ) : null}
-
-        <div className="filter-fields-row">
-          <div className="engineer-filter filter-field--engineer">
-            <div className="field-label-row">
-              <span className="field-label" id="overview2-engineer-label">
-                Employee Name
-              </span>
-              <div className="field-label-actions">
-                <button
-                  type="button"
-                  className="button secondary button-small"
-                  onClick={() => {
-                    setActionError(null);
-                    setIsAddingEngineer(true);
-                  }}
-                  disabled={disabled}
-                >
-                  Add
-                </button>
-                <button
-                  type="button"
-                  className="button danger button-small"
-                  onClick={handleDeleteEngineer}
-                  disabled={disabled || selectedEngineerNames.size === 0}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-
-            {listedEmployees.length === 0 && !loading ? (
-              <p className="hint">
-                No engineers on the list yet. Use Add to include Clockify
-                employees.
-              </p>
-            ) : (
-              <div
-                className="overview2-radio-row"
-                role="group"
-                aria-labelledby="overview2-engineer-label"
-              >
-                {listedEmployees.map((employee) => {
-                  const inputId = `overview2-engineer-${employee.id}`;
-                  return (
-                    <label
-                      key={employee.id}
-                      className="overview2-radio-option"
-                      htmlFor={inputId}
-                    >
-                      <input
-                        id={inputId}
-                        type="checkbox"
-                        value={employee.id}
-                        checked={selectedEngineerNames.has(employee.name)}
-                        onChange={(e) => {
-                          toggleEngineer(employee.name, e.target.checked);
-                        }}
-                        disabled={disabled}
-                      />
-                      <span>{employee.name}</span>
-                    </label>
-                  );
-                })}
-              </div>
-            )}
+      <div className="utilization-workspace__body">
+        <aside className="overview2-sidebar" aria-label="Employee selection">
+          <div className="overview2-sidebar__manage">
+            <button
+              type="button"
+              className="button secondary button-small overview2-sidebar__manage-btn"
+              onClick={() => {
+                setActionError(null);
+                setIsAddingEngineer(true);
+              }}
+              disabled={editDisabled}
+              title={canEdit ? undefined : "View only — editing requires Users access"}
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              className="button danger button-small overview2-sidebar__manage-btn"
+              onClick={handleDeleteEngineer}
+              disabled={editDisabled || selectedEngineerNames.size === 0}
+              title={canEdit ? undefined : "View only — editing requires Users access"}
+            >
+              Delete
+            </button>
           </div>
-        </div>
 
-        <div className="filter-actions">
-          <button
-            type="button"
-            className="button primary"
-            onClick={() => {
-              void handleSearch();
-            }}
-            disabled={disabled || selectedEngineerNames.size === 0}
-          >
-            {searching
-              ? searchProgress.total > 0
-                ? `Searching… ${searchProgress.done}/${searchProgress.total} · ${searchElapsedSec}s`
-                : `Searching… ${searchElapsedSec}s`
-              : "Search"}
-          </button>
-          <button
-            type="button"
-            className="button secondary"
-            onClick={selectAllEmployees}
-            disabled={disabled || listedEmployees.length === 0}
-          >
-            Select All
-          </button>
-          <button
-            type="button"
-            className="button secondary"
-            onClick={clearAllEmployees}
-            disabled={disabled || selectedEngineerNames.size === 0}
-          >
-            Clear All
-          </button>
-        </div>
-        {searching ? (
-          <p className="hint search-progress-hint" aria-live="polite">
-            Still searching
-            {searchProgress.total > 0
-              ? ` — ${Math.max(searchProgress.total - searchProgress.done, 0)} employee${
-                  searchProgress.total - searchProgress.done === 1 ? "" : "s"
-                } left`
-              : ""}
-            {` (${searchElapsedSec}s)`}
-          </p>
-        ) : null}
+          <div className="overview2-sidebar__date">
+            <AnalysisDateRangePicker
+              value={dateRange}
+              onChange={(range) => {
+                setDateRange(range);
+                const parsed = range.end.split("-").map(Number);
+                if (parsed.length === 3) {
+                  const [year, month] = parsed;
+                  if (year && month) setMonth({ year, month });
+                }
+              }}
+            />
+          </div>
 
-        {isAddingEngineer ? (
-          <AddEngineerDialog
-            candidates={addCandidates}
-            onSave={handleAddEngineer}
-            onClose={() => setIsAddingEngineer(false)}
-          />
-        ) : null}
-      </section>
+          {listedEmployees.length === 0 && !loading ? (
+            <p className="overview2-sidebar__empty hint">
+              No engineers on the list yet. Use Add to include ATS employees.
+            </p>
+          ) : (
+            <div
+              className="overview2-sidebar__list"
+              role="group"
+              aria-label="Employees"
+            >
+              {listedEmployees.map((employee) => {
+                const inputId = `overview2-engineer-${employee.id}`;
+                return (
+                  <label
+                    key={employee.id}
+                    className="overview2-sidebar__option"
+                    htmlFor={inputId}
+                  >
+                    <input
+                      id={inputId}
+                      type="checkbox"
+                      value={employee.id}
+                      checked={selectedEngineerNames.has(employee.name)}
+                      onChange={(e) => {
+                        toggleEngineer(employee.name, e.target.checked);
+                      }}
+                      disabled={disabled}
+                    />
+                    <span>{employee.name}</span>
+                  </label>
+                );
+              })}
+            </div>
+          )}
 
-      <Overview2GroupedResults
+          <div className="overview2-sidebar__actions">
+            <button
+              type="button"
+              className="button primary overview2-sidebar__action"
+              onClick={() => {
+                void handleSearch();
+              }}
+              disabled={disabled || selectedEngineerNames.size === 0}
+            >
+              {searching
+                ? searchProgress.total > 0
+                  ? `Searching… ${searchProgress.done}/${searchProgress.total} · ${searchElapsedSec}s`
+                  : `Searching… ${searchElapsedSec}s`
+                : "Search"}
+            </button>
+            <button
+              type="button"
+              className="button secondary overview2-sidebar__action"
+              onClick={selectAllEmployees}
+              disabled={disabled || listedEmployees.length === 0}
+            >
+              Select All
+            </button>
+            <button
+              type="button"
+              className="button secondary overview2-sidebar__action"
+              onClick={clearAllEmployees}
+              disabled={disabled || selectedEngineerNames.size === 0}
+            >
+              Clear All
+            </button>
+          </div>
+          {searching ? (
+            <p
+              className="hint search-progress-hint overview2-sidebar__progress"
+              aria-live="polite"
+            >
+              Still searching
+              {searchProgress.total > 0
+                ? ` — ${Math.max(searchProgress.total - searchProgress.done, 0)} employee${
+                    searchProgress.total - searchProgress.done === 1 ? "" : "s"
+                  } left`
+                : ""}
+              {` (${searchElapsedSec}s)`}
+            </p>
+          ) : null}
+        </aside>
+
+        <div className="overview2-main">
+          <Overview2GroupedResults
         engineers={selectedEngineers
           .filter((engineer) => searchedEngineerNameSet.has(engineer.name))
           .map((engineer) => ({
             engineerName: engineer.name,
             visibleProjects: visibleProjectsByEngineer[engineer.name] ?? [],
             onUpdate: (updated) => {
-              updateEntries(
-                entries.map((entry) =>
-                  entry.id === updated.id ? updated : entry,
-                ),
+              const lookup = projectLookupKey(
+                updated.projectCode,
+                updated.projectName,
               );
+              const existingIndex = entries.findIndex(
+                (entry) =>
+                  isSameEngineerName(entry.engineerName, updated.engineerName) &&
+                  projectLookupKey(entry.projectCode, entry.projectName) ===
+                    lookup,
+              );
+              if (existingIndex >= 0) {
+                updateEntries(
+                  entries.map((entry, index) =>
+                    index === existingIndex
+                      ? {
+                          ...entry,
+                          ...updated,
+                          id: entry.id,
+                        }
+                      : entry,
+                  ),
+                );
+                return;
+              }
+              updateEntries([
+                ...entries,
+                updated.id.startsWith("pending:")
+                  ? createUtilizationEntry({
+                      engineerName: updated.engineerName,
+                      projectCode: updated.projectCode,
+                      projectName: updated.projectName,
+                      weekValuesByMonth: updated.weekValuesByMonth,
+                      starred: updated.starred,
+                    })
+                  : updated,
+              ]);
             },
             onDelete: (id) => {
               const removed = entries.find((entry) => entry.id === id);
@@ -733,21 +790,23 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
         entries={entries}
         month={month}
         dateRange={dateRange}
-        onDateRangeChange={(range) => {
-          setDateRange(range);
-          // Use the *end* month of the selected range.
-          // (If the range spans multiple months, users expect to see the last month.)
-          const parsed = range.end.split("-").map(Number);
-          if (parsed.length === 3) {
-            const [year, month] = parsed;
-            if (year && month) setMonth({ year, month });
-          }
-        }}
         holidayDates={holidays.map((holiday) => holiday.date)}
         clockifyHoursByMonth={clockifyHoursByMonth}
+        billableHoursByMonth={billableHoursByMonth}
         clockifyHoursLoading={clockifyHoursLoading}
         clockifyHoursError={clockifyHoursError}
-      />
+        readOnly={!canEdit}
+          />
+        </div>
+      </div>
+
+      {isAddingEngineer && canEdit ? (
+        <AddEngineerDialog
+          candidates={addCandidates}
+          onSave={handleAddEngineer}
+          onClose={() => setIsAddingEngineer(false)}
+        />
+      ) : null}
     </div>
   );
 }

@@ -6,6 +6,8 @@ export type UtilizationResultRow = {
   projectName: string;
   /** Keyed by YYYY-MM, then week number → cell value */
   weekValuesByMonth: Record<string, Record<string, string>>;
+  /** User-marked important project (star). */
+  starred?: boolean;
 };
 
 export type UtilizationEntry = UtilizationResultRow & {
@@ -261,6 +263,7 @@ function createId(): string {
 export function createUtilizationEntry(
   input: Omit<UtilizationResultRow, "weekValuesByMonth"> & {
     weekValuesByMonth?: UtilizationResultRow["weekValuesByMonth"];
+    starred?: boolean;
   },
 ): UtilizationEntry {
   return {
@@ -269,6 +272,7 @@ export function createUtilizationEntry(
     projectCode: input.projectCode,
     projectName: input.projectName,
     weekValuesByMonth: input.weekValuesByMonth ?? {},
+    starred: Boolean(input.starred),
   };
 }
 
@@ -291,6 +295,7 @@ export function parseUtilizationEntries(parsed: unknown): UtilizationEntry[] {
         item.weekValuesByMonth && typeof item.weekValuesByMonth === "object"
           ? (item.weekValuesByMonth as UtilizationResultRow["weekValuesByMonth"])
           : {},
+      starred: Boolean(item.starred),
     }))
     .filter(
       (item) => item.engineerName && item.projectCode && item.projectName,

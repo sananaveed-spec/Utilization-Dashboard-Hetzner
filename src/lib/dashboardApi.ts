@@ -9,6 +9,22 @@ export type DashboardData = {
   calendarYearRange: CalendarYearRange;
 };
 
+let dashboardUserEmail = "";
+
+export function setDashboardUserEmail(email: string): void {
+  dashboardUserEmail = email.trim().toLowerCase();
+}
+
+function writeHeaders(): HeadersInit {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (dashboardUserEmail) {
+    headers["x-user-email"] = dashboardUserEmail;
+  }
+  return headers;
+}
+
 async function readJson<T>(response: Response): Promise<T> {
   const data = (await response.json()) as T & { error?: string };
   if (!response.ok) {
@@ -27,7 +43,7 @@ export async function fetchDashboardData(): Promise<DashboardData> {
 export async function saveHolidays(holidays: Holiday[]): Promise<Holiday[]> {
   const response = await fetch("/api/holidays", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: writeHeaders(),
     body: JSON.stringify({ holidays }),
   });
   const data = await readJson<{ holidays: Holiday[] }>(response);
@@ -37,7 +53,7 @@ export async function saveHolidays(holidays: Holiday[]): Promise<Holiday[]> {
 export async function saveEngineers(engineers: string[]): Promise<string[]> {
   const response = await fetch("/api/engineers", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: writeHeaders(),
     body: JSON.stringify({ engineers }),
   });
   const data = await readJson<{ engineers: string[] }>(response);
@@ -49,7 +65,7 @@ export async function saveEntries(
 ): Promise<UtilizationEntry[]> {
   const response = await fetch("/api/entries", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: writeHeaders(),
     body: JSON.stringify({ entries }),
   });
   const data = await readJson<{ entries: UtilizationEntry[] }>(response);
@@ -61,7 +77,7 @@ export async function saveCalendarYearRange(
 ): Promise<CalendarYearRange> {
   const response = await fetch("/api/calendar-year-range", {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: writeHeaders(),
     body: JSON.stringify({ calendarYearRange }),
   });
   const data = await readJson<{ calendarYearRange: CalendarYearRange }>(

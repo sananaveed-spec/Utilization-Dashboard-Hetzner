@@ -27,6 +27,7 @@ export type ClockifyDetailedTimeEntry = {
   id: string;
   userName: string;
   projectName: string;
+  billable?: boolean;
   timeInterval: {
     start: string;
     end: string | null;
@@ -486,6 +487,7 @@ export class ClockifyClient {
           id: raw.id,
           userName,
           projectName,
+          billable: Boolean(raw.billable),
           timeInterval: {
             start: raw.start,
             end: raw.end,

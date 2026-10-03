@@ -1,13 +1,15 @@
 "use client";
 
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { AnalysisDateRangePicker } from "@/components/AnalysisDateRangePicker";
 import {
   clockifyHoursKey,
   formatClockifyHours,
 } from "@/lib/clockify/hours";
 import { isSameEngineerName, normalizeEngineerName } from "@/lib/engineers";
-import type { UtilizationEntry } from "@/lib/entries";
+import {
+  createUtilizationEntry,
+  type UtilizationEntry,
+} from "@/lib/entries";
 import {
   dateRangeSpansMultipleYears,
   formatFullMonthSpanLabel,
@@ -188,6 +190,74 @@ function engineerAccentColor(name: string): string {
   return ENGINEER_ACCENT_COLORS[hash % ENGINEER_ACCENT_COLORS.length] ?? ENGINEER_ACCENT_COLORS[0];
 }
 
+function ProjectCodeCell({
+  entry,
+  rowSpan,
+  onUpdate,
+  readOnly = false,
+}: {
+  entry: UtilizationEntry;
+  rowSpan: number;
+  onUpdate: (row: UtilizationEntry) => void;
+  readOnly?: boolean;
+}) {
+  const starred = Boolean(entry.starred);
+
+  function toggleStar() {
+    if (readOnly) {
+      return;
+    }
+    const nextStarred = !starred;
+    if (entry.id.startsWith("pending:")) {
+      onUpdate(
+        createUtilizationEntry({
+          engineerName: entry.engineerName,
+          projectCode: entry.projectCode,
+          projectName: entry.projectName,
+          weekValuesByMonth: entry.weekValuesByMonth,
+          starred: nextStarred,
+        }),
+      );
+      return;
+    }
+    onUpdate({ ...entry, starred: nextStarred });
+  }
+
+  return (
+    <th
+      scope="row"
+      rowSpan={Math.max(rowSpan, 1)}
+      className="overview2-results-project overview2-results-project-code"
+    >
+      <span className="overview2-project-code-cell">
+        <button
+          type="button"
+          className={`overview2-star-button${starred ? " overview2-star-button--on" : ""}`}
+          aria-label={starred ? "Unstar project" : "Star project"}
+          aria-pressed={starred}
+          title={
+            readOnly
+              ? "View only"
+              : starred
+                ? "Remove from important"
+                : "Mark as important"
+          }
+          disabled={readOnly}
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleStar();
+          }}
+        >
+          {starred ? "★" : "☆"}
+        </button>
+        <span className="overview2-project-code-text">
+          {entry.projectCode || "—"}
+        </span>
+      </span>
+    </th>
+  );
+}
+
 function ProjectNameCell({ name }: { name: string }) {
   const textRef = useRef<HTMLSpanElement>(null);
   const [expanded, setExpanded] = useState(false);
@@ -252,6 +322,7 @@ type EngineerRowGroupProps = {
   clockifyHoursLoading: boolean;
   onUpdate: (row: UtilizationEntry) => void;
   onDelete: (id: string) => void;
+  readOnly?: boolean;
 };
 
 function EngineerRowGroup({
@@ -271,16 +342,25 @@ function EngineerRowGroup({
   clockifyHoursLoading,
   onUpdate,
   onDelete,
+  readOnly = false,
 }: EngineerRowGroupProps) {
   const [projectsExpanded, setProjectsExpanded] = useState(false);
+  const [codedExpanded, setCodedExpanded] = useState(false);
   const [uncodedExpanded, setUncodedExpanded] = useState(false);
+  const [projectQuery, setProjectQuery] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftWeeks, setDraftWeeks] = useState<Record<string, string>>({});
   const [editError, setEditError] = useState<string | null>(null);
 
+  function collapseHiddenProjectSections() {
+    setCodedExpanded(false);
+    setUncodedExpanded(false);
+  }
+
   useEffect(() => {
     setProjectsExpanded(false);
-    setUncodedExpanded(false);
+    collapseHiddenProjectSections();
+    setProjectQuery("");
     setEditingId(null);
     setDraftWeeks({});
     setEditError(null);
@@ -299,9 +379,15 @@ function EngineerRowGroup({
     [entries, engineerName],
   );
 
-  const { codedProjectRows, uncodedProjectRows } = useMemo(() => {
-    const coded: UtilizationEntry[] = [];
-    const uncoded: UtilizationEntry[] = [];
+  const {
+    starredProjectRows,
+    codedUnstarredProjectRows,
+    uncodedUnstarredProjectRows,
+    allProjectRows,
+  } = useMemo(() => {
+    const starred: UtilizationEntry[] = [];
+    const codedUnstarred: UtilizationEntry[] = [];
+    const uncodedUnstarred: UtilizationEntry[] = [];
 
     for (const project of visibleProjects) {
       const lookupKey = projectLookupKey(
@@ -320,32 +406,60 @@ function EngineerRowGroup({
         weekValuesByMonth: {},
       };
 
-      if (
-        project.projectCode &&
-        project.projectCode !== "—" &&
-        isProjectCode(project.projectCode)
-      ) {
-        coded.push(entry);
+      if (entry.starred) {
+        starred.push(entry);
+      } else if (isProjectCode(entry.projectCode)) {
+        codedUnstarred.push(entry);
       } else {
-        uncoded.push(entry);
+        uncodedUnstarred.push(entry);
       }
     }
 
+    const starredProjectRows = sortProjectEntries(starred);
+    const codedUnstarredProjectRows = sortProjectEntries(codedUnstarred);
+    const uncodedUnstarredProjectRows = sortProjectEntries(uncodedUnstarred);
+
     return {
-      codedProjectRows: sortProjectEntries(coded),
-      uncodedProjectRows: sortProjectEntries(uncoded),
+      starredProjectRows,
+      codedUnstarredProjectRows,
+      uncodedUnstarredProjectRows,
+      allProjectRows: [
+        ...starredProjectRows,
+        ...codedUnstarredProjectRows,
+        ...uncodedUnstarredProjectRows,
+      ],
     };
   }, [engineerEntries, engineerName, visibleProjects]);
 
+  const normalizedProjectQuery = projectQuery.trim().toLowerCase();
+  const isProjectSearching = normalizedProjectQuery.length > 0;
+
   const projectRows = useMemo(() => {
-    // If this engineer has no coded projects, show uncoded immediately.
-    if (codedProjectRows.length === 0) {
-      return uncodedProjectRows;
+    if (isProjectSearching) {
+      return allProjectRows.filter((entry) => {
+        const code = entry.projectCode.toLowerCase();
+        const name = entry.projectName.toLowerCase();
+        return (
+          code.includes(normalizedProjectQuery) ||
+          name.includes(normalizedProjectQuery)
+        );
+      });
     }
-    return uncodedExpanded
-      ? [...codedProjectRows, ...uncodedProjectRows]
-      : codedProjectRows;
-  }, [codedProjectRows, uncodedProjectRows, uncodedExpanded]);
+
+    const rows = [...starredProjectRows];
+    if (codedExpanded) rows.push(...codedUnstarredProjectRows);
+    if (uncodedExpanded) rows.push(...uncodedUnstarredProjectRows);
+    return rows;
+  }, [
+    allProjectRows,
+    starredProjectRows,
+    codedUnstarredProjectRows,
+    uncodedUnstarredProjectRows,
+    codedExpanded,
+    uncodedExpanded,
+    isProjectSearching,
+    normalizedProjectQuery,
+  ]);
 
   const monthKeysInRange = useMemo(
     () => monthsInRange.map((cursor) => monthCursorKey(cursor)),
@@ -486,15 +600,22 @@ function EngineerRowGroup({
   const engineerAccentStyle = {
     ["--engineer-accent" as string]: engineerAccentColor(engineerName),
   };
+  const showCodedToggle =
+    projectsExpanded &&
+    !isProjectSearching &&
+    codedUnstarredProjectRows.length > 0;
   const showUncodedToggle =
     projectsExpanded &&
-    codedProjectRows.length > 0 &&
-    uncodedProjectRows.length > 0;
+    !isProjectSearching &&
+    uncodedUnstarredProjectRows.length > 0;
+  const showHiddenProjectToggles = showCodedToggle || showUncodedToggle;
   const hasEmptyProjectsMessage =
-    projectsExpanded && projectWeekTotals.length === 0;
+    projectsExpanded &&
+    projectWeekTotals.length === 0 &&
+    !showHiddenProjectToggles;
   const hasProjectRows = projectsExpanded && projectWeekTotals.length > 0;
   const hasTrailingRows =
-    hasEmptyProjectsMessage || hasProjectRows || showUncodedToggle;
+    hasEmptyProjectsMessage || hasProjectRows || showHiddenProjectToggles;
 
   const metricHeaderRows = [
     ...(allottedExpanded ? (["allotted"] as const) : []),
@@ -546,12 +667,14 @@ function EngineerRowGroup({
   const lastProjectIndex = projectWeekTotals.length - 1;
 
   function handleDelete(row: UtilizationEntry) {
+    if (readOnly) return;
     if (!window.confirm(`Delete row for "${row.engineerName}" / "${row.projectCode}"?`)) return;
     if (editingId === row.id) { setEditingId(null); setDraftWeeks({}); setEditError(null); }
     onDelete(row.id);
   }
 
   function startEditing(row: UtilizationEntry) {
+    if (readOnly) return;
     setEditingId(row.id);
     setDraftWeeks(row.weekValuesByMonth[weeksMonthKey] ?? {});
     setEditError(null);
@@ -560,28 +683,6 @@ function EngineerRowGroup({
   function cancelEditing() { setEditingId(null); setDraftWeeks({}); setEditError(null); }
 
   function saveEditing(row: UtilizationEntry) {
-    const exceededWeeks = weeks.filter((week) => {
-      const weekId = String(week.weekNumber);
-      let total = 0;
-      for (const current of engineerEntries) {
-        const values =
-          current.id === row.id
-            ? draftWeeks
-            : (current.weekValuesByMonth[weeksMonthKey] ?? {});
-        total += parseHours(values[weekId]);
-      }
-      return total > (week.isWeekendOnly ? week.dayCount * 8 : week.capacityHours);
-    });
-
-    if (exceededWeeks.length > 0) {
-      setEditError(
-        `Planned Total Hours must not exceed Total Forecasted Hours. Reduce hours for: ${exceededWeeks
-          .map((w) => `Week ${w.weekNumber} (${w.isWeekendOnly ? w.dayCount * 8 : w.capacityHours}h max)`)
-          .join(", ")}. Entry was not saved.`,
-      );
-      return;
-    }
-
     onUpdate({
       ...row,
       weekValuesByMonth: {
@@ -598,6 +699,52 @@ function EngineerRowGroup({
     setEditError(null);
     setDraftWeeks((c) => ({ ...c, [String(weekNumber)]: value }));
   }
+
+  function toggleProjectsExpanded() {
+    setProjectsExpanded((current) => {
+      const next = !current;
+      if (!next) {
+        collapseHiddenProjectSections();
+        setProjectQuery("");
+      }
+      return next;
+    });
+  }
+
+  function handleProjectQueryChange(value: string) {
+    setProjectQuery(value);
+    if (value.trim()) {
+      setProjectsExpanded(true);
+    }
+  }
+
+  const engineerHeader = (
+    <span className="overview2-engineer-header">
+      <span className="overview2-engineer-name">{engineerName}</span>
+      <button
+        type="button"
+        className="overview2-expand-button"
+        onClick={toggleProjectsExpanded}
+        aria-expanded={projectsExpanded}
+        disabled={Boolean(editingId)}
+        aria-label={
+          projectsExpanded ? "Hide active projects" : "Show active projects"
+        }
+      >
+        {projectsExpanded ? "−" : "+"}
+      </button>
+      <input
+        type="search"
+        className="overview2-project-search"
+        value={projectQuery}
+        onChange={(event) => handleProjectQueryChange(event.target.value)}
+        onFocus={() => setProjectsExpanded(true)}
+        placeholder="Search ID or name…"
+        aria-label={`Search projects for ${engineerName}`}
+        disabled={Boolean(editingId)}
+      />
+    </span>
+  );
 
   return (
     <>
@@ -621,25 +768,7 @@ function EngineerRowGroup({
           colSpan={2}
           className="overview2-results-engineer"
         >
-          <span className="overview2-engineer-header">
-            <span>{engineerName}</span>
-            <button
-              type="button"
-              className="overview2-expand-button"
-              onClick={() => {
-                setProjectsExpanded((c) => {
-                  const next = !c;
-                  if (!next) setUncodedExpanded(false);
-                  return next;
-                });
-              }}
-              aria-expanded={projectsExpanded}
-              disabled={Boolean(editingId)}
-              aria-label={projectsExpanded ? "Hide active projects" : "Show active projects"}
-            >
-              {projectsExpanded ? "−" : "+"}
-            </button>
-          </span>
+          {engineerHeader}
         </th>
         <th scope="row" className="overview2-results-metric">Planned Hours</th>
         {monthTotals.map((totals) => (
@@ -696,25 +825,7 @@ function EngineerRowGroup({
             colSpan={2}
             className="overview2-results-engineer"
           >
-            <span className="overview2-engineer-header">
-              <span>{engineerName}</span>
-              <button
-                type="button"
-                className="overview2-expand-button"
-                onClick={() => {
-                  setProjectsExpanded((c) => {
-                    const next = !c;
-                    if (!next) setUncodedExpanded(false);
-                    return next;
-                  });
-                }}
-                aria-expanded={projectsExpanded}
-                disabled={Boolean(editingId)}
-                aria-label={projectsExpanded ? "Hide active projects" : "Show active projects"}
-              >
-                {projectsExpanded ? "−" : "+"}
-              </button>
-            </span>
+            {engineerHeader}
           </th>
         ) : null}
         <th scope="row" className="overview2-results-metric">Actual Hours</th>
@@ -776,25 +887,7 @@ function EngineerRowGroup({
           colSpan={2}
           className="overview2-results-engineer"
         >
-          <span className="overview2-engineer-header">
-            <span>{engineerName}</span>
-            <button
-              type="button"
-              className="overview2-expand-button"
-              onClick={() => {
-                setProjectsExpanded((c) => {
-                  const next = !c;
-                  if (!next) setUncodedExpanded(false);
-                  return next;
-                });
-              }}
-              aria-expanded={projectsExpanded}
-              disabled={Boolean(editingId)}
-              aria-label={projectsExpanded ? "Hide active projects" : "Show active projects"}
-            >
-              {projectsExpanded ? "−" : "+"}
-            </button>
-          </span>
+          {engineerHeader}
         </th>
         <td colSpan={1 + monthKeysInRange.length + (weeksExpanded ? weeks.length : 0)} />
         {weeksExpanded ? <td className="actions-cell" /> : null}
@@ -804,11 +897,13 @@ function EngineerRowGroup({
       {/* Project rows */}
       {projectsExpanded && projectWeekTotals.length === 0 ? (
         <tr
-          className={blockClass(showUncodedToggle ? "middle" : "end")}
+          className={blockClass(showHiddenProjectToggles ? "middle" : "end")}
           style={engineerAccentStyle}
         >
           <td colSpan={emptyColSpan} className="overview2-results-empty">
-            No active projects with lifetime Clockify time for this engineer.
+            {isProjectSearching
+              ? `No lifetime projects match “${projectQuery.trim()}”.`
+              : "No project has been selected for this engineer from their lifetime active projects in ATS."}
           </td>
         </tr>
       ) : null}
@@ -818,8 +913,8 @@ function EngineerRowGroup({
             const isEditing = editingId === entry.id;
             const isLastProject = projectIndex === lastProjectIndex;
             const allottedIsEnd =
-              isLastProject && !showUncodedToggle && !actualExpanded;
-            const actualIsEnd = isLastProject && !showUncodedToggle;
+              isLastProject && !showHiddenProjectToggles && !actualExpanded;
+            const actualIsEnd = isLastProject && !showHiddenProjectToggles;
             const projectNameRowSpan =
               (allottedExpanded ? 1 : 0) + (actualExpanded ? 1 : 0);
             return (
@@ -829,9 +924,12 @@ function EngineerRowGroup({
                   className={`overview2-project-row overview2-project-row--allotted ${blockClass(allottedIsEnd ? "end" : "middle")}`}
                   style={engineerAccentStyle}
                 >
-                  <th scope="row" rowSpan={Math.max(projectNameRowSpan, 1)} className="overview2-results-project overview2-results-project-code">
-                    {entry.projectCode || "—"}
-                  </th>
+                  <ProjectCodeCell
+                    entry={entry}
+                    rowSpan={projectNameRowSpan}
+                    onUpdate={onUpdate}
+                    readOnly={readOnly}
+                  />
                   <th scope="row" rowSpan={Math.max(projectNameRowSpan, 1)} className="overview2-results-project overview2-results-project-name" title={entry.projectName}>
                     <ProjectNameCell name={entry.projectName} />
                   </th>
@@ -898,8 +996,8 @@ function EngineerRowGroup({
                         </>
                       ) : (
                         <>
-                          <button type="button" className="icon-button icon-button--edit" onClick={() => startEditing(entry)} disabled={Boolean(editingId)} aria-label="Edit" title="Edit">✎</button>
-                          <button type="button" className="icon-button icon-button--delete" onClick={() => handleDelete(entry)} disabled={Boolean(editingId) && editingId !== entry.id} aria-label="Delete" title="Delete">×</button>
+                          <button type="button" className="icon-button icon-button--edit" onClick={() => startEditing(entry)} disabled={Boolean(editingId) || readOnly} aria-label="Edit" title="Edit">✎</button>
+                          <button type="button" className="icon-button icon-button--delete" onClick={() => handleDelete(entry)} disabled={(Boolean(editingId) && editingId !== entry.id) || readOnly} aria-label="Delete" title="Delete">×</button>
                         </>
                       )}
                     </div>
@@ -914,9 +1012,12 @@ function EngineerRowGroup({
                 >
                   {!allottedExpanded ? (
                     <>
-                      <th scope="row" rowSpan={Math.max(projectNameRowSpan, 1)} className="overview2-results-project overview2-results-project-code">
-                        {entry.projectCode || "—"}
-                      </th>
+                      <ProjectCodeCell
+                        entry={entry}
+                        rowSpan={projectNameRowSpan}
+                        onUpdate={onUpdate}
+                        readOnly={readOnly}
+                      />
                       <th scope="row" rowSpan={Math.max(projectNameRowSpan, 1)} className="overview2-results-project overview2-results-project-name" title={entry.projectName}>
                         <ProjectNameCell name={entry.projectName} />
                       </th>
@@ -977,8 +1078,8 @@ function EngineerRowGroup({
                           </>
                         ) : (
                           <>
-                            <button type="button" className="icon-button icon-button--edit" onClick={() => startEditing(entry)} disabled={Boolean(editingId)} aria-label="Edit" title="Edit">✎</button>
-                            <button type="button" className="icon-button icon-button--delete" onClick={() => handleDelete(entry)} disabled={Boolean(editingId) && editingId !== entry.id} aria-label="Delete" title="Delete">×</button>
+                            <button type="button" className="icon-button icon-button--edit" onClick={() => startEditing(entry)} disabled={Boolean(editingId) || readOnly} aria-label="Edit" title="Edit">✎</button>
+                            <button type="button" className="icon-button icon-button--delete" onClick={() => handleDelete(entry)} disabled={(Boolean(editingId) && editingId !== entry.id) || readOnly} aria-label="Delete" title="Delete">×</button>
                           </>
                         )}
                       </div>
@@ -992,7 +1093,7 @@ function EngineerRowGroup({
           })
         : null}
 
-      {showUncodedToggle ? (
+      {showHiddenProjectToggles ? (
         <tr
           className={`overview2-uncoded-toggle-row ${blockClass("end")}`}
           style={engineerAccentStyle}
@@ -1001,31 +1102,70 @@ function EngineerRowGroup({
             colSpan={2}
             className="overview2-uncoded-toggle-cell overview2-uncoded-toggle-cell--pin"
           >
-            <button
-              type="button"
-              className="overview2-uncoded-toggle"
-              onClick={() => {
-                setUncodedExpanded((current) => {
-                  const next = !current;
-                  if (!next && editingId) {
-                    const editingUncoded = uncodedProjectRows.some(
-                      (entry) => entry.id === editingId,
-                    );
-                    if (editingUncoded) {
-                      setEditingId(null);
-                      setDraftWeeks({});
-                      setEditError(null);
-                    }
-                  }
-                  return next;
-                });
-              }}
-              aria-expanded={uncodedExpanded}
-            >
-              {uncodedExpanded
-                ? "see less"
-                : `see more (${uncodedProjectRows.length} without code)`}
-            </button>
+            <div className="overview2-more-toggles">
+              {!codedExpanded && !uncodedExpanded ? (
+                <span className="overview2-more-toggles-label">see more</span>
+              ) : null}
+              {showCodedToggle ? (
+                <button
+                  type="button"
+                  className="overview2-uncoded-toggle"
+                  onClick={() => {
+                    setCodedExpanded((current) => {
+                      const next = !current;
+                      if (!next && editingId) {
+                        const editingHidden = codedUnstarredProjectRows.some(
+                          (entry) => entry.id === editingId,
+                        );
+                        if (editingHidden) {
+                          setEditingId(null);
+                          setDraftWeeks({});
+                          setEditError(null);
+                        }
+                      }
+                      return next;
+                    });
+                  }}
+                  aria-expanded={codedExpanded}
+                >
+                  {codedExpanded
+                    ? "see less with codes"
+                    : `with codes (${codedUnstarredProjectRows.length})`}
+                </button>
+              ) : null}
+              {showCodedToggle && showUncodedToggle ? (
+                <span className="overview2-more-toggles-sep" aria-hidden="true">
+                  ·
+                </span>
+              ) : null}
+              {showUncodedToggle ? (
+                <button
+                  type="button"
+                  className="overview2-uncoded-toggle"
+                  onClick={() => {
+                    setUncodedExpanded((current) => {
+                      const next = !current;
+                      if (!next && editingId) {
+                        const editingHidden = uncodedUnstarredProjectRows.some(
+                          (entry) => entry.id === editingId,
+                        );
+                        if (editingHidden) {
+                          setEditingId(null);
+                          setDraftWeeks({});
+                          setEditError(null);
+                        }
+                      }
+                      return next;
+                    });
+                  }}
+                  aria-expanded={uncodedExpanded}
+                >
+                  {uncodedExpanded
+                    ? "see less without code"
+                    : `without code (${uncodedUnstarredProjectRows.length})`}
+                </button>
+              ) : null}
+            </div>
           </td>
           <td
             colSpan={Math.max(emptyColSpan - 2, 1)}
@@ -1049,6 +1189,7 @@ type TeamSummaryRowsProps = {
   actualExpanded: boolean;
   currentMonthKey: string;
   clockifyHoursByMonth: Record<string, Record<string, number>>;
+  billableHoursByMonth: Record<string, Record<string, number>>;
   clockifyHoursLoading: boolean;
 };
 
@@ -1064,6 +1205,7 @@ function TeamSummaryRows({
   actualExpanded,
   currentMonthKey,
   clockifyHoursByMonth,
+  billableHoursByMonth,
   clockifyHoursLoading,
 }: TeamSummaryRowsProps) {
   const teamSize = engineerNames.length;
@@ -1092,13 +1234,22 @@ function TeamSummaryRows({
           }
         }
         let clockify = 0;
+        let billable = 0;
         const monthHours = clockifyHoursByMonth[rangeMonthKey] ?? {};
+        const monthBillable = billableHoursByMonth[rangeMonthKey] ?? {};
         for (const name of engineerNames) {
           clockify += sumClockifyForEngineer(name, monthHours);
+          billable += sumClockifyForEngineer(name, monthBillable);
         }
-        return { monthKey: rangeMonthKey, assigned, clockify };
+        return { monthKey: rangeMonthKey, assigned, clockify, billable };
       }),
-    [monthKeysInRange, teamEntries, clockifyHoursByMonth, engineerNames],
+    [
+      monthKeysInRange,
+      teamEntries,
+      clockifyHoursByMonth,
+      billableHoursByMonth,
+      engineerNames,
+    ],
   );
 
   const weekTotals = useMemo(
@@ -1107,7 +1258,9 @@ function TeamSummaryRows({
         const weekId = String(week.weekNumber);
         let assigned = 0;
         let clockify = 0;
+        let billable = 0;
         const monthHours = clockifyHoursByMonth[weeksMonthKey] ?? {};
+        const monthBillable = billableHoursByMonth[weeksMonthKey] ?? {};
         for (const entry of teamEntries) {
           assigned += parseHours(
             entry.weekValuesByMonth[weeksMonthKey]?.[weekId],
@@ -1122,19 +1275,39 @@ function TeamSummaryRows({
               )
             ] ?? 0;
         }
-        return { assigned, clockify };
+        const weekSuffix = `::${week.weekNumber}`;
+        for (const name of engineerNames) {
+          const prefix = `${normalizeEngineerName(name)}::`;
+          for (const [key, hours] of Object.entries(monthBillable)) {
+            if (!key.startsWith(prefix) || !key.endsWith(weekSuffix)) continue;
+            if (!Number.isFinite(hours)) continue;
+            billable += hours;
+          }
+        }
+        return { assigned, clockify, billable };
       }),
-    [weeks, teamEntries, weeksMonthKey, clockifyHoursByMonth],
+    [
+      weeks,
+      teamEntries,
+      weeksMonthKey,
+      clockifyHoursByMonth,
+      billableHoursByMonth,
+      engineerNames,
+    ],
   );
 
   const metricRows = [
     ...(allottedExpanded ? (["allotted"] as const) : []),
-    ...(actualExpanded ? (["actual"] as const) : []),
+    ...(actualExpanded ? (["actual", "billable"] as const) : []),
   ];
-  const nameRowSpan = Math.max(metricRows.length, 1);
   const teamAccentStyle = { ["--engineer-accent" as string]: "#94a3b8" };
+  const firstFooterRow = allottedExpanded
+    ? "allotted"
+    : actualExpanded
+      ? "actual"
+      : null;
 
-  function rowKind(row: "allotted" | "actual"): string {
+  function rowKind(row: "allotted" | "actual" | "billable"): string {
     const index = metricRows.indexOf(row);
     if (index < 0) return "overview2-engineer-block";
     const isFirst = index === 0;
@@ -1147,6 +1320,20 @@ function TeamSummaryRows({
     return "overview2-engineer-block";
   }
 
+  function teamLabelCell(row: "allotted" | "actual" | "billable") {
+    if (firstFooterRow !== row) return null;
+    return (
+      <th
+        scope="row"
+        colSpan={2}
+        rowSpan={metricRows.length}
+        className="overview2-results-engineer overview2-team-label"
+      >
+        Team
+      </th>
+    );
+  }
+
   if (teamSize === 0 || metricRows.length === 0) return null;
 
   return (
@@ -1156,14 +1343,7 @@ function TeamSummaryRows({
           className={`overview2-engineer-row overview2-engineer-row--allotted overview2-team-row ${rowKind("allotted")}`}
           style={teamAccentStyle}
         >
-          <th
-            scope="row"
-            rowSpan={nameRowSpan}
-            colSpan={2}
-            className="overview2-results-engineer overview2-team-label"
-          >
-            Team
-          </th>
+          {teamLabelCell("allotted")}
           <th scope="row" className="overview2-results-metric">
             Planned Hours
           </th>
@@ -1213,16 +1393,7 @@ function TeamSummaryRows({
           className={`overview2-engineer-row ${allottedExpanded ? "overview2-engineer-row--actual" : "overview2-engineer-row--allotted overview2-engineer-row--actual-only"} overview2-team-row ${rowKind("actual")}`}
           style={teamAccentStyle}
         >
-          {!allottedExpanded ? (
-            <th
-              scope="row"
-              rowSpan={nameRowSpan}
-              colSpan={2}
-              className="overview2-results-engineer overview2-team-label"
-            >
-              Team
-            </th>
-          ) : null}
+          {teamLabelCell("actual")}
           <th scope="row" className="overview2-results-metric">
             Actual Hours
           </th>
@@ -1272,6 +1443,62 @@ function TeamSummaryRows({
           {weeksExpanded ? <td className="actions-cell" /> : null}
         </tr>
       ) : null}
+
+      {actualExpanded ? (
+        <tr
+          className={`overview2-engineer-row overview2-engineer-row--actual overview2-team-row overview2-team-row--billable ${rowKind("billable")}`}
+          style={teamAccentStyle}
+        >
+          {teamLabelCell("billable")}
+          <th scope="row" className="overview2-results-metric">
+            Billable Hours
+          </th>
+          {monthTotals.map((totals) => (
+            <Fragment key={`team-billable-${totals.monthKey}`}>
+              <td
+                className={monthValueClass(
+                  totals.monthKey,
+                  currentMonthKey,
+                  totals.billable,
+                  (monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize,
+                  weeksExpanded && weeksMonthKey === currentMonthKey,
+                )}
+              >
+                {clockifyHoursLoading
+                  ? "…"
+                  : <HoursWithUtilization
+                      hours={totals.billable}
+                      allottedHours={(monthCapacitiesByKey[totals.monthKey] ?? 0) * teamSize}
+                      preferClockifyFormat
+                    />}
+              </td>
+              {weeksExpanded && totals.monthKey === weeksMonthKey
+                ? weekTotals.map((weekTotal, index) => (
+                    <td
+                      key={`team-billable-w${weeks[index]?.weekNumber ?? index}`}
+                      className={weekValueClass(
+                        weekTotal.billable,
+                        (weeks[index]?.capacityHours ?? 0) * teamSize,
+                        weeksMonthKey === currentMonthKey,
+                        index,
+                        weeks.length,
+                      )}
+                    >
+                      {clockifyHoursLoading
+                        ? "…"
+                        : <HoursWithUtilization
+                            hours={weekTotal.billable}
+                            allottedHours={(weeks[index]?.capacityHours ?? 0) * teamSize}
+                            preferClockifyFormat
+                          />}
+                    </td>
+                  ))
+                : null}
+            </Fragment>
+          ))}
+          {weeksExpanded ? <td className="actions-cell" /> : null}
+        </tr>
+      ) : null}
     </>
   );
 }
@@ -1290,11 +1517,12 @@ type Overview2GroupedResultsProps = {
   entries: UtilizationEntry[];
   month: MonthCursor;
   dateRange: DateRange;
-  onDateRangeChange: (range: DateRange) => void;
   holidayDates?: readonly string[];
   clockifyHoursByMonth?: Record<string, Record<string, number>>;
+  billableHoursByMonth?: Record<string, Record<string, number>>;
   clockifyHoursLoading?: boolean;
   clockifyHoursError?: string | null;
+  readOnly?: boolean;
 };
 
 export function Overview2GroupedResults({
@@ -1302,11 +1530,12 @@ export function Overview2GroupedResults({
   entries,
   month,
   dateRange,
-  onDateRangeChange,
   holidayDates = [],
   clockifyHoursByMonth = {},
+  billableHoursByMonth = {},
   clockifyHoursLoading = false,
   clockifyHoursError = null,
+  readOnly = false,
 }: Overview2GroupedResultsProps) {
   const [expandedMonthKey, setExpandedMonthKey] = useState<string | null>(null);
   const [allottedExpanded, setAllottedExpanded] = useState(true);
@@ -1360,6 +1589,17 @@ export function Overview2GroupedResults({
           `${headerHeight + h1 + h2 - 1}px`,
         );
       }
+
+      const teamTbody = scroll.querySelector(".overview2-team-tbody");
+      const teamRows = teamTbody?.querySelectorAll(".overview2-team-row");
+      const lastTeamRow = teamRows?.[teamRows.length - 1] ?? null;
+      const teamRowHeight = slotHeight(lastTeamRow);
+      if (teamRowHeight > 0) {
+        scroll.style.setProperty(
+          "--overview2-sticky-team-row-height",
+          `${teamRowHeight}px`,
+        );
+      }
     }
     syncStickyOffsets();
     const observer = new ResizeObserver(syncStickyOffsets);
@@ -1369,6 +1609,8 @@ export function Overview2GroupedResults({
     const slot2 = tbody?.querySelector(".overview2-sticky-slot-2");
     if (slot1) observer.observe(slot1);
     if (slot2) observer.observe(slot2);
+    const teamTbody = scroll.querySelector(".overview2-team-tbody");
+    if (teamTbody) observer.observe(teamTbody);
     window.addEventListener("resize", syncStickyOffsets);
     return () => {
       observer.disconnect();
@@ -1477,12 +1719,8 @@ export function Overview2GroupedResults({
   return (
     <div className="overview2-results">
       {clockifyHoursError ? (
-        <p className="form-message error" role="alert">Clockify hours: {clockifyHoursError}</p>
+        <p className="form-message error" role="alert">ATS hours: {clockifyHoursError}</p>
       ) : null}
-
-      <div className="week-nav">
-        <AnalysisDateRangePicker value={dateRange} onChange={onDateRangeChange} />
-      </div>
 
       <div className="overview2-results-scroll" ref={scrollRef}>
         <table className="overview2-results-table">
@@ -1511,7 +1749,9 @@ export function Overview2GroupedResults({
           </colgroup>
           <thead>
             <tr className="overview2-header-row" ref={headerRowRef}>
-              <th scope="col" colSpan={2} className="overview2-results-identity-header" />
+              <th scope="col" colSpan={2} className="overview2-results-identity-header">
+                EMPLOYEES ({engineers.length})
+              </th>
               <th scope="col" className="overview2-results-metric-header">
                 <span className="overview2-metric-header-group">
                   <span
@@ -1633,6 +1873,7 @@ export function Overview2GroupedResults({
                 clockifyHoursLoading={clockifyHoursLoading}
                 onUpdate={eng.onUpdate}
                 onDelete={eng.onDelete}
+                readOnly={readOnly}
               />
             </tbody>
           ))}
@@ -1649,6 +1890,7 @@ export function Overview2GroupedResults({
               actualExpanded={actualExpanded}
               currentMonthKey={currentMonthKey}
               clockifyHoursByMonth={clockifyHoursByMonth}
+              billableHoursByMonth={billableHoursByMonth}
               clockifyHoursLoading={clockifyHoursLoading}
             />
           </tbody>

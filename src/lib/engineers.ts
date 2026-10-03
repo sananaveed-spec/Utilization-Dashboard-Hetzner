@@ -1,16 +1,5 @@
 const STORAGE_KEY = "utilization-dashboard-engineers";
 
-export const DEFAULT_ENGINEER_NAMES = [
-  "zain.abideen",
-  "m.sulaiman",
-  "irsa.sarfaraz",
-  "Wareesha Azwar",
-  "mustafa.abdullah",
-  "zahir.hussain",
-  "Areeb",
-  "nawab.naveed",
-] as const;
-
 export function normalizeEngineerName(name: string): string {
   return name
     .normalize("NFKC")
@@ -26,18 +15,18 @@ export function sortEngineerNames(names: string[]): string[] {
 
 export function loadEngineerNames(): string[] {
   if (typeof window === "undefined") {
-    return [...DEFAULT_ENGINEER_NAMES];
+    return [];
   }
 
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) {
-      return [...DEFAULT_ENGINEER_NAMES];
+      return [];
     }
 
     const parsed = JSON.parse(raw) as unknown;
     if (!Array.isArray(parsed)) {
-      return [...DEFAULT_ENGINEER_NAMES];
+      return [];
     }
 
     const names = parsed
@@ -45,9 +34,9 @@ export function loadEngineerNames(): string[] {
       .map((value) => value.trim())
       .filter(Boolean);
 
-    return names.length > 0 ? sortEngineerNames(names) : [...DEFAULT_ENGINEER_NAMES];
+    return sortEngineerNames(names);
   } catch {
-    return [...DEFAULT_ENGINEER_NAMES];
+    return [];
   }
 }
 

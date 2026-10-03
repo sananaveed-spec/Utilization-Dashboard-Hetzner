@@ -1,4 +1,4 @@
-import { DEFAULT_ENGINEER_NAMES, sortEngineerNames } from "@/lib/engineers";
+import { sortEngineerNames } from "@/lib/engineers";
 import {
   parseUtilizationEntries,
   type UtilizationEntry,
@@ -27,9 +27,7 @@ export async function writeHolidays(holidays: unknown): Promise<Holiday[]> {
 }
 
 export async function readEngineers(): Promise<string[]> {
-  const parsed = await readJsonFile<unknown>(ENGINEERS_FILE, [
-    ...DEFAULT_ENGINEER_NAMES,
-  ]);
+  const parsed = await readJsonFile<unknown>(ENGINEERS_FILE, []);
   return parseEngineerNames(parsed);
 }
 
@@ -65,7 +63,7 @@ export async function writeCalendarYearRange(
 
 function parseEngineerNames(parsed: unknown): string[] {
   if (!Array.isArray(parsed)) {
-    return [...DEFAULT_ENGINEER_NAMES];
+    return [];
   }
 
   const names = parsed
@@ -73,7 +71,5 @@ function parseEngineerNames(parsed: unknown): string[] {
     .map((value) => value.trim())
     .filter(Boolean);
 
-  return names.length > 0
-    ? sortEngineerNames(names)
-    : [...DEFAULT_ENGINEER_NAMES];
+  return sortEngineerNames(names);
 }
