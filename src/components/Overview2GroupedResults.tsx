@@ -57,13 +57,23 @@ function utilizationPercent(hours: number, allottedHours: number): number | null
   return Number.isFinite(percent) ? percent : null;
 }
 
+/** Round to 1 decimal so color matches the displayed % label. */
+function roundedUtilizationPercent(
+  hours: number,
+  allottedHours: number,
+): number | null {
+  const percent = utilizationPercent(hours, allottedHours);
+  if (percent === null) return null;
+  return Math.round(percent * 10) / 10;
+}
+
 /**
- * Heatmap bands:
+ * Heatmap bands (based on the rounded % shown in the cell):
  * 0–25 blue, 25–50 bluish green, 50–75 light green, 75–100 green, >100 red.
  */
 function utilizationHeatClass(hours: number, allottedHours: number): string {
   if (!Number.isFinite(hours) || hours <= 0) return "";
-  const percent = utilizationPercent(hours, allottedHours);
+  const percent = roundedUtilizationPercent(hours, allottedHours);
   if (percent === null) return "";
   if (percent < 25) return "overview2-util-heat overview2-util-heat--0-25";
   if (percent < 50) return "overview2-util-heat overview2-util-heat--25-50";
@@ -115,9 +125,8 @@ function weekValueClass(
 
 /** Hours / total allotted hours × 100. Empty when allotted hours is 0. */
 function formatUtilizationPercent(hours: number, allottedHours: number): string {
-  const percent = utilizationPercent(hours, allottedHours);
-  if (percent === null) return "";
-  const rounded = Math.round(percent * 10) / 10;
+  const rounded = roundedUtilizationPercent(hours, allottedHours);
+  if (rounded === null) return "";
   return `${Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1)}%`;
 }
 
@@ -1523,6 +1532,7 @@ type Overview2GroupedResultsProps = {
   clockifyHoursLoading?: boolean;
   clockifyHoursError?: string | null;
   readOnly?: boolean;
+  hideTeamFooter?: boolean;
 };
 
 export function Overview2GroupedResults({
@@ -1536,6 +1546,7 @@ export function Overview2GroupedResults({
   clockifyHoursLoading = false,
   clockifyHoursError = null,
   readOnly = false,
+  hideTeamFooter = false,
 }: Overview2GroupedResultsProps) {
   const [expandedMonthKey, setExpandedMonthKey] = useState<string | null>(null);
   const [allottedExpanded, setAllottedExpanded] = useState(true);
@@ -1877,23 +1888,25 @@ export function Overview2GroupedResults({
               />
             </tbody>
           ))}
-          <tbody className="overview2-team-tbody">
-            <TeamSummaryRows
-              engineerNames={engineers.map((eng) => eng.engineerName)}
-              entries={entries}
-              monthsInRange={monthsInRange}
-              monthCapacitiesByKey={monthCapacitiesByKey}
-              weeks={weeks}
-              weeksMonthKey={weeksMonthKey}
-              weeksExpanded={weeksExpanded}
-              allottedExpanded={allottedExpanded}
-              actualExpanded={actualExpanded}
-              currentMonthKey={currentMonthKey}
-              clockifyHoursByMonth={clockifyHoursByMonth}
-              billableHoursByMonth={billableHoursByMonth}
-              clockifyHoursLoading={clockifyHoursLoading}
-            />
-          </tbody>
+          {!hideTeamFooter ? (
+            <tbody className="overview2-team-tbody">
+              <TeamSummaryRows
+                engineerNames={engineers.map((eng) => eng.engineerName)}
+                entries={entries}
+                monthsInRange={monthsInRange}
+                monthCapacitiesByKey={monthCapacitiesByKey}
+                weeks={weeks}
+                weeksMonthKey={weeksMonthKey}
+                weeksExpanded={weeksExpanded}
+                allottedExpanded={allottedExpanded}
+                actualExpanded={actualExpanded}
+                currentMonthKey={currentMonthKey}
+                clockifyHoursByMonth={clockifyHoursByMonth}
+                billableHoursByMonth={billableHoursByMonth}
+                clockifyHoursLoading={clockifyHoursLoading}
+              />
+            </tbody>
+          ) : null}
         </table>
       </div>
     </div>

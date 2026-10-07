@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { canEditDashboard, canViewDashboard } from "@/auth/access";
+import { canViewDashboard, resolveAccess } from "@/auth/access";
 import { normalizeEmail } from "@/lib/allowedUsers";
-import { readAllowedEmails } from "@/lib/allowedUsersStore";
+import { readDashboardUsers } from "@/lib/allowedUsersStore";
 
 /**
- * Soft server gate for write APIs: require x-user-email on the allowlist.
- * Client UI also blocks edits for view-only users.
+ * Soft server gate for write APIs: require x-user-email with Admin role.
+ * Client UI also blocks edits for non-admins.
  */
 export async function requireEditor(
   request: Request,
@@ -19,12 +19,13 @@ export async function requireEditor(
     );
   }
 
-  const editorEmails = await readAllowedEmails();
-  if (!canEditDashboard(email, editorEmails)) {
+  const users = await readDashboardUsers();
+  const access = resolveAccess(email, users);
+  if (!access.canEdit) {
     return NextResponse.json(
       {
         error:
-          "View-only access. Ask an admin to add your email under Users to edit.",
+          "Admin access required to edit. Ask an Admin to update your role under Users.",
       },
       { status: 403 },
     );
@@ -32,3 +33,6 @@ export async function requireEditor(
 
   return null;
 }
+
+/** Alias for clarity — write APIs require Admin. */
+export const requireAdmin = requireEditor;

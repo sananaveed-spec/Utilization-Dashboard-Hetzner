@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useIsAuthenticated, useMsal } from "@azure/msal-react";
 import { AccessProvider } from "@/auth/accessContext";
-import { canEditDashboard, canViewDashboard } from "@/auth/access";
+import { resolveAccess } from "@/auth/access";
 import { AuthHeader } from "@/components/AuthHeader";
 import {
   DashboardNav,
@@ -18,14 +18,18 @@ import { useAllowedUsers } from "@/hooks/useAllowedUsers";
 export default function Home() {
   const isAuthenticated = useIsAuthenticated();
   const { accounts } = useMsal();
-  const { emails, loading: allowlistLoading } = useAllowedUsers();
+  const { users, loading: usersLoading } = useAllowedUsers();
   const [tab, setTab] = useState<DashboardTab>("overview2");
   const authenticatedEmail = isAuthenticated
     ? getAccountEmail(accounts[0])
     : "";
-  const canView =
-    isAuthenticated && canViewDashboard(authenticatedEmail);
-  const canEdit = canView && canEditDashboard(authenticatedEmail, emails);
+  const accessChecking = usersLoading && users === null;
+
+  const access = useMemo(
+    () => resolveAccess(authenticatedEmail, users),
+    [authenticatedEmail, users],
+  );
+  const canView = isAuthenticated && !accessChecking && access.canView;
 
   return (
     <main className="page">
@@ -37,7 +41,9 @@ export default function Home() {
                 <DashboardNav
                   tab={tab}
                   onTabChange={setTab}
-                  canEdit={canEdit}
+                  role={access.role}
+                  canManageUsers={access.canManageUsers}
+                  scope={access.scope}
                 />
               ) : undefined
             }
@@ -51,20 +57,20 @@ export default function Home() {
               <div className="divider" />
               <LoginPage />
             </>
-          ) : !canView ? (
-            <>
-              <h1 className="dashboard-title">Utilization Dashboard</h1>
-              <div className="divider" />
-              <UnauthorizedPage />
-            </>
-          ) : allowlistLoading && emails === null ? (
+          ) : accessChecking ? (
             <>
               <h1 className="dashboard-title">Utilization Dashboard</h1>
               <div className="divider" />
               <p className="login-subtitle">Checking access…</p>
             </>
+          ) : !access.canView ? (
+            <>
+              <h1 className="dashboard-title">Utilization Dashboard</h1>
+              <div className="divider" />
+              <UnauthorizedPage />
+            </>
           ) : (
-            <AccessProvider email={authenticatedEmail} canEdit={canEdit}>
+            <AccessProvider access={access}>
               <DashboardShell tab={tab} onTabChange={setTab} />
             </AccessProvider>
           )}

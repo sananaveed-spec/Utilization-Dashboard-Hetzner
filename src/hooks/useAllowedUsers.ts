@@ -3,24 +3,18 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ALLOWED_USERS_CHANGED_EVENT,
-  DEFAULT_ALLOWED_EMAILS,
-  isEmailAllowed,
-  uniqueNormalizedEmails,
+  defaultAdminUsers,
+  type DashboardUser,
 } from "@/lib/allowedUsers";
 
 type UseAllowedUsersResult = {
-  emails: string[] | null;
+  users: DashboardUser[] | null;
   loading: boolean;
-  isAllowed: (email: string) => boolean;
   refresh: () => Promise<void>;
 };
 
-function getFallbackEmails(): string[] {
-  return uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
-}
-
 export function useAllowedUsers(): UseAllowedUsersResult {
-  const [emails, setEmails] = useState<string[] | null>(null);
+  const [users, setUsers] = useState<DashboardUser[] | null>(null);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
@@ -28,18 +22,18 @@ export function useAllowedUsers(): UseAllowedUsersResult {
     try {
       const response = await fetch("/api/allowed-users", { cache: "no-store" });
       const data = (await response.json()) as {
-        emails?: string[];
+        users?: DashboardUser[];
         error?: string;
       };
 
-      if (!response.ok || !Array.isArray(data.emails) || data.emails.length === 0) {
-        setEmails(getFallbackEmails());
+      if (!response.ok || !Array.isArray(data.users) || data.users.length === 0) {
+        setUsers(defaultAdminUsers());
         return;
       }
 
-      setEmails(data.emails);
+      setUsers(data.users);
     } catch {
-      setEmails(getFallbackEmails());
+      setUsers(defaultAdminUsers());
     } finally {
       setLoading(false);
     }
@@ -61,10 +55,8 @@ export function useAllowedUsers(): UseAllowedUsersResult {
   }, [refresh]);
 
   return {
-    emails,
+    users,
     loading,
-    isAllowed: (email: string) =>
-      emails !== null && isEmailAllowed(email, emails),
     refresh,
   };
 }

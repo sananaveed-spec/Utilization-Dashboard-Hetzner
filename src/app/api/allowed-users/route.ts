@@ -1,18 +1,18 @@
 import { NextResponse } from "next/server";
-import { isValidEmail, normalizeEmail } from "@/lib/allowedUsers";
+import { isDashboardRole, isValidEmail, normalizeEmail } from "@/lib/allowedUsers";
 import {
-  addAllowedEmail,
-  readAllowedEmails,
-  removeAllowedEmail,
+  readDashboardUsers,
+  removeDashboardUser,
+  upsertDashboardUser,
 } from "@/lib/allowedUsersStore";
-import { requireEditor } from "@/lib/requireEditor";
+import { requireAdmin } from "@/lib/requireEditor";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const emails = await readAllowedEmails();
-    return NextResponse.json({ emails });
+    const users = await readDashboardUsers();
+    return NextResponse.json({ users });
   } catch {
     return NextResponse.json(
       { error: "Failed to load allowed users." },
@@ -22,15 +22,22 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const denied = await requireEditor(request);
+  const denied = await requireAdmin(request);
   if (denied) {
     return denied;
   }
 
   try {
-    const body = (await request.json()) as { email?: unknown };
+    const body = (await request.json()) as {
+      email?: unknown;
+      role?: unknown;
+      engineerName?: unknown;
+    };
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : "";
+    const role = body.role;
+    const engineerName =
+      typeof body.engineerName === "string" ? body.engineerName : undefined;
 
     if (!isValidEmail(email)) {
       return NextResponse.json(
@@ -38,28 +45,39 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+    if (!isDashboardRole(role)) {
+      return NextResponse.json(
+        { error: "Select a valid role (admin, lead, or team)." },
+        { status: 400 },
+      );
+    }
 
-    const result = await addAllowedEmail(email);
+    const result = await upsertDashboardUser({ email, role, engineerName });
+    if (result.error) {
+      return NextResponse.json(
+        { error: result.error, users: result.users },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       {
-        emails: result.emails,
-        added: result.added,
-        message: result.added
-          ? "Email added."
-          : "Email is already on the allowlist.",
+        users: result.users,
+        saved: result.saved,
+        message: "User saved.",
       },
-      { status: result.added ? 201 : 200 },
+      { status: 200 },
     );
   } catch {
     return NextResponse.json(
-      { error: "Failed to add email." },
+      { error: "Failed to save user." },
       { status: 500 },
     );
   }
 }
 
 export async function DELETE(request: Request) {
-  const denied = await requireEditor(request);
+  const denied = await requireAdmin(request);
   if (denied) {
     return denied;
   }
@@ -76,24 +94,24 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const result = await removeAllowedEmail(email);
+    const result = await removeDashboardUser(email);
     if (result.error) {
       return NextResponse.json(
-        { error: result.error, emails: result.emails },
+        { error: result.error, users: result.users },
         { status: 400 },
       );
     }
 
     return NextResponse.json({
-      emails: result.emails,
+      users: result.users,
       removed: result.removed,
       message: result.removed
-        ? "Email removed."
-        : "Email was not on the allowlist.",
+        ? "User removed."
+        : "User was not on the list.",
     });
   } catch {
     return NextResponse.json(
-      { error: "Failed to remove email." },
+      { error: "Failed to remove user." },
       { status: 500 },
     );
   }

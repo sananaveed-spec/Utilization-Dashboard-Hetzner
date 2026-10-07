@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useAccess } from "@/auth/accessContext";
-import { AnalysisPanel } from "@/components/AnalysisPanel";
+import type { AccessScope } from "@/auth/access";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
 import { Overview2Filters } from "@/components/Overview2Filters";
 import { UsersPanel } from "@/components/UsersPanel";
 import { useUtilizationStore } from "@/hooks/useUtilizationStore";
+import type { DashboardRole } from "@/lib/allowedUsers";
+import { resolveAccess } from "@/auth/access";
+import { useAllowedUsers } from "@/hooks/useAllowedUsers";
 
 export type DashboardTab =
   | "overview2"
@@ -16,7 +19,6 @@ export type DashboardTab =
 
 export const DASHBOARD_NAV_ITEMS: Array<{ id: DashboardTab; label: string }> = [
   { id: "overview2", label: "Overview" },
-  { id: "analysis", label: "Analysis" },
   { id: "holidays", label: "Holidays" },
   { id: "users", label: "Users" },
 ];
@@ -26,18 +28,34 @@ type DashboardShellProps = {
   onTabChange: (tab: DashboardTab) => void;
 };
 
+function navItemsForAccess(options: {
+  role: DashboardRole;
+  canManageUsers: boolean;
+  scope: AccessScope;
+}): Array<{ id: DashboardTab; label: string }> {
+  if (options.scope === "self" || options.role === "team") {
+    return DASHBOARD_NAV_ITEMS.filter((item) => item.id === "overview2");
+  }
+  if (!options.canManageUsers) {
+    return DASHBOARD_NAV_ITEMS.filter((item) => item.id !== "users");
+  }
+  return DASHBOARD_NAV_ITEMS;
+}
+
 export function DashboardNav({
   tab,
   onTabChange,
-  canEdit,
+  role,
+  canManageUsers,
+  scope,
 }: {
   tab: DashboardTab;
   onTabChange: (tab: DashboardTab) => void;
-  canEdit: boolean;
+  role: DashboardRole;
+  canManageUsers: boolean;
+  scope: AccessScope;
 }) {
-  const items = canEdit
-    ? DASHBOARD_NAV_ITEMS
-    : DASHBOARD_NAV_ITEMS.filter((item) => item.id !== "users");
+  const items = navItemsForAccess({ role, canManageUsers, scope });
 
   return (
     <nav className="dashboard-nav" aria-label="Dashboard navigation">
@@ -57,14 +75,28 @@ export function DashboardNav({
 }
 
 export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
-  const { canEdit } = useAccess();
+  const access = useAccess();
   const store = useUtilizationStore();
+  const { users } = useAllowedUsers();
+
+  // Re-resolve with engineer names once store is loaded (Team link validation).
+  const resolved = useMemo(
+    () =>
+      resolveAccess(access.email, users, store.engineerNames),
+    [access.email, users, store.engineerNames],
+  );
 
   useEffect(() => {
-    if (!canEdit && tab === "users") {
+    const allowed = navItemsForAccess({
+      role: resolved.role,
+      canManageUsers: resolved.canManageUsers,
+      scope: resolved.scope,
+    }).map((item) => item.id);
+
+    if (tab === "analysis" || !allowed.includes(tab)) {
       onTabChange("overview2");
     }
-  }, [canEdit, tab, onTabChange]);
+  }, [resolved, tab, onTabChange]);
 
   if (store.loading) {
     return (
@@ -78,10 +110,13 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
 
   return (
     <div className="dashboard-shell">
-      {!canEdit ? (
+      {!resolved.canEdit ? (
         <p className="dashboard-view-only-banner" role="status">
-          View only — you can browse the dashboard. Editing is limited to users
-          added under Users.
+          {resolved.role === "team"
+            ? resolved.needsEngineerLink
+              ? "Ask an Admin to link your engineer profile under Users."
+              : "Team member view — you can only see your own Overview row."
+            : "View only — browsing is enabled. Editing requires Admin role."}
         </p>
       ) : null}
 
@@ -92,16 +127,12 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
       ) : null}
 
       <div className="dashboard-main">
-        {tab === "overview2" ? (
-          <Overview2Filters store={store} />
-        ) : tab === "analysis" ? (
-          <AnalysisPanel store={store} />
-        ) : tab === "holidays" ? (
+        {tab === "holidays" && resolved.scope === "all" ? (
           <HolidaysPanel store={store} />
-        ) : canEdit ? (
-          <UsersPanel />
+        ) : tab === "users" && resolved.canManageUsers ? (
+          <UsersPanel engineerNames={store.engineerNames} />
         ) : (
-          <Overview2Filters store={store} />
+          <Overview2Filters store={store} accessOverride={resolved} />
         )}
       </div>
     </div>

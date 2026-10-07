@@ -1,6 +1,18 @@
 [
-  "abdur.rehman@allumiax.com",
-  "hamza@allumiax.com",
-  "sana.naveed@allumiax.com",
-  "talha.qamar@allumiax.com"
+  {
+    "email": "abdur.rehman@allumiax.com",
+    "role": "admin"
+  },
+  {
+    "email": "hamza@allumiax.com",
+    "role": "admin"
+  },
+  {
+    "email": "sana.naveed@allumiax.com",
+    "role": "admin"
+  },
+  {
+    "email": "talha.qamar@allumiax.com",
+    "role": "admin"
+  }
 ]

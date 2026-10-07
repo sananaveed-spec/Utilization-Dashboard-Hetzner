@@ -1583,8 +1583,8 @@ td.col-project-name {
 }
 
 .overview2-util-heat--over {
-  background: #ffc7ce !important;
-  color: #9c0006;
+  background: #ff5b61 !important;
+  color: #ffffff;
 }
 
 .overview2-util-heat .overview2-hours-util-hours,
@@ -1627,8 +1627,8 @@ td.col-project-name {
 
 .overview2-sticky-slot-1 > .overview2-util-heat--over,
 .overview2-sticky-slot-2 > .overview2-util-heat--over {
-  background: #ffc7ce !important;
-  color: #9c0006;
+  background: #ff5b61 !important;
+  color: #ffffff;
 }
 
 .overview2-month-header {
@@ -3015,8 +3015,18 @@ td.col-project-name {
   align-items: center;
 }
 
+.users-add-row--roles {
+  flex-wrap: wrap;
+}
+
 .users-add-row .holidays-input {
   flex: 1;
+}
+
+.users-role-select,
+.users-engineer-select {
+  flex: 0 1 10rem;
+  min-width: 8rem;
 }
 
 .users-error {

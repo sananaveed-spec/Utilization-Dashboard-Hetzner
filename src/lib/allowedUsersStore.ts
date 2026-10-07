@@ -1,78 +1,92 @@
 import {
-  DEFAULT_ALLOWED_EMAILS,
+  defaultAdminUsers,
+  normalizeDashboardUser,
   normalizeEmail,
-  uniqueNormalizedEmails,
+  parseDashboardUsers,
+  type DashboardRole,
+  type DashboardUser,
 } from "@/lib/allowedUsers";
 import { readJsonFile, writeJsonFile } from "@/lib/jsonDataStore";
 
 const ALLOWED_USERS_FILE = "allowed-users.json";
 
-function parseAllowedEmails(parsed: unknown): string[] {
-  if (!Array.isArray(parsed)) {
-    return uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
-  }
-
-  const emails = uniqueNormalizedEmails(
-    parsed.filter((value): value is string => typeof value === "string"),
-  );
-
-  return emails.length > 0
-    ? emails
-    : uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
+export async function readDashboardUsers(): Promise<DashboardUser[]> {
+  const parsed = await readJsonFile<unknown>(ALLOWED_USERS_FILE, defaultAdminUsers());
+  return parseDashboardUsers(parsed);
 }
 
+/** @deprecated Use readDashboardUsers; returns admin emails for legacy callers. */
 export async function readAllowedEmails(): Promise<string[]> {
-  const parsed = await readJsonFile<unknown>(ALLOWED_USERS_FILE, [
-    ...DEFAULT_ALLOWED_EMAILS,
-  ]);
-  return parseAllowedEmails(parsed);
+  const users = await readDashboardUsers();
+  return users.filter((user) => user.role === "admin").map((user) => user.email);
 }
 
-export async function writeAllowedEmails(emails: string[]): Promise<string[]> {
-  const next = uniqueNormalizedEmails(emails);
-  const toWrite =
-    next.length > 0 ? next : uniqueNormalizedEmails([...DEFAULT_ALLOWED_EMAILS]);
-
+export async function writeDashboardUsers(
+  users: DashboardUser[],
+): Promise<DashboardUser[]> {
+  const next = parseDashboardUsers(users);
+  const toWrite = next.length > 0 ? next : defaultAdminUsers();
   return writeJsonFile(ALLOWED_USERS_FILE, toWrite);
 }
 
-export async function addAllowedEmail(email: string): Promise<{
-  emails: string[];
-  added: boolean;
-}> {
-  const normalized = normalizeEmail(email);
-  const current = await readAllowedEmails();
-
-  if (current.includes(normalized)) {
-    return { emails: current, added: false };
-  }
-
-  const emails = await writeAllowedEmails([...current, normalized]);
-  return { emails, added: true };
+function adminCount(users: DashboardUser[]): number {
+  return users.filter((user) => user.role === "admin").length;
 }
 
-export async function removeAllowedEmail(email: string): Promise<{
-  emails: string[];
+export async function upsertDashboardUser(input: {
+  email: string;
+  role: DashboardRole;
+  engineerName?: string;
+}): Promise<{ users: DashboardUser[]; saved: boolean; error?: string }> {
+  const normalized = normalizeDashboardUser(input);
+  if ("error" in normalized) {
+    const users = await readDashboardUsers();
+    return { users, saved: false, error: normalized.error };
+  }
+
+  const current = await readDashboardUsers();
+  const existing = current.find((user) => user.email === normalized.email);
+  const without = current.filter((user) => user.email !== normalized.email);
+
+  if (
+    existing?.role === "admin" &&
+    normalized.role !== "admin" &&
+    adminCount(current) <= 1
+  ) {
+    return {
+      users: current,
+      saved: false,
+      error: "At least one admin is required.",
+    };
+  }
+
+  const users = await writeDashboardUsers([...without, normalized]);
+  return { users, saved: true };
+}
+
+export async function removeDashboardUser(email: string): Promise<{
+  users: DashboardUser[];
   removed: boolean;
   error?: string;
 }> {
   const normalized = normalizeEmail(email);
-  const current = await readAllowedEmails();
+  const current = await readDashboardUsers();
+  const existing = current.find((user) => user.email === normalized);
 
-  if (!current.includes(normalized)) {
-    return { emails: current, removed: false };
+  if (!existing) {
+    return { users: current, removed: false };
   }
 
-  if (current.length <= 1) {
+  if (existing.role === "admin" && adminCount(current) <= 1) {
     return {
-      emails: current,
+      users: current,
       removed: false,
-      error: "At least one allowed email is required.",
+      error: "At least one admin is required.",
     };
   }
 
-  const emails = await writeAllowedEmails(
-    current.filter((item) => item !== normalized),
+  const users = await writeDashboardUsers(
+    current.filter((user) => user.email !== normalized),
   );
-  return { emails, removed: true };
+  return { users, removed: true };
 }

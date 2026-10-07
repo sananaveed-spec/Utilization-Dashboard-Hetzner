@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAccess } from "@/auth/accessContext";
+import type { ResolvedAccess } from "@/auth/access";
 import { AddEngineerDialog } from "@/components/AddEngineerDialog";
 import { AnalysisDateRangePicker } from "@/components/AnalysisDateRangePicker";
 import { Overview2GroupedResults } from "@/components/Overview2GroupedResults";
@@ -98,10 +99,21 @@ function syncEngineerClockifyProjects(
 
 type Overview2FiltersProps = {
   store: UtilizationStore;
+  accessOverride?: ResolvedAccess;
 };
 
-export function Overview2Filters({ store }: Overview2FiltersProps) {
-  const { canEdit } = useAccess();
+export function Overview2Filters({
+  store,
+  accessOverride,
+}: Overview2FiltersProps) {
+  const accessFromContext = useAccess();
+  const canEdit = accessOverride?.canEdit ?? accessFromContext.canEdit;
+  const scope = accessOverride?.scope ?? accessFromContext.scope;
+  const linkedEngineerName =
+    accessOverride?.engineerName ?? accessFromContext.engineerName;
+  const needsEngineerLink =
+    accessOverride?.needsEngineerLink ?? accessFromContext.needsEngineerLink;
+  const isSelfScope = scope === "self";
   const {
     entries,
     engineerNames,
@@ -297,7 +309,14 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
   }, [monthsInRange, searchedEngineerNames]);
 
   const listedEmployees = useMemo(() => {
-    return engineerNames
+    const names =
+      isSelfScope && linkedEngineerName
+        ? engineerNames.filter((name) =>
+            isSameEngineerName(name, linkedEngineerName),
+          )
+        : engineerNames;
+
+    return names
       .map((name) => {
         const match = employees.find((employee) =>
           isSameEngineerName(employee.name, name),
@@ -312,7 +331,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
       .sort((a, b) =>
         a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
       );
-  }, [employees, engineerNames]);
+  }, [employees, engineerNames, isSelfScope, linkedEngineerName]);
 
   const hasAutoSearched = useRef(false);
   const lastSearchedRangeRef = useRef<string>("");
@@ -329,13 +348,18 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
     return () => window.clearInterval(timer);
   }, [searching]);
 
-  // Auto-select all engineers when the list is first populated, then auto-search once
+  // Auto-select engineers when the list is first populated (self-scope: linked only)
   useEffect(() => {
-    if (listedEmployees.length > 0 && selectedEngineerNames.size === 0) {
+    if (listedEmployees.length === 0) return;
+    if (isSelfScope) {
+      setSelectedEngineerNames(new Set(listedEmployees.map((e) => e.name)));
+      return;
+    }
+    if (selectedEngineerNames.size === 0) {
       setSelectedEngineerNames(new Set(listedEmployees.map((e) => e.name)));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listedEmployees]);
+  }, [listedEmployees, isSelfScope]);
 
 
   const addCandidates = useMemo(() => {
@@ -603,29 +627,39 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
 
       <div className="utilization-workspace__body">
         <aside className="overview2-sidebar" aria-label="Employee selection">
-          <div className="overview2-sidebar__manage">
-            <button
-              type="button"
-              className="button secondary button-small overview2-sidebar__manage-btn"
-              onClick={() => {
-                setActionError(null);
-                setIsAddingEngineer(true);
-              }}
-              disabled={editDisabled}
-              title={canEdit ? undefined : "View only — editing requires Users access"}
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              className="button danger button-small overview2-sidebar__manage-btn"
-              onClick={handleDeleteEngineer}
-              disabled={editDisabled || selectedEngineerNames.size === 0}
-              title={canEdit ? undefined : "View only — editing requires Users access"}
-            >
-              Delete
-            </button>
-          </div>
+          {!isSelfScope ? (
+            <div className="overview2-sidebar__manage">
+              <button
+                type="button"
+                className="button secondary button-small overview2-sidebar__manage-btn"
+                onClick={() => {
+                  setActionError(null);
+                  setIsAddingEngineer(true);
+                }}
+                disabled={editDisabled}
+                title={
+                  canEdit
+                    ? undefined
+                    : "View only — editing requires Admin role"
+                }
+              >
+                Add
+              </button>
+              <button
+                type="button"
+                className="button danger button-small overview2-sidebar__manage-btn"
+                onClick={handleDeleteEngineer}
+                disabled={editDisabled || selectedEngineerNames.size === 0}
+                title={
+                  canEdit
+                    ? undefined
+                    : "View only — editing requires Admin role"
+                }
+              >
+                Delete
+              </button>
+            </div>
+          ) : null}
 
           <div className="overview2-sidebar__date">
             <AnalysisDateRangePicker
@@ -641,9 +675,15 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
             />
           </div>
 
-          {listedEmployees.length === 0 && !loading ? (
+          {needsEngineerLink ? (
             <p className="overview2-sidebar__empty hint">
-              No engineers on the list yet. Use Add to include ATS employees.
+              Ask an Admin to link your engineer profile under Users.
+            </p>
+          ) : listedEmployees.length === 0 && !loading ? (
+            <p className="overview2-sidebar__empty hint">
+              {isSelfScope
+                ? "Your linked engineer was not found on the list."
+                : "No engineers on the list yet. Use Add to include ATS employees."}
             </p>
           ) : (
             <div
@@ -665,9 +705,10 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                       value={employee.id}
                       checked={selectedEngineerNames.has(employee.name)}
                       onChange={(e) => {
+                        if (isSelfScope) return;
                         toggleEngineer(employee.name, e.target.checked);
                       }}
-                      disabled={disabled}
+                      disabled={disabled || isSelfScope}
                     />
                     <span>{employee.name}</span>
                   </label>
@@ -683,7 +724,11 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
               onClick={() => {
                 void handleSearch();
               }}
-              disabled={disabled || selectedEngineerNames.size === 0}
+              disabled={
+                disabled ||
+                needsEngineerLink ||
+                selectedEngineerNames.size === 0
+              }
             >
               {searching
                 ? searchProgress.total > 0
@@ -691,22 +736,26 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
                   : `Searching… ${searchElapsedSec}s`
                 : "Search"}
             </button>
-            <button
-              type="button"
-              className="button secondary overview2-sidebar__action"
-              onClick={selectAllEmployees}
-              disabled={disabled || listedEmployees.length === 0}
-            >
-              Select All
-            </button>
-            <button
-              type="button"
-              className="button secondary overview2-sidebar__action"
-              onClick={clearAllEmployees}
-              disabled={disabled || selectedEngineerNames.size === 0}
-            >
-              Clear All
-            </button>
+            {!isSelfScope ? (
+              <>
+                <button
+                  type="button"
+                  className="button secondary overview2-sidebar__action"
+                  onClick={selectAllEmployees}
+                  disabled={disabled || listedEmployees.length === 0}
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  className="button secondary overview2-sidebar__action"
+                  onClick={clearAllEmployees}
+                  disabled={disabled || selectedEngineerNames.size === 0}
+                >
+                  Clear All
+                </button>
+              </>
+            ) : null}
           </div>
           {searching ? (
             <p
@@ -796,6 +845,7 @@ export function Overview2Filters({ store }: Overview2FiltersProps) {
         clockifyHoursLoading={clockifyHoursLoading}
         clockifyHoursError={clockifyHoursError}
         readOnly={!canEdit}
+        hideTeamFooter={isSelfScope}
           />
         </div>
       </div>

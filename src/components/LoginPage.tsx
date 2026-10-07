@@ -46,9 +46,8 @@ export function LoginPage() {
       </div>
 
       <p className="login-subtitle">
-        Log in with your @allumiax.com Microsoft 365 account to view the
-        Utilization Dashboard. Editing requires your email to be added under
-        Users.
+        Log in with your @allumiax.com Microsoft 365 account. An Admin must
+        add you under Users (Team members need a linked engineer name).
       </p>
 
       {!isAzureConfigured ? (
