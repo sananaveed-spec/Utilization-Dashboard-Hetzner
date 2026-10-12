@@ -74,11 +74,12 @@ export function resolveAccess(
   }
 
   if (record.role === "lead") {
+    // Lead can edit data; only Admin manages Users.
     return {
       email: normalized,
       role: "lead",
       canView: true,
-      canEdit: false,
+      canEdit: true,
       canManageUsers: false,
       scope: "all",
       needsEngineerLink: false,

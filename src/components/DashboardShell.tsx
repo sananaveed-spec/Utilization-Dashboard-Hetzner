@@ -116,7 +116,7 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
             ? resolved.needsEngineerLink
               ? "Ask an Admin to link your engineer profile under Users."
               : "Team member view — you can only see your own Overview row."
-            : "View only — browsing is enabled. Editing requires Admin role."}
+            : "View only — browsing is enabled. Editing requires Admin or Lead."}
         </p>
       ) : null}
 

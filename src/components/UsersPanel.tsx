@@ -191,10 +191,10 @@ export function UsersPanel({ engineerNames }: UsersPanelProps) {
         <div>
           <h2 className="analysis-title">Users</h2>
           <p className="analysis-subtitle">
-            Admin can edit everything. Lead can view all data but not edit.
-            Team can view only their linked engineer row on Overview and must
-            be associated with an engineer name. Anyone with @allumiax.com who
-            is not listed sees Access restricted.
+            Admin and Lead can edit dashboard data. Only Admin can manage
+            Users. Team can view only their linked engineer row on Overview
+            and must be associated with an engineer name. Anyone with
+            @allumiax.com who is not listed sees Access restricted.
           </p>
         </div>
       </div>

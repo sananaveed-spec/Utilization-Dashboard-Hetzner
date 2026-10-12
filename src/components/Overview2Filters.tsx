@@ -640,7 +640,7 @@ export function Overview2Filters({
                 title={
                   canEdit
                     ? undefined
-                    : "View only — editing requires Admin role"
+                    : "View only — editing requires Admin or Lead"
                 }
               >
                 Add
@@ -653,7 +653,7 @@ export function Overview2Filters({
                 title={
                   canEdit
                     ? undefined
-                    : "View only — editing requires Admin role"
+                    : "View only — editing requires Admin or Lead"
                 }
               >
                 Delete
