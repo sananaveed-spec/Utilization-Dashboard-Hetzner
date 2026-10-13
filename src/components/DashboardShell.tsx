@@ -3,7 +3,6 @@
 import { useEffect, useMemo } from "react";
 import { useAccess } from "@/auth/accessContext";
 import type { ResolvedAccess } from "@/auth/access";
-import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
 import { Overview2Filters } from "@/components/Overview2Filters";
@@ -12,6 +11,9 @@ import { useUtilizationStore } from "@/hooks/useUtilizationStore";
 import { resolveAccess } from "@/auth/access";
 import { useAllowedUsers } from "@/hooks/useAllowedUsers";
 import { useTeams } from "@/hooks/useTeams";
+
+/** Analysis tab is temporarily hidden from the live dashboard. */
+const SHOW_ANALYSIS_TAB = false;
 
 export type DashboardTab =
   | "overview2"
@@ -45,7 +47,9 @@ function navItemsForAccess(
 ): Array<{ id: DashboardTab; label: string }> {
   return DASHBOARD_NAV_ITEMS.filter((item) => {
     if (item.id === "overview2") return true;
-    if (item.id === "analysis") return access.canViewAnalysis;
+    if (item.id === "analysis") {
+      return SHOW_ANALYSIS_TAB && access.canViewAnalysis;
+    }
     if (item.id === "holidays") return access.canViewHolidays;
     if (item.id === "history") return access.canViewHistory;
     if (item.id === "users") return access.canManageUsers;
@@ -143,9 +147,7 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
       ) : null}
 
       <div className="dashboard-main">
-        {tab === "analysis" && resolved.canViewAnalysis ? (
-          <AnalysisPanel store={store} />
-        ) : tab === "holidays" && resolved.canViewHolidays ? (
+        {tab === "holidays" && resolved.canViewHolidays ? (
           <HolidaysPanel store={store} />
         ) : tab === "history" && resolved.canViewHistory ? (
           <HistoryPanel />
