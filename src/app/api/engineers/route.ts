@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { readEngineers, writeEngineers } from "@/lib/dashboardDataStore";
-import { requireEditor } from "@/lib/requireEditor";
+import { requireFullEditor } from "@/lib/requireEditor";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const denied = await requireEditor(request);
+  const denied = await requireFullEditor(request);
   if (denied) {
     return denied;
   }

@@ -3,7 +3,7 @@ import {
   readCalendarYearRange,
   writeCalendarYearRange,
 } from "@/lib/dashboardDataStore";
-import { requireEditor } from "@/lib/requireEditor";
+import { requireFullEditor } from "@/lib/requireEditor";
 import { getDefaultCalendarYearRange } from "@/lib/weeks";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const denied = await requireEditor(request);
+  const denied = await requireFullEditor(request);
   if (denied) {
     return denied;
   }

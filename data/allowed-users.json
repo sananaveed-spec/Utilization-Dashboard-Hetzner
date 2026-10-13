@@ -14,5 +14,28 @@
   {
     "email": "talha.qamar@allumiax.com",
     "role": "admin"
+  },
+  {
+    "email": "tooba@allumiax.com",
+    "role": "manager"
+  },
+  {
+    "email": "wareesha.azwar@allumiax.com",
+    "role": "lead",
+    "engineerName": "Wareesha Azwar",
+    "teamId": "team-wareesha-azwar"
+  },
+  {
+    "email": "zain.abideen@allumiax.com",
+    "role": "lead",
+    "engineerName": "Zain ul Abideen",
+    "teamId": "team-zain-ul-abideen"
+  },
+  {
+    "email": "musab@allumiax.com",
+    "role": "employee",
+    "engineerName": "Musab Mustafa",
+    "leadEngineerName": "Zain ul Abideen",
+    "teamId": "team-zain-ul-abideen"
   }
 ]

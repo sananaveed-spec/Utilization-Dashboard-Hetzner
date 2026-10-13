@@ -47,7 +47,7 @@ export function LoginPage() {
 
       <p className="login-subtitle">
         Log in with your @allumiax.com Microsoft 365 account. An Admin must
-        add you under Users (Team members need a linked engineer name).
+        add you under Users (Admin, Manager, Lead, or Employee).
       </p>
 
       {!isAzureConfigured ? (

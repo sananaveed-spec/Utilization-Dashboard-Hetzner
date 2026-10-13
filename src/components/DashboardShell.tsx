@@ -2,24 +2,29 @@
 
 import { useEffect, useMemo } from "react";
 import { useAccess } from "@/auth/accessContext";
-import type { AccessScope } from "@/auth/access";
+import type { ResolvedAccess } from "@/auth/access";
+import { AnalysisPanel } from "@/components/AnalysisPanel";
+import { HistoryPanel } from "@/components/HistoryPanel";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
 import { Overview2Filters } from "@/components/Overview2Filters";
 import { UsersPanel } from "@/components/UsersPanel";
 import { useUtilizationStore } from "@/hooks/useUtilizationStore";
-import type { DashboardRole } from "@/lib/allowedUsers";
 import { resolveAccess } from "@/auth/access";
 import { useAllowedUsers } from "@/hooks/useAllowedUsers";
+import { useTeams } from "@/hooks/useTeams";
 
 export type DashboardTab =
   | "overview2"
   | "analysis"
   | "holidays"
+  | "history"
   | "users";
 
 export const DASHBOARD_NAV_ITEMS: Array<{ id: DashboardTab; label: string }> = [
   { id: "overview2", label: "Overview" },
+  { id: "analysis", label: "Analysis" },
   { id: "holidays", label: "Holidays" },
+  { id: "history", label: "History" },
   { id: "users", label: "Users" },
 ];
 
@@ -28,34 +33,43 @@ type DashboardShellProps = {
   onTabChange: (tab: DashboardTab) => void;
 };
 
-function navItemsForAccess(options: {
-  role: DashboardRole;
-  canManageUsers: boolean;
-  scope: AccessScope;
-}): Array<{ id: DashboardTab; label: string }> {
-  if (options.scope === "self" || options.role === "team") {
-    return DASHBOARD_NAV_ITEMS.filter((item) => item.id === "overview2");
-  }
-  if (!options.canManageUsers) {
-    return DASHBOARD_NAV_ITEMS.filter((item) => item.id !== "users");
-  }
-  return DASHBOARD_NAV_ITEMS;
+function navItemsForAccess(
+  access: Pick<
+    ResolvedAccess,
+    | "role"
+    | "canManageUsers"
+    | "canViewHistory"
+    | "canViewAnalysis"
+    | "canViewHolidays"
+  >,
+): Array<{ id: DashboardTab; label: string }> {
+  return DASHBOARD_NAV_ITEMS.filter((item) => {
+    if (item.id === "overview2") return true;
+    if (item.id === "analysis") return access.canViewAnalysis;
+    if (item.id === "holidays") return access.canViewHolidays;
+    if (item.id === "history") return access.canViewHistory;
+    if (item.id === "users") return access.canManageUsers;
+    return false;
+  });
 }
 
 export function DashboardNav({
   tab,
   onTabChange,
-  role,
-  canManageUsers,
-  scope,
+  access,
 }: {
   tab: DashboardTab;
   onTabChange: (tab: DashboardTab) => void;
-  role: DashboardRole;
-  canManageUsers: boolean;
-  scope: AccessScope;
+  access: Pick<
+    ResolvedAccess,
+    | "role"
+    | "canManageUsers"
+    | "canViewHistory"
+    | "canViewAnalysis"
+    | "canViewHolidays"
+  >;
 }) {
-  const items = navItemsForAccess({ role, canManageUsers, scope });
+  const items = navItemsForAccess(access);
 
   return (
     <nav className="dashboard-nav" aria-label="Dashboard navigation">
@@ -78,22 +92,17 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
   const access = useAccess();
   const store = useUtilizationStore();
   const { users } = useAllowedUsers();
+  const { teams } = useTeams();
 
-  // Re-resolve with engineer names once store is loaded (Team link validation).
   const resolved = useMemo(
     () =>
-      resolveAccess(access.email, users, store.engineerNames),
-    [access.email, users, store.engineerNames],
+      resolveAccess(access.email, users, store.engineerNames, teams),
+    [access.email, users, store.engineerNames, teams],
   );
 
   useEffect(() => {
-    const allowed = navItemsForAccess({
-      role: resolved.role,
-      canManageUsers: resolved.canManageUsers,
-      scope: resolved.scope,
-    }).map((item) => item.id);
-
-    if (tab === "analysis" || !allowed.includes(tab)) {
+    const allowed = navItemsForAccess(resolved).map((item) => item.id);
+    if (!allowed.includes(tab)) {
       onTabChange("overview2");
     }
   }, [resolved, tab, onTabChange]);
@@ -108,15 +117,22 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
     );
   }
 
+  const banner =
+    resolved.role === "lead" && resolved.needsEngineerLink
+      ? "Ask an Admin to link your team engineers under Users."
+      : resolved.role === "lead"
+        ? "Lead view — you can edit hours and stars for your team engineers only."
+        : resolved.role === "employee"
+          ? "Employee view — Overview is view only."
+          : !resolved.canEdit
+            ? "View only — editing requires Manager or Admin."
+            : null;
+
   return (
     <div className="dashboard-shell">
-      {!resolved.canEdit ? (
+      {banner ? (
         <p className="dashboard-view-only-banner" role="status">
-          {resolved.role === "team"
-            ? resolved.needsEngineerLink
-              ? "Ask an Admin to link your engineer profile under Users."
-              : "Team member view — you can only see your own Overview row."
-            : "View only — browsing is enabled. Editing requires Admin or Lead."}
+          {banner}
         </p>
       ) : null}
 
@@ -127,10 +143,14 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
       ) : null}
 
       <div className="dashboard-main">
-        {tab === "holidays" && resolved.scope === "all" ? (
+        {tab === "analysis" && resolved.canViewAnalysis ? (
+          <AnalysisPanel store={store} />
+        ) : tab === "holidays" && resolved.canViewHolidays ? (
           <HolidaysPanel store={store} />
+        ) : tab === "history" && resolved.canViewHistory ? (
+          <HistoryPanel />
         ) : tab === "users" && resolved.canManageUsers ? (
-          <UsersPanel engineerNames={store.engineerNames} />
+          <UsersPanel />
         ) : (
           <Overview2Filters store={store} accessOverride={resolved} />
         )}

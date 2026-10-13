@@ -1,0 +1,93 @@
+[
+  {
+    "id": "hist-1791892343742-gm4yqv",
+    "createdAt": "2026-10-13T11:52:23.742Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "musab@allumiax.com",
+    "entityType": "users",
+    "entityLabel": "musab@allumiax.com",
+    "action": "created",
+    "summary": "User added: musab@allumiax.com",
+    "details": "Role: Employee\nEngineer: Musab Mustafa",
+    "comment": "Changes saved on Users."
+  },
+  {
+    "id": "hist-1791892311959-a8x0vn",
+    "createdAt": "2026-10-13T11:51:51.959Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "zain.abideen@allumiax.com",
+    "entityType": "users",
+    "entityLabel": "zain.abideen@allumiax.com",
+    "action": "created",
+    "summary": "User added: zain.abideen@allumiax.com",
+    "details": "Role: Lead\nTeam: Zain ul Abideen",
+    "comment": "Changes saved on Users."
+  },
+  {
+    "id": "hist-1791892287857-35t78j",
+    "createdAt": "2026-10-13T11:51:27.857Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "wareesha.azwar@allumiax.com",
+    "entityType": "users",
+    "entityLabel": "wareesha.azwar@allumiax.com",
+    "action": "created",
+    "summary": "User added: wareesha.azwar@allumiax.com",
+    "details": "Role: Lead\nTeam: Wareesha Azwar",
+    "comment": "Changes saved on Users."
+  },
+  {
+    "id": "hist-1791892249301-9dtihc",
+    "createdAt": "2026-10-13T11:50:49.301Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "tooba@allumiax.com",
+    "entityType": "users",
+    "entityLabel": "tooba@allumiax.com",
+    "action": "created",
+    "summary": "User added: tooba@allumiax.com",
+    "details": "Role: Manager",
+    "comment": "Changes saved on Users."
+  },
+  {
+    "id": "hist-1791890287346-a0vxdi",
+    "createdAt": "2026-10-13T11:18:07.346Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "Utilization",
+    "entityType": "utilization",
+    "entityLabel": "Overview hours",
+    "action": "updated",
+    "summary": "Utilization entries saved (no hour changes detected)",
+    "details": "",
+    "comment": "Changes saved on Overview."
+  },
+  {
+    "id": "hist-1791890250904-y3iqgu",
+    "createdAt": "2026-10-13T11:17:30.904Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "Utilization",
+    "entityType": "utilization",
+    "entityLabel": "Overview hours",
+    "action": "updated",
+    "summary": "Utilization entries saved (no hour changes detected)",
+    "details": "",
+    "comment": "Changes saved on Overview."
+  },
+  {
+    "id": "hist-1791890244478-qnjy9z",
+    "createdAt": "2026-10-13T11:17:24.478Z",
+    "employeeName": "Sana Naveed",
+    "employeeEmail": "sana.naveed@allumiax.com",
+    "project": "Utilization",
+    "entityType": "utilization",
+    "entityLabel": "Overview hours",
+    "action": "updated",
+    "summary": "Utilization entries saved (no hour changes detected)",
+    "details": "",
+    "comment": "Changes saved on Overview."
+  }
+]

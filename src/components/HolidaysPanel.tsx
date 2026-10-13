@@ -15,7 +15,7 @@ type HolidaysPanelProps = {
 };
 
 export function HolidaysPanel({ store }: HolidaysPanelProps) {
-  const { canEdit } = useAccess();
+  const { canEditAll: canEdit } = useAccess();
   const { holidays, updateHolidays } = store;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState<{ name: string; date: string } | null>(

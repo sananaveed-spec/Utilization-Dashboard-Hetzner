@@ -32,12 +32,26 @@ export async function POST(request: Request) {
       email?: unknown;
       role?: unknown;
       engineerName?: unknown;
+      leadEngineerName?: unknown;
+      teamId?: unknown;
+      teamEngineers?: unknown;
     };
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : "";
     const role = body.role;
     const engineerName =
       typeof body.engineerName === "string" ? body.engineerName : undefined;
+    const leadEngineerName =
+      typeof body.leadEngineerName === "string"
+        ? body.leadEngineerName
+        : undefined;
+    const teamId =
+      typeof body.teamId === "string" ? body.teamId : undefined;
+    const teamEngineers = Array.isArray(body.teamEngineers)
+      ? body.teamEngineers.filter(
+          (value): value is string => typeof value === "string",
+        )
+      : undefined;
 
     if (!isValidEmail(email)) {
       return NextResponse.json(
@@ -47,12 +61,22 @@ export async function POST(request: Request) {
     }
     if (!isDashboardRole(role)) {
       return NextResponse.json(
-        { error: "Select a valid role (admin, lead, or team)." },
+        {
+          error:
+            "Select a valid role (admin, manager, lead, or employee).",
+        },
         { status: 400 },
       );
     }
 
-    const result = await upsertDashboardUser({ email, role, engineerName });
+    const result = await upsertDashboardUser({
+      email,
+      role,
+      engineerName,
+      leadEngineerName,
+      teamId,
+      teamEngineers,
+    });
     if (result.error) {
       return NextResponse.json(
         { error: result.error, users: result.users },

@@ -37,6 +37,9 @@ export async function upsertDashboardUser(input: {
   email: string;
   role: DashboardRole;
   engineerName?: string;
+  leadEngineerName?: string;
+  teamId?: string;
+  teamEngineers?: string[];
 }): Promise<{ users: DashboardUser[]; saved: boolean; error?: string }> {
   const normalized = normalizeDashboardUser(input);
   if ("error" in normalized) {

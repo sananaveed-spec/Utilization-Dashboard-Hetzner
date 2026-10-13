@@ -3,7 +3,7 @@ import { ClockifyClient, getClockifyConfig } from "@/lib/clockify/client";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
   const config = getClockifyConfig();
 
   if (!config) {
@@ -16,8 +16,28 @@ export async function GET() {
     );
   }
 
+  const scope = new URL(request.url).searchParams.get("scope");
+  const employeesOnly = scope === "employees";
+
   try {
     const client = new ClockifyClient(config);
+
+    if (employeesOnly) {
+      const users = await client.getActiveUsers();
+      return NextResponse.json({
+        employees: users.map((user) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        })),
+        projects: [],
+        counts: {
+          employees: users.length,
+          projects: 0,
+        },
+      });
+    }
+
     const [users, projects] = await Promise.all([
       client.getActiveUsers(),
       client.getActiveProjects(),

@@ -1,9 +1,19 @@
 import { NextResponse } from "next/server";
-import { canViewDashboard, resolveAccess } from "@/auth/access";
+import {
+  canViewDashboard,
+  resolveAccess,
+  type ResolvedAccess,
+} from "@/auth/access";
 import { normalizeEmail } from "@/lib/allowedUsers";
 import { readDashboardUsers } from "@/lib/allowedUsersStore";
+import { readEngineers } from "@/lib/dashboardDataStore";
+import { readTeams } from "@/lib/teamsStore";
 
-async function resolveRequestAccess(request: Request) {
+export async function resolveRequestAccess(request: Request): Promise<{
+  email: string;
+  access: ResolvedAccess | null;
+  unauthorized: NextResponse | null;
+}> {
   const email = normalizeEmail(request.headers.get("x-user-email") ?? "");
 
   if (!email || !canViewDashboard(email)) {
@@ -14,19 +24,23 @@ async function resolveRequestAccess(request: Request) {
         { error: "Sign in with an @allumiax.com account to continue." },
         { status: 401 },
       ),
-    } as const;
+    };
   }
 
-  const users = await readDashboardUsers();
+  const [users, teams, engineers] = await Promise.all([
+    readDashboardUsers(),
+    readTeams(),
+    readEngineers(),
+  ]);
   return {
     email,
-    access: resolveAccess(email, users),
+    access: resolveAccess(email, users, engineers, teams),
     unauthorized: null,
-  } as const;
+  };
 }
 
 /**
- * Soft server gate for write APIs: require Admin or Lead (canEdit).
+ * Soft server gate for write APIs that Leads may use (e.g. entries hours/stars).
  */
 export async function requireEditor(
   request: Request,
@@ -38,7 +52,7 @@ export async function requireEditor(
     return NextResponse.json(
       {
         error:
-          "Admin or Lead access required to edit. Ask an Admin to update your role under Users.",
+          "Edit access required. Ask an Admin to update your role under Users.",
       },
       { status: 403 },
     );
@@ -47,7 +61,29 @@ export async function requireEditor(
   return null;
 }
 
-/** Users management APIs — Admin only (canManageUsers). */
+/**
+ * Firm-wide edits (holidays, engineer list, calendar) — Admin or Manager only.
+ */
+export async function requireFullEditor(
+  request: Request,
+): Promise<NextResponse | null> {
+  const { access, unauthorized } = await resolveRequestAccess(request);
+  if (unauthorized) return unauthorized;
+
+  if (!access?.canEditAll) {
+    return NextResponse.json(
+      {
+        error:
+          "Admin or Manager access required. Ask an Admin to update your role under Users.",
+      },
+      { status: 403 },
+    );
+  }
+
+  return null;
+}
+
+/** Users management APIs — Admin only. */
 export async function requireAdmin(
   request: Request,
 ): Promise<NextResponse | null> {

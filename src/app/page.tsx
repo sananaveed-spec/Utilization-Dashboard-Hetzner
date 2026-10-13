@@ -14,11 +14,13 @@ import { LoginPage } from "@/components/LoginPage";
 import { UnauthorizedPage } from "@/components/UnauthorizedPage";
 import { getAccountEmail } from "@/auth/organization";
 import { useAllowedUsers } from "@/hooks/useAllowedUsers";
+import { useTeams } from "@/hooks/useTeams";
 
 export default function Home() {
   const isAuthenticated = useIsAuthenticated();
   const { accounts } = useMsal();
   const { users, loading: usersLoading } = useAllowedUsers();
+  const { teams } = useTeams();
   const [tab, setTab] = useState<DashboardTab>("overview2");
   const authenticatedEmail = isAuthenticated
     ? getAccountEmail(accounts[0])
@@ -26,8 +28,8 @@ export default function Home() {
   const accessChecking = usersLoading && users === null;
 
   const access = useMemo(
-    () => resolveAccess(authenticatedEmail, users),
-    [authenticatedEmail, users],
+    () => resolveAccess(authenticatedEmail, users, [], teams),
+    [authenticatedEmail, users, teams],
   );
   const canView = isAuthenticated && !accessChecking && access.canView;
 
@@ -41,9 +43,7 @@ export default function Home() {
                 <DashboardNav
                   tab={tab}
                   onTabChange={setTab}
-                  role={access.role}
-                  canManageUsers={access.canManageUsers}
-                  scope={access.scope}
+                  access={access}
                 />
               ) : undefined
             }

@@ -54,3 +54,50 @@ export function saveEngineerNames(names: string[]): void {
 export function isSameEngineerName(a: string, b: string): boolean {
   return normalizeEngineerName(a) === normalizeEngineerName(b);
 }
+
+/**
+ * Exact match, or first-name match when either side is a single token
+ * (e.g. team nickname "Areeb" ↔ "Areeb Farhan").
+ */
+export function engineerNamesMatch(a: string, b: string): boolean {
+  if (isSameEngineerName(a, b)) {
+    return true;
+  }
+  const na = normalizeEngineerName(a);
+  const nb = normalizeEngineerName(b);
+  if (!na || !nb) {
+    return false;
+  }
+  const aParts = na.split(" ");
+  const bParts = nb.split(" ");
+  if (aParts.length === 1 || bParts.length === 1) {
+    return aParts[0] === bParts[0];
+  }
+  return false;
+}
+
+/** Resolve a team/link nickname to the canonical engineer list name when possible. */
+export function resolveEngineerName(
+  link: string,
+  engineerNames: string[],
+): string | undefined {
+  const exact = engineerNames.find((name) => isSameEngineerName(name, link));
+  if (exact) {
+    return exact;
+  }
+  const fuzzy = engineerNames.filter((name) => engineerNamesMatch(name, link));
+  if (fuzzy.length === 1) {
+    return fuzzy[0];
+  }
+  // Prefer first-name uniqueness among multi-word roster names
+  if (fuzzy.length > 1) {
+    const first = normalizeEngineerName(link).split(" ")[0];
+    const firstNameHits = fuzzy.filter(
+      (name) => normalizeEngineerName(name).split(" ")[0] === first,
+    );
+    if (firstNameHits.length === 1) {
+      return firstNameHits[0];
+    }
+  }
+  return undefined;
+}
