@@ -5,11 +5,26 @@ import {
   writeHistory,
 } from "@/lib/dashboardDataStore";
 import type { HistoryInput } from "@/lib/history";
-import { requireAdmin, requireEditor } from "@/lib/requireEditor";
+import {
+  requireAdmin,
+  requireEditor,
+  resolveRequestAccess,
+} from "@/lib/requireEditor";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { access, unauthorized } = await resolveRequestAccess(request);
+  if (unauthorized) {
+    return unauthorized;
+  }
+  if (!access?.canViewHistory) {
+    return NextResponse.json(
+      { error: "History is available to Admins only." },
+      { status: 403 },
+    );
+  }
+
   try {
     const entries = await readHistory();
     return NextResponse.json({ entries });

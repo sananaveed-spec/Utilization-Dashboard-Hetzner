@@ -74,7 +74,7 @@ export async function requireFullEditor(
     return NextResponse.json(
       {
         error:
-          "Admin or Manager access required. Ask an Admin to update your role under Users.",
+          "Team Lead, Manager, or Admin access required. Ask an Admin to update your role under Users.",
       },
       { status: 403 },
     );

@@ -4,14 +4,8 @@ import {
   type DashboardRole,
   type DashboardUser,
 } from "@/lib/allowedUsers";
-import {
-  engineerNamesMatch,
-  resolveEngineerName,
-} from "@/lib/engineers";
-import {
-  teamEditableEngineers,
-  type DashboardTeam,
-} from "@/lib/teams";
+import { engineerNamesMatch } from "@/lib/engineers";
+import type { DashboardTeam } from "@/lib/teams";
 
 export type AccessScope = "all" | "team" | "self";
 
@@ -19,16 +13,16 @@ export type ResolvedAccess = {
   email: string;
   role: DashboardRole;
   canView: boolean;
-  /** May edit anything they are allowed to touch (hours/stars for scoped engineers). */
+  /** May edit hours/stars (and other scoped writes). */
   canEdit: boolean;
-  /** Admin/Manager: edit all engineers, holidays, engineer list, analysis data writes. */
+  /** Firm-wide edits: all engineers, holidays, engineer list. */
   canEditAll: boolean;
   canManageUsers: boolean;
   canViewHistory: boolean;
   canViewAnalysis: boolean;
   canViewHolidays: boolean;
   scope: AccessScope;
-  /** Lead: engineers they may edit. Employee optional self name. */
+  /** Optional Employee self link (display). */
   engineerName?: string;
   editableEngineerNames: string[];
   needsEngineerLink: boolean;
@@ -74,30 +68,17 @@ export function canEditEngineerName(
   );
 }
 
-function matchEngineers(
-  linked: string[],
-  engineerNames: string[],
-): string[] {
-  if (engineerNames.length === 0) {
-    return linked;
-  }
-  const matched: string[] = [];
-  const seen = new Set<string>();
-  for (const link of linked) {
-    const found = resolveEngineerName(link, engineerNames) ?? link;
-    const key = found.toLowerCase();
-    if (seen.has(key)) continue;
-    seen.add(key);
-    matched.push(found);
-  }
-  return matched;
-}
-
+/**
+ * Access levels:
+ * - Employee: view Overview / Holidays / Analysis; no History or Users; no edit
+ * - Team Lead / Manager: edit all content; no History or Users
+ * - Admin: everything including History and Users
+ */
 export function resolveAccess(
   email: string,
   users: DashboardUser[] | null,
   engineerNames: string[] = [],
-  teams: DashboardTeam[] = [],
+  _teams: DashboardTeam[] = [],
 ): ResolvedAccess {
   const normalized = normalizeEmail(email);
   const onDomain = canViewDashboard(normalized);
@@ -130,15 +111,15 @@ export function resolveAccess(
     };
   }
 
-  if (record.role === "manager") {
+  if (record.role === "manager" || record.role === "lead") {
     return {
       email: normalized,
-      role: "manager",
+      role: record.role,
       canView: true,
       canEdit: true,
       canEditAll: true,
       canManageUsers: false,
-      canViewHistory: true,
+      canViewHistory: false,
       canViewAnalysis: true,
       canViewHolidays: true,
       scope: "all",
@@ -147,50 +128,7 @@ export function resolveAccess(
     };
   }
 
-  if (record.role === "lead") {
-    const team = record.teamId
-      ? teams.find((item) => item.id === record.teamId)
-      : undefined;
-    const linked = team
-      ? teamEditableEngineers(team)
-      : (record.teamEngineers ?? []).map((name) => name.trim()).filter(Boolean);
-
-    if (linked.length === 0) {
-      return {
-        ...deniedAccess(normalized, "lead"),
-        canView: true,
-        needsEngineerLink: true,
-        scope: "team",
-      };
-    }
-
-    const matched = matchEngineers(linked, engineerNames);
-    const editable =
-      engineerNames.length > 0 && matched.length === 0
-        ? linked
-        : matched.length > 0
-          ? matched
-          : linked;
-
-    return {
-      email: normalized,
-      role: "lead",
-      canView: true,
-      canEdit: editable.length > 0,
-      canEditAll: false,
-      canManageUsers: false,
-      canViewHistory: false,
-      canViewAnalysis: false,
-      canViewHolidays: false,
-      scope: "team",
-      editableEngineerNames: editable,
-      needsEngineerLink: Boolean(record.teamId) && !team
-        ? true
-        : engineerNames.length > 0 && matched.length === 0,
-    };
-  }
-
-  // Employee — Overview view only
+  // Employee — view all content tabs except History and Users; no edit
   const selfName = record.engineerName?.trim() ?? "";
   return {
     email: normalized,
@@ -200,8 +138,8 @@ export function resolveAccess(
     canEditAll: false,
     canManageUsers: false,
     canViewHistory: false,
-    canViewAnalysis: false,
-    canViewHolidays: false,
+    canViewAnalysis: true,
+    canViewHolidays: true,
     scope: "all",
     engineerName: selfName || undefined,
     editableEngineerNames: [],

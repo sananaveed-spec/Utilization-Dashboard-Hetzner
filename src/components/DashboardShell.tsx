@@ -122,15 +122,11 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
   }
 
   const banner =
-    resolved.role === "lead" && resolved.needsEngineerLink
-      ? "Ask an Admin to link your team engineers under Users."
-      : resolved.role === "lead"
-        ? "Lead view — you can edit hours and stars for your team engineers only."
-        : resolved.role === "employee"
-          ? "Employee view — Overview is view only."
-          : !resolved.canEdit
-            ? "View only — editing requires Manager or Admin."
-            : null;
+    resolved.role === "employee"
+      ? "Employee view — you can view Overview and Holidays; editing requires Team Lead, Manager, or Admin."
+      : resolved.role === "lead" || resolved.role === "manager"
+        ? "You can edit dashboard data. History and Users are Admin only."
+        : null;
 
   return (
     <div className="dashboard-shell">

@@ -18,7 +18,6 @@ import {
   type DashboardRole,
   type DashboardUser,
 } from "@/lib/allowedUsers";
-import { logDashboardAction } from "@/lib/history-client";
 import {
   defaultTeamName,
   notifyTeamsChanged,
@@ -233,9 +232,6 @@ export function UsersPanel() {
   }): Promise<boolean> {
     setSaving(true);
     setError(null);
-    const existing = users.find(
-      (user) => user.email === normalizeEmail(input.email),
-    );
     try {
       const response = await fetch("/api/allowed-users", {
         method: "POST",
@@ -248,33 +244,6 @@ export function UsersPanel() {
       }
       setUsers(Array.isArray(data.users) ? data.users : []);
       notifyAllowedUsersChanged();
-
-      const action = existing ? "updated" : "created";
-      const detailLines: string[] = [];
-      if (!existing) {
-        detailLines.push(`Role: ${ROLE_LABELS[input.role]}`);
-        if (input.role === "employee" && input.engineerName) {
-          detailLines.push(`Name: ${input.engineerName}`);
-        }
-      } else if (existing.role !== input.role) {
-        detailLines.push(
-          `Role: "${ROLE_LABELS[existing.role]}" → "${ROLE_LABELS[input.role]}"`,
-        );
-      }
-
-      if (!existing || detailLines.length > 0) {
-        void logDashboardAction({
-          project: input.email,
-          entityType: "users",
-          entityLabel: input.email,
-          action,
-          summary: existing
-            ? `User updated: ${input.email}`
-            : `User added: ${input.email}`,
-          details: detailLines.join("\n"),
-          comment: "Changes saved on Users.",
-        });
-      }
       return true;
     } catch (saveError) {
       setError(
@@ -390,15 +359,6 @@ export function UsersPanel() {
       }
       setUsers(Array.isArray(data.users) ? data.users : []);
       notifyAllowedUsersChanged();
-      void logDashboardAction({
-        project: email,
-        entityType: "users",
-        entityLabel: email,
-        action: "deleted",
-        summary: `User removed: ${email}`,
-        details: "",
-        comment: "User deleted on Users.",
-      });
     } catch (deleteError) {
       setError(
         deleteError instanceof Error

@@ -37,7 +37,14 @@ export function HistoryPanel() {
 
     async function load() {
       try {
-        const response = await fetch("/api/history", { cache: "no-store" });
+        const headers: HeadersInit = {};
+        if (email) {
+          headers["x-user-email"] = email;
+        }
+        const response = await fetch("/api/history", {
+          cache: "no-store",
+          headers,
+        });
         const data = (await response.json()) as {
           entries?: HistoryEntry[];
           error?: string;
@@ -77,7 +84,7 @@ export function HistoryPanel() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [email]);
 
   const toolbarFilters = useMemo(
     () => [
