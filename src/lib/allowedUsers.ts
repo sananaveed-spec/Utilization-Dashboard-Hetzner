@@ -22,7 +22,29 @@ export type DashboardUser = {
   teamId?: string;
   /** Lead legacy: engineers list (used if teamId missing) */
   teamEngineers?: string[];
+  /** ISO date YYYY-MM-DD — Overview weeks before this are shown as pre-join (gray). */
+  joiningDate?: string;
 };
+
+/** Normalize calendar date to YYYY-MM-DD, or undefined if invalid/empty. */
+export function normalizeJoiningDate(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return undefined;
+  const date = new Date(`${trimmed}T00:00:00.000Z`);
+  if (Number.isNaN(date.getTime())) return undefined;
+  if (date.toISOString().slice(0, 10) !== trimmed) return undefined;
+  return trimmed;
+}
+
+/** True when the period ends strictly before the joining date. */
+export function isBeforeJoiningDate(
+  periodEndDate: string | undefined,
+  joiningDate: string | undefined,
+): boolean {
+  if (!joiningDate || !periodEndDate) return false;
+  return periodEndDate < joiningDate;
+}
 
 export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -147,19 +169,19 @@ export function parseDashboardUsers(parsed: unknown): DashboardUser[] {
       record.leadEngineerName.trim()
         ? record.leadEngineerName.trim()
         : undefined;
+    const joiningDate = normalizeJoiningDate(record.joiningDate);
 
     byEmail.set(email, {
       email,
       role,
-      ...(engineerName && (role === "employee" || role === "lead")
-        ? { engineerName }
-        : {}),
+      ...(engineerName ? { engineerName } : {}),
       ...(role === "employee" && leadEngineerName ? { leadEngineerName } : {}),
       ...(role === "employee" && teamId ? { teamId } : {}),
       ...(role === "lead" && teamId ? { teamId } : {}),
       ...(role === "lead" && !teamId && teamEngineers
         ? { teamEngineers }
         : {}),
+      ...(joiningDate ? { joiningDate } : {}),
     });
   }
 
@@ -174,6 +196,7 @@ export function normalizeDashboardUser(input: {
   leadEngineerName?: string;
   teamId?: string;
   teamEngineers?: string[];
+  joiningDate?: string;
 }): DashboardUser | { error: string } {
   const email = normalizeEmail(input.email);
   if (!isValidEmail(email)) {
@@ -182,6 +205,8 @@ export function normalizeDashboardUser(input: {
   if (!isDashboardRole(input.role)) {
     return { error: "Select a valid role." };
   }
+
+  const joiningDate = normalizeJoiningDate(input.joiningDate);
 
   if (input.role === "lead") {
     const teamId = input.teamId?.trim() ?? "";
@@ -198,6 +223,7 @@ export function normalizeDashboardUser(input: {
       ...(engineerName ? { engineerName } : {}),
       ...(teamId ? { teamId } : {}),
       ...(!teamId && teamEngineers ? { teamEngineers } : {}),
+      ...(joiningDate ? { joiningDate } : {}),
     };
   }
 
@@ -211,10 +237,17 @@ export function normalizeDashboardUser(input: {
       ...(engineerName ? { engineerName } : {}),
       ...(leadEngineerName ? { leadEngineerName } : {}),
       ...(teamId ? { teamId } : {}),
+      ...(joiningDate ? { joiningDate } : {}),
     };
   }
 
-  return { email, role: input.role };
+  const engineerName = input.engineerName?.trim() ?? "";
+  return {
+    email,
+    role: input.role,
+    ...(engineerName ? { engineerName } : {}),
+    ...(joiningDate ? { joiningDate } : {}),
+  };
 }
 
 export function notifyAllowedUsersChanged(): void {

@@ -6,6 +6,7 @@ import type { ResolvedAccess } from "@/auth/access";
 import { AddEngineerDialog } from "@/components/AddEngineerDialog";
 import { AnalysisDateRangePicker } from "@/components/AnalysisDateRangePicker";
 import { Overview2GroupedResults } from "@/components/Overview2GroupedResults";
+import { useAllowedUsers } from "@/hooks/useAllowedUsers";
 import type { UtilizationStore } from "@/hooks/useUtilizationStore";
 import {
   createUtilizationEntry,
@@ -107,6 +108,7 @@ export function Overview2Filters({
   accessOverride,
 }: Overview2FiltersProps) {
   const accessFromContext = useAccess();
+  const { users: dashboardUsers } = useAllowedUsers();
   const canEdit = accessOverride?.canEdit ?? accessFromContext.canEdit;
   const canEditAll =
     accessOverride?.canEditAll ?? accessFromContext.canEditAll;
@@ -176,7 +178,11 @@ export function Overview2Filters({
     setError(null);
 
     try {
-      const response = await fetch("/api/clockify", { cache: "no-store" });
+      // Employees-only: Overview only needs names/emails to link the list.
+      // Full /api/clockify also loads projects and is slower / more failure-prone.
+      const response = await fetch("/api/clockify?scope=employees", {
+        cache: "no-store",
+      });
       const payload = await readJsonResponse<
         ClockifyPayload & { error?: string }
       >(response);
@@ -189,7 +195,9 @@ export function Overview2Filters({
     } catch (err) {
       setEmployees([]);
       setError(
-        err instanceof Error ? err.message : "Failed to load ATS data.",
+        err instanceof Error
+          ? `ATS unavailable (${err.message}). Search needs ATS employees — retry after Timesheets is reachable.`
+          : "Failed to load ATS data.",
       );
     } finally {
       setLoading(false);
@@ -389,6 +397,31 @@ export function Overview2Filters({
     );
   }, [employees, engineerNames]);
 
+  /** Map engineer list names → joining dates from Users (by engineerName or ATS email name). */
+  const joiningDateByEngineer = useMemo(() => {
+    const map: Record<string, string> = {};
+    if (!dashboardUsers) return map;
+    for (const name of engineerNames) {
+      const user = dashboardUsers.find((item) => {
+        if (
+          item.engineerName &&
+          isSameEngineerName(item.engineerName, name)
+        ) {
+          return true;
+        }
+        const ats = employees.find((employee) =>
+          isSameEngineerName(employee.name, name),
+        );
+        return Boolean(ats && ats.email === item.email && item.joiningDate);
+      });
+      if (user?.joiningDate) {
+        map[name] = user.joiningDate;
+        map[normalizeEngineerName(name)] = user.joiningDate;
+      }
+    }
+    return map;
+  }, [dashboardUsers, engineerNames, employees]);
+
   const selectedEngineers = listedEmployees.filter(
     (employee) => selectedEngineerNames.has(employee.name),
   );
@@ -490,6 +523,14 @@ export function Overview2Filters({
     const unlinked = selectedEngineers.filter((e) => !e.linked);
 
     if (linkedEngineers.length === 0) {
+      // ATS list empty/failed → everyone looks unlinked; don't blame each name.
+      if (employees.length === 0) {
+        setActionError(
+          error ??
+            "ATS employees are not loaded yet. Wait for ATS to connect, then Search again.",
+        );
+        return;
+      }
       setActionError(
         `${unlinked.map((e) => `"${e.name}"`).join(", ")} ${unlinked.length === 1 ? "was" : "were"} not found in ATS. Add them from ATS employees.`,
       );
@@ -871,6 +912,7 @@ export function Overview2Filters({
         clockifyHoursError={clockifyHoursError}
         readOnly={!canEdit}
         hideTeamFooter={isSelfScope || isTeamScope}
+        joiningDateByEngineer={joiningDateByEngineer}
           />
         </div>
       </div>

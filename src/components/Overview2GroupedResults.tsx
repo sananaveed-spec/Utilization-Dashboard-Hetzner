@@ -5,6 +5,7 @@ import {
   clockifyHoursKey,
   formatClockifyHours,
 } from "@/lib/clockify/hours";
+import { isBeforeJoiningDate } from "@/lib/allowedUsers";
 import { isSameEngineerName, normalizeEngineerName } from "@/lib/engineers";
 import {
   createUtilizationEntry,
@@ -22,6 +23,11 @@ import {
   monthCursorKey,
   type MonthCursor,
 } from "@/lib/weeks";
+
+function monthEndDate(cursor: MonthCursor): string {
+  const lastDay = new Date(Date.UTC(cursor.year, cursor.month, 0)).getUTCDate();
+  return `${cursor.year}-${String(cursor.month).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+}
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -88,6 +94,7 @@ function monthValueClass(
   hours: number,
   allottedHours: number,
   weeksOpenForCurrent = false,
+  preJoin = false,
 ): string {
   const parts = [
     "overview2-results-value",
@@ -99,8 +106,12 @@ function monthValueClass(
       parts.push("overview2-results-month-value--current-open");
     }
   }
-  const heat = utilizationHeatClass(hours, allottedHours);
-  if (heat) parts.push(heat);
+  if (preJoin) {
+    parts.push("overview2-results-month-value--pre-join");
+  } else {
+    const heat = utilizationHeatClass(hours, allottedHours);
+    if (heat) parts.push(heat);
+  }
   return parts.join(" ");
 }
 
@@ -110,6 +121,7 @@ function weekValueClass(
   isCurrentMonthWeeks = false,
   weekIndex = 0,
   weekCount = 0,
+  preJoin = false,
 ): string {
   const parts = ["overview2-results-value", "overview2-results-week-value"];
   if (isCurrentMonthWeeks && weekCount > 0) {
@@ -118,8 +130,12 @@ function weekValueClass(
       parts.push("overview2-results-week-value--current-end");
     }
   }
-  const heat = utilizationHeatClass(hours, allottedHours);
-  if (heat) parts.push(heat);
+  if (preJoin) {
+    parts.push("overview2-results-week-value--pre-join");
+  } else {
+    const heat = utilizationHeatClass(hours, allottedHours);
+    if (heat) parts.push(heat);
+  }
   return parts.join(" ");
 }
 
@@ -332,6 +348,8 @@ type EngineerRowGroupProps = {
   onUpdate: (row: UtilizationEntry) => void;
   onDelete: (id: string) => void;
   readOnly?: boolean;
+  /** YYYY-MM-DD — weeks ending before this are grayed (pre-join). */
+  joiningDate?: string;
 };
 
 function EngineerRowGroup({
@@ -352,6 +370,7 @@ function EngineerRowGroup({
   onUpdate,
   onDelete,
   readOnly = false,
+  joiningDate,
 }: EngineerRowGroupProps) {
   const [projectsExpanded, setProjectsExpanded] = useState(false);
   const [codedExpanded, setCodedExpanded] = useState(false);
@@ -387,6 +406,23 @@ function EngineerRowGroup({
     () => entries.filter((e) => isSameEngineerName(e.engineerName, engineerName)),
     [entries, engineerName],
   );
+
+  const weekPreJoin = useMemo(
+    () =>
+      weeks.map((week) => isBeforeJoiningDate(week.endDate, joiningDate)),
+    [weeks, joiningDate],
+  );
+
+  const monthPreJoinByKey = useMemo(() => {
+    const map: Record<string, boolean> = {};
+    for (const cursor of monthsInRange) {
+      map[monthCursorKey(cursor)] = isBeforeJoiningDate(
+        monthEndDate(cursor),
+        joiningDate,
+      );
+    }
+    return map;
+  }, [monthsInRange, joiningDate]);
 
   const {
     starredProjectRows,
@@ -729,7 +765,17 @@ function EngineerRowGroup({
 
   const engineerHeader = (
     <span className="overview2-engineer-header">
-      <span className="overview2-engineer-name">{engineerName}</span>
+      <span className="overview2-engineer-name-block">
+        <span className="overview2-engineer-name">{engineerName}</span>
+        {joiningDate ? (
+          <span
+            className="overview2-joining-date"
+            title="Weeks before this date are gray — no data expected"
+          >
+            Joined {joiningDate}
+          </span>
+        ) : null}
+      </span>
       <button
         type="button"
         className="overview2-expand-button"
@@ -789,6 +835,7 @@ function EngineerRowGroup({
                 totals.assigned,
                 monthCapacitiesByKey[totals.monthKey] ?? 0,
                 weeksExpanded && weeksMonthKey === currentMonthKey,
+                monthPreJoinByKey[totals.monthKey] ?? false,
               )}
             >
               <HoursWithUtilization
@@ -806,6 +853,7 @@ function EngineerRowGroup({
                       weeksMonthKey === currentMonthKey,
                       index,
                       weeks.length,
+                      weekPreJoin[index] ?? false,
                     )}
                   >
                     <HoursWithUtilization
@@ -847,6 +895,7 @@ function EngineerRowGroup({
                 totals.clockify,
                 monthCapacitiesByKey[totals.monthKey] ?? 0,
                 weeksExpanded && weeksMonthKey === currentMonthKey,
+                monthPreJoinByKey[totals.monthKey] ?? false,
               )}
             >
               {clockifyHoursLoading
@@ -867,6 +916,7 @@ function EngineerRowGroup({
                       weeksMonthKey === currentMonthKey,
                       index,
                       weeks.length,
+                      weekPreJoin[index] ?? false,
                     )}
                   >
                     {clockifyHoursLoading
@@ -952,6 +1002,7 @@ function EngineerRowGroup({
                           totals.assigned,
                           monthCapacitiesByKey[totals.monthKey] ?? 0,
                           weeksExpanded && weeksMonthKey === currentMonthKey,
+                monthPreJoinByKey[totals.monthKey] ?? false,
                         )}
                       >
                         <HoursWithUtilization
@@ -981,6 +1032,7 @@ function EngineerRowGroup({
                                     inputMode="decimal"
                                     aria-label={`${entry.projectCode} week ${week.weekNumber} planned`}
                                     value={weekTotal.rawValue}
+                                    disabled={isBeforeJoiningDate(week.endDate, joiningDate)}
                                     onChange={(e) => updateWeekValue(week.weekNumber, e.target.value)}
                                   />
                                 ) : (
@@ -1042,6 +1094,7 @@ function EngineerRowGroup({
                           totals.clockify,
                           monthCapacitiesByKey[totals.monthKey] ?? 0,
                           weeksExpanded && weeksMonthKey === currentMonthKey,
+                monthPreJoinByKey[totals.monthKey] ?? false,
                         )}
                       >
                         {clockifyHoursLoading
@@ -1062,6 +1115,7 @@ function EngineerRowGroup({
                                 weeksMonthKey === currentMonthKey,
                                 index,
                                 weeks.length,
+                      weekPreJoin[index] ?? false,
                               )}
                             >
                               {clockifyHoursLoading
@@ -1533,6 +1587,8 @@ type Overview2GroupedResultsProps = {
   clockifyHoursError?: string | null;
   readOnly?: boolean;
   hideTeamFooter?: boolean;
+  /** engineer display name → YYYY-MM-DD joining date */
+  joiningDateByEngineer?: Record<string, string>;
 };
 
 export function Overview2GroupedResults({
@@ -1547,6 +1603,7 @@ export function Overview2GroupedResults({
   clockifyHoursError = null,
   readOnly = false,
   hideTeamFooter = false,
+  joiningDateByEngineer = {},
 }: Overview2GroupedResultsProps) {
   const [expandedMonthKey, setExpandedMonthKey] = useState<string | null>(null);
   const [allottedExpanded, setAllottedExpanded] = useState(true);
@@ -1885,6 +1942,10 @@ export function Overview2GroupedResults({
                 onUpdate={eng.onUpdate}
                 onDelete={eng.onDelete}
                 readOnly={readOnly}
+                joiningDate={
+                  joiningDateByEngineer[eng.engineerName] ??
+                  joiningDateByEngineer[normalizeEngineerName(eng.engineerName)]
+                }
               />
             </tbody>
           ))}

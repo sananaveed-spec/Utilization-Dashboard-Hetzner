@@ -1723,11 +1723,47 @@ td.col-project-name {
   width: 100%;
 }
 
+.overview2-engineer-name-block {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  gap: 0.1rem;
+}
+
 .overview2-engineer-name {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+
+.overview2-joining-date {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.overview2-results-week-value--pre-join,
+.overview2-results-month-value--pre-join {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.overview2-results-week-value--pre-join .week-input,
+.overview2-results-month-value--pre-join .week-input {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.users-joining-hint {
+  margin: -0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
 }
 
 .overview2-project-search {

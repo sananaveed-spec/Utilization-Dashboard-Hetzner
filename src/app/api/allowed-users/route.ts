@@ -35,6 +35,7 @@ export async function POST(request: Request) {
       leadEngineerName?: unknown;
       teamId?: unknown;
       teamEngineers?: unknown;
+      joiningDate?: unknown;
     };
     const email =
       typeof body.email === "string" ? normalizeEmail(body.email) : "";
@@ -52,6 +53,8 @@ export async function POST(request: Request) {
           (value): value is string => typeof value === "string",
         )
       : undefined;
+    const joiningDate =
+      typeof body.joiningDate === "string" ? body.joiningDate : undefined;
 
     if (!isValidEmail(email)) {
       return NextResponse.json(
@@ -76,6 +79,7 @@ export async function POST(request: Request) {
       leadEngineerName,
       teamId,
       teamEngineers,
+      joiningDate,
     });
     if (result.error) {
       return NextResponse.json(

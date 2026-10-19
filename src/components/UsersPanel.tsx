@@ -229,6 +229,7 @@ export function UsersPanel() {
     engineerName?: string;
     leadEngineerName?: string;
     teamId?: string;
+    joiningDate?: string;
   }): Promise<boolean> {
     setSaving(true);
     setError(null);
@@ -275,6 +276,7 @@ export function UsersPanel() {
           engineerName: result.name,
           leadEngineerName: result.leadEngineerName,
           teamId: team?.id,
+          joiningDate: result.joiningDate,
         });
       }
 
@@ -292,6 +294,7 @@ export function UsersPanel() {
           role: "lead",
           engineerName: result.name,
           teamId: team.id,
+          joiningDate: result.joiningDate,
         });
       }
 
@@ -299,6 +302,7 @@ export function UsersPanel() {
         email: result.email,
         role: result.role,
         engineerName: result.name,
+        joiningDate: result.joiningDate,
       });
     } catch (saveError) {
       setError(
@@ -325,6 +329,7 @@ export function UsersPanel() {
         role: "lead",
         engineerName: name || undefined,
         teamId: team?.id ?? user.teamId,
+        joiningDate: user.joiningDate,
       });
       return;
     }
@@ -332,10 +337,14 @@ export function UsersPanel() {
     await saveUser({
       email: user.email,
       role,
-      engineerName: role === "employee" ? name || undefined : undefined,
+      engineerName:
+        role === "employee" || role === "admin" || role === "manager"
+          ? name || user.engineerName || undefined
+          : undefined,
       leadEngineerName:
         role === "employee" ? user.leadEngineerName : undefined,
       teamId: role === "employee" ? user.teamId : undefined,
+      joiningDate: user.joiningDate,
     });
   }
 
@@ -412,6 +421,7 @@ export function UsersPanel() {
               <th scope="col">Email</th>
               <th scope="col">Role</th>
               <th scope="col">Lead</th>
+              <th scope="col">Joining date</th>
               <th scope="col" className="holidays-actions-col">
                 Action
               </th>
@@ -420,13 +430,13 @@ export function UsersPanel() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="holidays-empty">
+                <td colSpan={6} className="holidays-empty">
                   Loading users…
                 </td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={5} className="holidays-empty">
+                <td colSpan={6} className="holidays-empty">
                   No users yet. Click Add to create one.
                 </td>
               </tr>
@@ -471,6 +481,11 @@ export function UsersPanel() {
                     </td>
                     <td>
                       <span className="holidays-value">{leadLabel}</span>
+                    </td>
+                    <td>
+                      <span className="holidays-value">
+                        {user.joiningDate ?? "—"}
+                      </span>
                     </td>
                     <td className="holidays-actions-col">
                       <div className="row-actions">

@@ -21,6 +21,8 @@ export type AddUserDialogResult = {
   role: DashboardRole;
   /** Required when role is employee (Team Member) */
   leadEngineerName?: string;
+  /** ISO YYYY-MM-DD */
+  joiningDate?: string;
 };
 
 type AddUserDialogProps = {
@@ -82,6 +84,9 @@ export function AddUserDialog({
   const [leadName, setLeadName] = useState(
     initialUser?.leadEngineerName ?? "",
   );
+  const [joiningDate, setJoiningDate] = useState(
+    initialUser?.joiningDate ?? "",
+  );
   const [error, setError] = useState<string | null>(null);
 
   const editCandidates = useMemo(() => {
@@ -141,6 +146,7 @@ export function AddUserDialog({
       name: selected.name,
       role,
       leadEngineerName: role === "employee" ? leadName.trim() : undefined,
+      joiningDate: joiningDate.trim() || undefined,
     });
     if (ok) {
       onClose();
@@ -245,6 +251,24 @@ export function AddUserDialog({
               }}
             />
           ) : null}
+
+          <label className="field-label" htmlFor="add-user-joining-date">
+            Joining date
+          </label>
+          <input
+            id="add-user-joining-date"
+            className="field-input"
+            type="date"
+            value={joiningDate}
+            disabled={saving}
+            onChange={(event) => {
+              setJoiningDate(event.target.value);
+              setError(null);
+            }}
+          />
+          <p className="hint users-joining-hint">
+            Weeks before this date appear gray on Overview (no data expected).
+          </p>
 
           {error ? (
             <p className="form-message error" role="alert">
