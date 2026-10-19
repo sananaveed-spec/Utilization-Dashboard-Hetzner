@@ -385,6 +385,7 @@ function EngineerRowGroup({
     setUncodedExpanded(false);
   }
 
+  // Reset project UI only when switching engineer — not when expanding a month.
   useEffect(() => {
     setProjectsExpanded(false);
     collapseHiddenProjectSections();
@@ -392,15 +393,14 @@ function EngineerRowGroup({
     setEditingId(null);
     setDraftWeeks({});
     setEditError(null);
-  }, [weeksMonth.year, weeksMonth.month, engineerName]);
+  }, [engineerName]);
 
+  // Expanding/collapsing month weeks should keep projects open; only clear in-progress edits.
   useEffect(() => {
-    if (!weeksExpanded) {
-      setEditingId(null);
-      setDraftWeeks({});
-      setEditError(null);
-    }
-  }, [weeksExpanded]);
+    setEditingId(null);
+    setDraftWeeks({});
+    setEditError(null);
+  }, [weeksMonth.year, weeksMonth.month, weeksExpanded]);
 
   const engineerEntries = useMemo(
     () => entries.filter((e) => isSameEngineerName(e.engineerName, engineerName)),
