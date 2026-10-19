@@ -24,32 +24,40 @@ export function AnalysisChartToolbar({
   showAts = true,
   showPlanned = true,
 }: AnalysisChartToolbarProps) {
+  const showSourceGroup = showPlanned || showAts;
+
   return (
     <div className="analysis-chart-toolbar" aria-label="Chart data controls">
-      <div className="analysis-chart-source" role="group" aria-label="Data source">
-        {showPlanned ? (
-          <label className="analysis-chart-source-check">
-            <input
-              type="checkbox"
-              checked={value.planned}
-              onChange={() =>
-                onChange({ ...value, planned: !value.planned })
-              }
-            />
-            <span>Planned</span>
-          </label>
-        ) : null}
-        {showAts ? (
-          <label className="analysis-chart-source-check">
-            <input
-              type="checkbox"
-              checked={value.ats}
-              onChange={() => onChange({ ...value, ats: !value.ats })}
-            />
-            <span>ATS</span>
-          </label>
-        ) : null}
-      </div>
+      {showSourceGroup ? (
+        <div
+          className="analysis-chart-source"
+          role="group"
+          aria-label="Data source"
+        >
+          {showPlanned ? (
+            <label className="analysis-chart-source-check">
+              <input
+                type="checkbox"
+                checked={value.planned}
+                onChange={() =>
+                  onChange({ ...value, planned: !value.planned })
+                }
+              />
+              <span>Planned</span>
+            </label>
+          ) : null}
+          {showAts ? (
+            <label className="analysis-chart-source-check">
+              <input
+                type="checkbox"
+                checked={value.ats}
+                onChange={() => onChange({ ...value, ats: !value.ats })}
+              />
+              <span>ATS</span>
+            </label>
+          ) : null}
+        </div>
+      ) : null}
       <AnalysisDateRangePicker
         value={value.dateRange}
         onChange={(dateRange) => onChange({ ...value, dateRange })}

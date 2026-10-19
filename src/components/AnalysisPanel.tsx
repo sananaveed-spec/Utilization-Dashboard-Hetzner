@@ -86,6 +86,7 @@ function ChartCard({
   children: ReactNode;
 }) {
   const noneSelected =
+    (showPlanned || showAts) &&
     (showPlanned ? !filters.planned : true) &&
     (showAts ? !filters.ats : true);
 
@@ -102,7 +103,11 @@ function ChartCard({
       </div>
       {noneSelected ? (
         <p className="analysis-chart-hint">
-          Check Planned and/or ATS to show this chart.
+          {showPlanned && showAts
+            ? "Check Planned and/or ATS to show this chart."
+            : showAts
+              ? "Check ATS to show this chart."
+              : "Check Planned to show this chart."}
         </p>
       ) : (
         children
@@ -126,12 +131,12 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
   const [filtersByChart, setFiltersByChart] = useState<
     Record<ChartId, ChartSourceFilters>
   >(() => ({
-    kpi: defaultChartFilters(),
+    kpi: { ...defaultChartFilters(), planned: false, ats: true },
     heatmap: defaultChartFilters(),
-    trend: defaultChartFilters(),
+    trend: { ...defaultChartFilters(), planned: false, ats: true },
     top: defaultChartFilters(),
     plannedVs: defaultChartFilters(),
-    workload: defaultChartFilters(),
+    workload: { ...defaultChartFilters(), planned: false, ats: true },
     project: defaultChartFilters(),
     forecast: { ...defaultChartFilters(), ats: false },
   }));
@@ -275,28 +280,7 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
     holidayDates,
   );
 
-  const kpiPlanned = useMemo(
-    () =>
-      filtersByChart.kpi.planned
-        ? buildFirmBillabilityKpi(
-            "planned",
-            entries,
-            engineerNames,
-            kpiWeeks,
-            atsHoursByMonth,
-            atsBillableByMonth,
-          )
-        : null,
-    [
-      atsBillableByMonth,
-      atsHoursByMonth,
-      engineerNames,
-      entries,
-      filtersByChart.kpi.planned,
-      kpiWeeks,
-    ],
-  );
-
+  /** Firm snapshot — ATS billability gauge only (guideline). */
   const kpiAts = useMemo(
     () =>
       filtersByChart.kpi.ats
@@ -359,28 +343,7 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
     ],
   );
 
-  const trendPlanned = useMemo(
-    () =>
-      filtersByChart.trend.planned
-        ? buildBillabilityTrend(
-            "planned",
-            entries,
-            engineerNames,
-            trendWeeks,
-            atsHoursByMonth,
-            atsBillableByMonth,
-          )
-        : undefined,
-    [
-      atsBillableByMonth,
-      atsHoursByMonth,
-      engineerNames,
-      entries,
-      filtersByChart.trend.planned,
-      trendWeeks,
-    ],
-  );
-
+  /** Chart 2 — ATS billable hours only (guideline). */
   const trendAts = useMemo(
     () =>
       filtersByChart.trend.ats
@@ -471,28 +434,7 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
     [atsHoursByMonth, engineerNames, entries, plannedVsWeeks],
   );
 
-  const workloadPlanned = useMemo(
-    () =>
-      filtersByChart.workload.planned
-        ? buildWorkloadSlices(
-            "planned",
-            entries,
-            engineerNames,
-            workloadWeeks,
-            atsHoursByMonth,
-            atsBillableByMonth,
-          )
-        : [],
-    [
-      atsBillableByMonth,
-      atsHoursByMonth,
-      engineerNames,
-      entries,
-      filtersByChart.workload.planned,
-      workloadWeeks,
-    ],
-  );
-
+  /** Chart 4 — ATS billable vs non-billable only (guideline). */
   const workloadAts = useMemo(
     () =>
       filtersByChart.workload.ats
@@ -561,30 +503,15 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
         <>
           <section className="analysis-section">
             <ChartCard
-              title="Firm snapshot"
+              title="Firm billability"
               filters={filtersByChart.kpi}
-              onFiltersChange={(next) => updateFilters("kpi", next)}
+              onFiltersChange={(next) =>
+                updateFilters("kpi", { ...next, planned: false })
+              }
+              showPlanned={false}
+              showAts
             >
               <div className="analysis-insight-row analysis-insight-row--kpi">
-                {kpiPlanned ? (
-                  <>
-                    <div className="analysis-insight-card analysis-insight-card--gauge">
-                      <BillabilityGauge
-                        percent={kpiPlanned.percent}
-                        label="Firm utilization (planned / capacity)"
-                      />
-                    </div>
-                    <div className="analysis-insight-card">
-                      <p className="analysis-insight-label">Planned %</p>
-                      <p className="analysis-insight-value">
-                        {formatAnalysisPercent(kpiPlanned.percent)}
-                      </p>
-                      <p className="analysis-insight-detail">
-                        Planned hours vs capacity in this chart’s date range
-                      </p>
-                    </div>
-                  </>
-                ) : null}
                 {kpiAts ? (
                   <>
                     <div className="analysis-insight-card analysis-insight-card--gauge">
@@ -594,12 +521,12 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
                       />
                     </div>
                     <div className="analysis-insight-card">
-                      <p className="analysis-insight-label">ATS %</p>
+                      <p className="analysis-insight-label">Billable %</p>
                       <p className="analysis-insight-value">
                         {formatAnalysisPercent(kpiAts.percent)}
                       </p>
                       <p className="analysis-insight-detail">
-                        Billable hours vs capacity in this chart’s date range
+                        ATS billable hours vs capacity in this date range
                       </p>
                     </div>
                   </>
@@ -659,14 +586,19 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
 
           <section className="analysis-section analysis-section--split">
             <ChartCard
-              title="2. Weekly vs monthly trend"
+              title="2. Weekly vs monthly billability trend"
               filters={filtersByChart.trend}
-              onFiltersChange={(next) => updateFilters("trend", next)}
+              onFiltersChange={(next) =>
+                updateFilters("trend", { ...next, planned: false })
+              }
+              showPlanned={false}
+              showAts
             >
-              <BillabilityTrendChart
-                planned={trendPlanned}
-                ats={trendAts}
-              />
+              <p className="analysis-chart-hint">
+                ATS billable hours % vs capacity — weekly line and monthly
+                average.
+              </p>
+              <BillabilityTrendChart ats={trendAts} />
             </ChartCard>
             <ChartCard
               title="3. Planned vs ATS"
@@ -685,17 +617,21 @@ export function AnalysisPanel({ store }: AnalysisPanelProps) {
             <ChartCard
               title="4. Workload distribution"
               filters={filtersByChart.workload}
-              onFiltersChange={(next) => updateFilters("workload", next)}
+              onFiltersChange={(next) =>
+                updateFilters("workload", { ...next, planned: false })
+              }
+              showPlanned={false}
+              showAts
             >
+              <p className="analysis-chart-hint">
+                ATS billable vs non-billable hours (firm-wide).
+              </p>
               <WorkloadPieChart
-                series={[
-                  ...(filtersByChart.workload.planned
-                    ? [{ label: "Planned", data: workloadPlanned }]
-                    : []),
-                  ...(filtersByChart.workload.ats
+                series={
+                  filtersByChart.workload.ats
                     ? [{ label: "ATS", data: workloadAts }]
-                    : []),
-                ]}
+                    : []
+                }
               />
             </ChartCard>
             <ChartCard
