@@ -62,26 +62,17 @@ export function isDashboardRole(value: unknown): value is DashboardRole {
   );
 }
 
-/** Display order: Manager → Team Lead → Team Member (Admin first). */
-const ROLE_SORT_ORDER: Record<DashboardRole, number> = {
-  admin: 0,
-  manager: 1,
-  lead: 2,
-  employee: 3,
-};
-
 function userSortName(user: DashboardUser): string {
   return (user.engineerName || user.email).toLowerCase();
 }
 
+/** Alphabetical by display name (engineer name, else email). */
 export function sortDashboardUsers(users: DashboardUser[]): DashboardUser[] {
-  return [...users].sort((a, b) => {
-    const roleDiff = ROLE_SORT_ORDER[a.role] - ROLE_SORT_ORDER[b.role];
-    if (roleDiff !== 0) return roleDiff;
-    return userSortName(a).localeCompare(userSortName(b), undefined, {
+  return [...users].sort((a, b) =>
+    userSortName(a).localeCompare(userSortName(b), undefined, {
       sensitivity: "base",
-    });
-  });
+    }),
+  );
 }
 
 export function defaultAdminUsers(): DashboardUser[] {
