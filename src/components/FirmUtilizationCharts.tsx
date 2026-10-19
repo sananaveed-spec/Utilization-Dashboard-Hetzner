@@ -38,10 +38,10 @@ type FirmUtilizationChartsProps = {
 
 const CHART_COLORS = {
   allotted: "#3b82f6",
-  capacity: "#64748b",
-  percent: "#22c55e",
-  grid: "#334155",
-  axis: "#94a3b8",
+  capacity: "#94a3b8",
+  percent: "#16a34a",
+  grid: "#e2e8f0",
+  axis: "#64748b",
 };
 
 function ChartTooltip({

@@ -3,6 +3,7 @@
 import { useEffect, useMemo } from "react";
 import { useAccess } from "@/auth/accessContext";
 import type { ResolvedAccess } from "@/auth/access";
+import { AnalysisPanel } from "@/components/AnalysisPanel";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { HolidaysPanel } from "@/components/HolidaysPanel";
 import { Overview2Filters } from "@/components/Overview2Filters";
@@ -12,8 +13,7 @@ import { resolveAccess } from "@/auth/access";
 import { useAllowedUsers } from "@/hooks/useAllowedUsers";
 import { useTeams } from "@/hooks/useTeams";
 
-/** Analysis tab is temporarily hidden from the live dashboard. */
-const SHOW_ANALYSIS_TAB = false;
+const SHOW_ANALYSIS_TAB = true;
 
 export type DashboardTab =
   | "overview2"
@@ -123,7 +123,7 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
 
   const banner =
     resolved.role === "employee"
-      ? "Employee view — you can view Overview and Holidays; editing requires Team Lead, Manager, or Admin."
+      ? "Employee view — you can view Overview, Analysis, and Holidays; editing requires Team Lead, Manager, or Admin."
       : resolved.role === "lead" || resolved.role === "manager"
         ? "You can edit dashboard data. History and Users are Admin only."
         : null;
@@ -143,7 +143,11 @@ export function DashboardShell({ tab, onTabChange }: DashboardShellProps) {
       ) : null}
 
       <div className="dashboard-main">
-        {tab === "holidays" && resolved.canViewHolidays ? (
+        {tab === "analysis" &&
+        SHOW_ANALYSIS_TAB &&
+        resolved.canViewAnalysis ? (
+          <AnalysisPanel store={store} />
+        ) : tab === "holidays" && resolved.canViewHolidays ? (
           <HolidaysPanel store={store} />
         ) : tab === "history" && resolved.canViewHistory ? (
           <HistoryPanel />
